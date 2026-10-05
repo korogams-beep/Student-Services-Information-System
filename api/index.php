@@ -1,6 +1,13 @@
 <?php
 
-// Ensure cache and view directories exist in /tmp for Vercel's read-only filesystem
+use Database\Seeders\DatabaseSeeder;
+use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
+
+define('LARAVEL_START', microtime(true));
+
+// Ensure cache, view, session, and storage directories exist in /tmp
 $dirs = [
     '/tmp/views',
     '/tmp/cache',
@@ -16,5 +23,29 @@ foreach ($dirs as $dir) {
     }
 }
 
-// Forward Vercel requests to Laravel's public entry point
-require __DIR__.'/../public/index.php';
+$sqliteFile = '/tmp/database.sqlite';
+$isFirstInit = false;
+$dbConnection = getenv('DB_CONNECTION') ?: 'sqlite';
+
+if ($dbConnection === 'sqlite') {
+    if (! file_exists($sqliteFile) || filesize($sqliteFile) === 0) {
+        @touch($sqliteFile);
+        $isFirstInit = true;
+    }
+}
+
+require __DIR__.'/../vendor/autoload.php';
+
+/** @var Application $app */
+$app = require_once __DIR__.'/../bootstrap/app.php';
+
+if ($isFirstInit && $dbConnection === 'sqlite') {
+    try {
+        Artisan::call('migrate', ['--force' => true]);
+        (new DatabaseSeeder)->run();
+    } catch (Throwable $e) {
+        error_log('Database initialization note: '.$e->getMessage());
+    }
+}
+
+$app->handleRequest(Request::capture());
