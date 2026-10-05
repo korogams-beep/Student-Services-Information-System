@@ -15,9 +15,22 @@ import { CertificateOfRegistrationView } from './views/CertificateOfRegistration
 import { StudentGradesView } from './views/StudentGradesView';
 import { StudentDocumentsView } from './views/StudentDocumentsView';
 import { StudentClearanceView } from './views/StudentClearanceView';
+
+// Distinct Registrar Views
 import { RegistrarApprovalsView } from './views/RegistrarApprovalsView';
 import { RegistrarRecordsView } from './views/RegistrarRecordsView';
+import { RegistrarStudentRecordsView } from './views/RegistrarStudentRecordsView';
+import { RegistrarDocumentsQueueView } from './views/RegistrarDocumentsQueueView';
+import { RegistrarReportsView } from './views/RegistrarReportsView';
+
+// Distinct Cashier Views
 import { CashierPaymentView } from './views/CashierPaymentView';
+import { CashierRecentPaymentsView } from './views/CashierRecentPaymentsView';
+import { CashierAssessmentsView } from './views/CashierAssessmentsView';
+import { CashierReceiptsArchiveView } from './views/CashierReceiptsArchiveView';
+import { CashierReportsView } from './views/CashierReportsView';
+
+// Department & Admin Views
 import { DepartmentClearanceView } from './views/DepartmentClearanceView';
 import { AdminAccountsAuditView } from './views/AdminAccountsAuditView';
 import { CheckCircle2 } from 'lucide-react';
@@ -35,9 +48,6 @@ const MainLayout = () => {
       case 'enrollment':
         return <StudentEnrollmentView />;
       case 'payments':
-      case 'recent_payments':
-      case 'assessments':
-      case 'reports':
         return <StudentPaymentsView />;
       case 'cor_preview':
       case 'cor_archive':
@@ -48,27 +58,46 @@ const MainLayout = () => {
         return <StudentDocumentsView />;
       case 'clearance':
         return <StudentClearanceView />;
+
+      // Registrar Views - each tab has its own distinct view!
       case 'approvals':
         return <RegistrarApprovalsView />;
       case 'academic_records':
-      case 'documents_queue':
-      case 'registrar_reports':
         return <RegistrarRecordsView />;
+      case 'student_records':
+        return <RegistrarStudentRecordsView />;
+      case 'documents_queue':
+        return <RegistrarDocumentsQueueView />;
+      case 'registrar_reports':
+        return <RegistrarReportsView />;
+
+      // Cashier Views - each tab has its own distinct view!
       case 'process_payment':
-      case 'receipts':
         return <CashierPaymentView />;
+      case 'recent_payments':
+        return <CashierRecentPaymentsView />;
+      case 'assessments':
+        return <CashierAssessmentsView />;
+      case 'receipts':
+        return <CashierReceiptsArchiveView />;
+      case 'reports':
+        return <CashierReportsView />;
+
+      // Department Staff Views
       case 'clearance_requests':
       case 'completed_clearance':
       case 'department_rules':
       case 'dept_reports':
         return <DepartmentClearanceView />;
+
+      // Admin Views
       case 'user_accounts':
       case 'audit_logs_view':
       case 'roles_view':
       case 'security_view':
       case 'system_settings_view':
-      case 'student_records':
         return <AdminAccountsAuditView />;
+
       default:
         return <StudentDashboardView />;
     }
@@ -113,19 +142,81 @@ const MainLayout = () => {
   );
 };
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('SSIS Application Error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontFamily: 'Inter, sans-serif',
+          background: '#0F172A',
+          color: '#F8FAFC',
+          padding: '24px',
+          textAlign: 'center'
+        }}>
+          <img src="/images/pnc-logo.png" alt="CuyoTech" style={{ width: '80px', height: '80px', marginBottom: '20px' }} />
+          <h1 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px' }}>CuyoTech University — SSIS</h1>
+          <p style={{ color: '#94A3B8', maxWidth: '480px', marginBottom: '24px', fontSize: '14px' }}>
+            An unexpected interface error occurred. Please click below to reset and reload the application.
+          </p>
+          <button
+            onClick={() => {
+              localStorage.clear();
+              sessionStorage.clear();
+              window.location.reload();
+            }}
+            style={{
+              background: '#2563EB',
+              color: '#FFFFFF',
+              border: 'none',
+              padding: '12px 28px',
+              borderRadius: '8px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            Reset & Reload Portal
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   return (
-    <AppProvider>
-      <MainLayout />
-    </AppProvider>
+    <ErrorBoundary>
+      <AppProvider>
+        <MainLayout />
+      </AppProvider>
+    </ErrorBoundary>
   );
 }
 
-const rootElement = document.getElementById('root');
-if (rootElement) {
-  ReactDOM.createRoot(rootElement).render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>
-  );
+const mountElement = document.getElementById('root') || document.getElementById('app');
+if (mountElement) {
+  const root = ReactDOM.createRoot(mountElement);
+  root.render(<App />);
+} else {
+  console.error("SSIS: Could not find mounting container element ('root' or 'app').");
 }
+

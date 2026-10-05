@@ -564,3 +564,173 @@ button, input, select, textarea {
     opacity: 1;
   }
 }
+
+/* ==========================================================================
+   Search Dropdown & Results Overlay
+   ========================================================================== */
+.ssis-search-results-overlay {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  width: 440px;
+  max-height: 480px;
+  overflow-y: auto;
+  background-color: #FFFFFF;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.16);
+  z-index: 1000;
+  padding: 12px 8px;
+}
+
+.ssis-search-category {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 8px 12px 4px;
+}
+
+.ssis-search-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  color: var(--text-main);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 13.5px;
+}
+
+.ssis-search-item:hover {
+  background-color: #F8FAFC;
+  color: #0F172A;
+}
+
+.ssis-search-icon-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background-color: #F1F5F9;
+  color: #475569;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   Tab Navigation Bar
+   ========================================================================== */
+.ssis-tabs-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #E2E8F0;
+  margin-bottom: 28px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.ssis-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748B;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.ssis-tab-btn:hover {
+  color: #0F172A;
+  background-color: #F1F5F9;
+}
+
+.ssis-tab-btn.active {
+  background-color: #FAF5F5;
+  color: #9F1239;
+  font-weight: 700;
+  border-bottom: 2px solid #F1B82D;
+}
+
+/* ==========================================================================
+   Print Document Styling & Media Rules
+   Only print the targeted paper / official document!
+   ========================================================================== */
+@media print {
+  body, html {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Hide app navigation, headers, toolbars, buttons, toasts, backdrop */
+  .ssis-sidebar,
+  .ssis-top-navbar,
+  .ssis-page-tag,
+  .ssis-page-heading,
+  .ssis-page-desc,
+  .ssis-btn-primary,
+  .ssis-btn-secondary,
+  .ssis-btn-lavender,
+  .ssis-btn-danger-soft,
+  .ssis-tabs-bar,
+  .ssis-toast,
+  .no-print,
+  button,
+  .ssis-modal-header button {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .ssis-app-container,
+  .ssis-main-wrapper,
+  .ssis-canvas,
+  .ssis-modal-backdrop,
+  .ssis-modal-content {
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+    inset: auto !important;
+  }
+
+  /* Isolate paper content */
+  .receipt-paper,
+  .printable-document,
+  .cor-document {
+    display: block !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 20px 30px !important;
+    box-shadow: none !important;
+    border: 1px solid #CBD5E1 !important;
+    background: #FFFFFF !important;
+    color: #000000 !important;
+    page-break-inside: avoid;
+  }
+}
+

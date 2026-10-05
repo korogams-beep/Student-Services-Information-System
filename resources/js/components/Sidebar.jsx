@@ -27,10 +27,10 @@ const ROLE_ACCENT = {
 export const Sidebar = () => {
   const { currentUser, currentView, setCurrentView, handleLogout } = useApp();
 
-  const accent = ROLE_ACCENT[currentUser.role] || ROLE_ACCENT.Student;
+  const accent = ROLE_ACCENT[currentUser?.role] || ROLE_ACCENT.Student;
 
   const getNavItems = () => {
-    switch (currentUser.role) {
+    switch (currentUser?.role) {
       case 'Student':
         return [
           { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -42,7 +42,7 @@ export const Sidebar = () => {
         ];
       case 'Registrar':
         return [
-          { id: 'approvals', label: 'Approvals', icon: CheckSquare },
+          { id: 'approvals', label: 'Enrollment Approvals', icon: CheckSquare },
           { id: 'academic_records', label: 'Academic Records', icon: GraduationCap },
           { id: 'student_records', label: 'Student Records', icon: Users },
           { id: 'documents_queue', label: 'Documents', icon: FileText },
@@ -81,10 +81,21 @@ export const Sidebar = () => {
 
   return (
     <aside className="ssis-sidebar">
-      {/* Brand Header matching Canva Spec */}
-      <div className="ssis-sidebar-brand">
-        <h1 className="ssis-brand-title">SSIS</h1>
-        <p className="ssis-brand-subtitle">Student Services</p>
+      {/* Brand Header with CuyoTech University Logo */}
+      <div className="ssis-sidebar-brand" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '24px 20px' }}>
+        <img 
+          src="/images/pnc-logo.png" 
+          alt="CuyoTech University Logo" 
+          style={{ width: '42px', height: '42px', objectFit: 'contain' }} 
+        />
+        <div>
+          <h1 className="ssis-brand-title" style={{ fontSize: '17px', fontWeight: '900', color: '#F1B82D', margin: 0, lineHeight: 1.1 }}>
+            CUYOTECH • SSIS
+          </h1>
+          <p className="ssis-brand-subtitle" style={{ fontSize: '10.5px', color: '#94A3B8', margin: '2px 0 0', fontWeight: '600' }}>
+            CuyoTech University
+          </p>
+        </div>
       </div>
 
       {/* Navigation Links */}
