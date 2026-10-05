@@ -4,6 +4,7 @@ use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 
 define('LARAVEL_START', microtime(true));
@@ -32,14 +33,10 @@ foreach ($dirs as $dir) {
 }
 
 $sqliteFile = '/tmp/database.sqlite';
-$isFirstInit = false;
 $dbConnection = getenv('DB_CONNECTION') ?: 'sqlite';
 
-if ($dbConnection === 'sqlite') {
-    if (! file_exists($sqliteFile) || filesize($sqliteFile) === 0) {
-        @touch($sqliteFile);
-        $isFirstInit = true;
-    }
+if ($dbConnection === 'sqlite' && ! file_exists($sqliteFile)) {
+    @touch($sqliteFile);
 }
 
 require __DIR__.'/../vendor/autoload.php';
@@ -47,17 +44,17 @@ require __DIR__.'/../vendor/autoload.php';
 /** @var Application $app */
 $app = require_once __DIR__.'/../bootstrap/app.php';
 
-$app->booted(function () {
+$app->booted(function () use ($dbConnection) {
     URL::forceScheme('https');
-});
 
-if ($isFirstInit && $dbConnection === 'sqlite') {
-    try {
-        Artisan::call('migrate', ['--force' => true]);
-        (new DatabaseSeeder)->run();
-    } catch (Throwable $e) {
-        error_log('Database initialization note: '.$e->getMessage());
+    if ($dbConnection === 'sqlite' && ! Schema::hasTable('students')) {
+        try {
+            Artisan::call('migrate', ['--force' => true]);
+            (new DatabaseSeeder)->run();
+        } catch (Throwable $e) {
+            error_log('Database initialization note: '.$e->getMessage());
+        }
     }
-}
+});
 
 $app->handleRequest(Request::capture());
