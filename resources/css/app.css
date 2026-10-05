@@ -1,0 +1,566 @@
+/* ==========================================================================
+   SSIS - STUDENT SERVICES INFORMATION SYSTEM
+   High Fidelity Design System matching Canva Wireframe Specification
+   ========================================================================== */
+
+:root {
+  --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  
+  /* Primary Wireframe Palette */
+  --sidebar-bg: #1B2430;
+  --sidebar-hover: rgba(255, 255, 255, 0.07);
+  --sidebar-border: #263342;
+  --sidebar-text: #94A3B8;
+  --sidebar-text-active: #881337;
+  --sidebar-pill-active: #FDE8E9;
+  
+  --brand-yellow: #F1B82D;
+  --brand-yellow-hover: #E2A619;
+  --brand-yellow-text: #18181B;
+  
+  --highlight-pink-bg: #FBE8E9;
+  --highlight-pink-text: #9F1239;
+  --highlight-pink-border: #FECDD3;
+  
+  --lavender-bg: #EDE9FE;
+  --lavender-text: #5B21B6;
+  --lavender-hover: #DDD6FE;
+  
+  --soft-red-bg: #FEE2E2;
+  --soft-red-text: #991B1B;
+  --soft-red-hover: #FECACA;
+  
+  --canvas-bg: #F8F9FA;
+  --card-bg: #FFFFFF;
+  --card-border: #E2E8F0;
+  --table-header-bg: #FAF5F5;
+  --text-main: #0F172A;
+  --text-muted: #64748B;
+  --text-light: #94A3B8;
+  
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-pill: 9999px;
+  
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--canvas-bg);
+  color: var(--text-main);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+}
+
+/* ==========================================================================
+   App Layout
+   ========================================================================== */
+.ssis-app-container {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background-color: var(--canvas-bg);
+}
+
+/* Sidebar */
+.ssis-sidebar {
+  width: 250px;
+  min-width: 250px;
+  background-color: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--sidebar-border);
+  position: relative;
+  z-index: 20;
+}
+
+.ssis-sidebar-brand {
+  padding: 32px 28px 24px;
+}
+
+.ssis-brand-title {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--brand-yellow);
+  line-height: 1;
+}
+
+.ssis-brand-subtitle {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: #CBD5E1;
+  text-transform: uppercase;
+  margin-top: 6px;
+}
+
+.ssis-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 20px;
+  flex: 1;
+}
+
+.ssis-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 18px;
+  border-radius: var(--radius-pill);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--sidebar-text);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+  width: 100%;
+}
+
+.ssis-nav-item:hover {
+  color: #FFFFFF;
+  background-color: var(--sidebar-hover);
+}
+
+.ssis-nav-item.active {
+  background-color: var(--sidebar-pill-active);
+  color: var(--sidebar-text-active);
+  font-weight: 700;
+}
+
+.ssis-sidebar-footer {
+  padding: 20px;
+  border-top: 1px solid var(--sidebar-border);
+}
+
+/* Main Content Area */
+.ssis-main-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background-color: var(--canvas-bg);
+}
+
+/* Top Navbar */
+.ssis-top-navbar {
+  height: 72px;
+  background-color: #FFFFFF;
+  border-bottom: 1px solid var(--card-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.ssis-header-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.3px;
+}
+
+.ssis-header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.ssis-search-box {
+  display: flex;
+  align-items: center;
+  background-color: #F1F5F9;
+  border-radius: var(--radius-pill);
+  padding: 8px 18px;
+  width: 240px;
+  gap: 10px;
+}
+
+.ssis-search-input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 13.5px;
+  color: var(--text-main);
+  width: 100%;
+}
+
+.ssis-search-input::placeholder {
+  color: var(--text-light);
+}
+
+.ssis-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #64748B;
+}
+
+.ssis-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-color: #FBE8E9;
+  color: #9F1239;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ssis-user-role-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748B;
+}
+
+/* Quick Role Switcher Pill */
+.ssis-role-switcher-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #F8FAFC;
+  border: 1px solid #CBD5E1;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ssis-role-switcher-btn:hover {
+  background: #EEF2F6;
+  border-color: #94A3B8;
+}
+
+/* Canvas Area */
+.ssis-canvas {
+  padding: 36px 44px;
+  flex: 1;
+}
+
+/* Section Tag & Headers */
+.ssis-page-tag {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #64748B;
+  margin-bottom: 6px;
+}
+
+.ssis-page-heading {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.ssis-page-desc {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-top: 6px;
+  margin-bottom: 28px;
+}
+
+/* Highlights & Badges */
+.ssis-highlight-card {
+  background-color: var(--highlight-pink-bg);
+  color: var(--highlight-pink-text);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.ssis-highlight-pill {
+  background-color: var(--highlight-pink-bg);
+  color: var(--highlight-pink-text);
+  border-radius: var(--radius-pill);
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  display: inline-block;
+}
+
+/* Cards */
+.ssis-card {
+  background-color: #FFFFFF;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  padding: 26px;
+  box-shadow: var(--shadow-sm);
+}
+
+.ssis-card-title {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 16px;
+}
+
+/* Tables */
+.ssis-table-container {
+  background: #FFFFFF;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.ssis-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.ssis-table thead th {
+  background-color: var(--table-header-bg);
+  padding: 14px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.ssis-table tbody td {
+  padding: 16px 20px;
+  font-size: 14px;
+  color: #1E293B;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.ssis-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.ssis-table tbody tr:hover td {
+  background-color: #FAFAFA;
+}
+
+/* Buttons */
+.ssis-btn-primary {
+  background-color: var(--brand-yellow);
+  color: var(--brand-yellow-text);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.ssis-btn-primary:hover {
+  background-color: var(--brand-yellow-hover);
+  transform: translateY(-1px);
+}
+
+.ssis-btn-secondary {
+  background-color: #FFFFFF;
+  color: #334155;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 20px;
+  border-radius: var(--radius-md);
+  border: 1px solid #CBD5E1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+}
+
+.ssis-btn-secondary:hover {
+  background-color: #F8FAFC;
+  border-color: #94A3B8;
+}
+
+.ssis-btn-lavender {
+  background-color: var(--lavender-bg);
+  color: var(--lavender-text);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ssis-btn-lavender:hover {
+  background-color: var(--lavender-hover);
+}
+
+.ssis-btn-danger-soft {
+  background-color: var(--soft-red-bg);
+  color: var(--soft-red-text);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ssis-btn-danger-soft:hover {
+  background-color: var(--soft-red-hover);
+}
+
+/* Form Controls */
+.ssis-form-group {
+  margin-bottom: 20px;
+}
+
+.ssis-label {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 8px;
+}
+
+.ssis-input, .ssis-select {
+  width: 100%;
+  padding: 11px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid #CBD5E1;
+  font-size: 14px;
+  color: var(--text-main);
+  background-color: #FFFFFF;
+  transition: border-color 0.15s ease;
+  outline: none;
+}
+
+.ssis-input:focus, .ssis-select:focus {
+  border-color: var(--brand-yellow);
+  box-shadow: 0 0 0 3px rgba(241, 184, 45, 0.2);
+}
+
+/* Modals */
+.ssis-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.ssis-modal-content {
+  background: #FFFFFF;
+  border-radius: var(--radius-lg);
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  padding: 32px;
+}
+
+/* Official Receipt Sheet styling */
+.receipt-paper {
+  background: #FFFDF9;
+  border: 1px dashed #CBD5E1;
+  padding: 28px;
+  border-radius: 8px;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+/* Status Badges */
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-success {
+  background-color: #DCFCE7;
+  color: #166534;
+}
+
+.badge-pending {
+  background-color: #FEF3C7;
+  color: #92400E;
+}
+
+.badge-review {
+  background-color: #E0E7FF;
+  color: #3730A3;
+}
+
+.badge-danger {
+  background-color: #FEE2E2;
+  color: #991B1B;
+}
+
+/* Toast */
+.ssis-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background-color: #1E293B;
+  color: #FFFFFF;
+  padding: 14px 22px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 2000;
+  font-size: 14px;
+  font-weight: 500;
+  animation: slideInUp 0.3s ease;
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
