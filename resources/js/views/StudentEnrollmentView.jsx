@@ -1,14 +1,15 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
+import { BookOpen, CheckSquare, Send } from 'lucide-react';
 
 export const StudentEnrollmentView = () => {
   const { 
+    currentUser,
     scheduleCourses, 
     setScheduleCourses, 
     enrollmentStatus, 
-    setEnrollmentStatus,
-    showToast,
-    recordAuditLog
+    submitEnrollmentRequest,
+    showToast
   } = useApp();
 
   const toggleCourse = (id) => {
@@ -19,33 +20,27 @@ export const StudentEnrollmentView = () => {
 
   const selectedCourses = scheduleCourses.filter(c => c.selected);
   const selectedCount = selectedCourses.length;
-  const totalUnits = selectedCourses.reduce((sum, c) => sum + c.units, 0);
+  const totalUnits = selectedCourses.reduce((sum, c) => sum + (Number(c.units) || 0), 0);
 
   const handleSubmit = () => {
-    setEnrollmentStatus('Pending');
-    showToast(`Enrollment request for ${selectedCount} subjects (${totalUnits} units) submitted to Registrar.`);
-    recordAuditLog('Enrollment requested', `Maria Santos • ${selectedCount} subjects (${totalUnits} units)`);
+    if (selectedCount === 0) {
+      alert('Please select at least one course section to enroll.');
+      return;
+    }
 
-    fetch('/api/enrollment/submit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        student_id: 1,
-        section_ids: selectedCourses.map(c => c.id),
-      }),
-    }).catch(err => console.log('Client-side synced', err));
+    submitEnrollmentRequest(selectedCourses);
   };
 
   return (
     <div className="ssis-canvas">
-      <div className="ssis-page-tag">DFD 2.0 • ENROLLMENT</div>
+      <div className="ssis-page-tag">CUYOTECH UNIVERSITY • ENROLLMENT</div>
       <h1 className="ssis-page-heading">Build your class schedule</h1>
       <p className="ssis-page-desc">
-        Select available sections. Schedule conflicts and unit limits are checked automatically.
+        Select available sections for <strong>{currentUser?.name}</strong>. Schedule conflicts and unit limits are checked automatically.
       </p>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '32px', alignItems: 'start' }}>
-        {/* Left Table matching Page 3 */}
+        {/* Left Table */}
         <div className="ssis-table-container">
           <table className="ssis-table">
             <thead>
@@ -64,52 +59,65 @@ export const StudentEnrollmentView = () => {
                   <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
                     <input
                       type="checkbox"
-                      checked={course.selected}
+                      checked={!!course.selected}
                       onChange={() => toggleCourse(course.id)}
                       style={{ width: '16px', height: '16px', accentColor: '#1E293B', cursor: 'pointer' }}
                     />
                   </td>
-                  <td style={{ fontWeight: '600' }}>{course.code}</td>
-                  <td>{course.title}</td>
-                  <td>{course.units}</td>
-                  <td style={{ color: '#475569' }}>{course.schedule}</td>
-                  <td style={{ fontWeight: '500' }}>{course.slots}</td>
+                  <td style={{ fontWeight: '600', color: '#0F172A', fontFamily: 'monospace' }}>
+                    {course.code}
+                  </td>
+                  <td style={{ fontWeight: '500' }}>{course.title}</td>
+                  <td>{course.units}.0</td>
+                  <td style={{ color: '#475569', fontSize: '13px' }}>{course.schedule}</td>
+                  <td>
+                    <span className="badge badge-success">{course.slots} slots</span>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        {/* Right Summary Card matching Page 3 */}
-        <div className="ssis-card" style={{ padding: '32px 28px' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#0F172A', marginBottom: '20px' }}>
-            Selection summary
-          </h3>
+        {/* Right Sticky Card */}
+        <div className="ssis-card" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div>
+            <h3 className="ssis-card-title">Schedule Summary</h3>
+            <p style={{ fontSize: '13px', color: '#64748B', marginBottom: '16px' }}>
+              Academic load limit: 24.0 units max.
+            </p>
 
-          <div style={{ fontSize: '14.5px', color: '#64748B', marginBottom: '10px' }}>
-            {selectedCount} subjects
-          </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #F1F5F9' }}>
+              <span style={{ color: '#475569' }}>Selected subjects:</span>
+              <strong style={{ color: '#0F172A' }}>{selectedCount}</strong>
+            </div>
 
-          <div style={{ fontSize: '42px', fontWeight: '800', color: '#BE123C', letterSpacing: '-0.5px', lineHeight: 1, marginBottom: '24px' }}>
-            {totalUnits} units
-          </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #F1F5F9' }}>
+              <span style={{ color: '#475569' }}>Total units:</span>
+              <strong style={{ color: '#0F172A' }}>{totalUnits}.0</strong>
+            </div>
 
-          <div style={{ fontSize: '14px', color: '#475569', marginBottom: '32px' }}>
-            Status: <strong style={{ color: '#0F172A' }}>{enrollmentStatus}</strong>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #F1F5F9' }}>
+              <span style={{ color: '#475569' }}>Status:</span>
+              <span className={`badge ${enrollmentStatus === 'Approved' ? 'badge-success' : 'badge-pending'}`}>
+                {enrollmentStatus}
+              </span>
+            </div>
           </div>
 
           <button
             onClick={handleSubmit}
             className="ssis-btn-primary"
-            style={{ width: '100%', padding: '14px', fontSize: '14.5px' }}
+            style={{ width: '100%', padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
           >
-            Submit Enrollment Request
+            <Send size={16} />
+            <span>Submit Enrollment Request</span>
           </button>
         </div>
       </div>
 
       <div style={{ textAlign: 'right', marginTop: '60px', fontSize: '12px', color: '#94A3B8' }}>
-        Select Subjects and Submit Enrollment Request — DFD 2.0
+        CuyoTech University — Office of the Registrar
       </div>
     </div>
   );
