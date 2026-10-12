@@ -21,7 +21,7 @@ export const RegistrarDocumentsQueueView = () => {
   ];
 
   const filteredRequests = allRequests.filter(req => {
-    const q = searchQuery.toLowerCase();
+    const q = (searchQuery || '').toLowerCase();
     const studentName = req.studentName || req.student || 'Student';
     const docName = req.document || req.request || '';
     const matchesSearch = !q || studentName.toLowerCase().includes(q) || docName.toLowerCase().includes(q);

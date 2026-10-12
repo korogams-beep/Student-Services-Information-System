@@ -1,19 +1,22 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { ShieldCheck, CheckCircle2, Clock, Send, Check } from 'lucide-react';
-
 export const StudentClearanceView = () => {
   const { 
     currentUser, 
     clearanceList, 
-    clearedCount, 
+    studentClearanceMap,
     applyForClearanceReview,
     applyForAllClearanceDepartments,
     showToast, 
     recordAuditLog 
   } = useApp();
 
-  const pendingDepartments = clearanceList.filter(c => c.status !== 'Cleared');
+  const activeStudentId = currentUser?.student_id_number || currentUser?.studentId || '2026-0001';
+
+  const myClearanceList = (studentClearanceMap && studentClearanceMap[activeStudentId]) || clearanceList;
+  const pendingDepartments = myClearanceList.filter(c => c.status !== 'Cleared');
+  const myClearedCount = myClearanceList.filter(c => c.status === 'Cleared').length;
   const [selectedDept, setSelectedDept] = useState(pendingDepartments[0]?.department || 'University Library');
 
   const handleSubmitClearance = (deptToApply = null) => {
@@ -36,7 +39,7 @@ export const StudentClearanceView = () => {
     }
   };
 
-  const isAllCleared = clearanceList.length > 0 && clearedCount === clearanceList.length;
+  const isAllCleared = myClearanceList.length > 0 && myClearedCount === myClearanceList.length;
 
   return (
     <div className="ssis-canvas">
@@ -59,7 +62,7 @@ export const StudentClearanceView = () => {
               </tr>
             </thead>
             <tbody>
-              {clearanceList.map(c => (
+              {myClearanceList.map(c => (
                 <tr key={c.id}>
                   <td>
                     <div style={{ fontWeight: '600', color: '#0F172A' }}>{c.department}</div>
@@ -108,7 +111,7 @@ export const StudentClearanceView = () => {
               DEPARTMENTS CLEARED
             </div>
             <div style={{ fontSize: '38px', fontWeight: '900', letterSpacing: '-0.5px' }}>
-              {clearedCount} OF {clearanceList.length}
+              {myClearedCount} OF {myClearanceList.length}
             </div>
             <p style={{ fontSize: '12.5px', marginTop: '10px', opacity: 0.9 }}>
               {isAllCleared ? '✓ Fully cleared across all university offices.' : 'Action required from remaining department heads.'}

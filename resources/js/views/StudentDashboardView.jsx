@@ -2,11 +2,14 @@ import React from 'react';
 import { useApp } from '../context/AppContext';
 
 export const StudentDashboardView = () => {
-  const { currentUser, setCurrentView, gradeReports, studentGradesMap } = useApp();
+  const { currentUser, setCurrentView, gradeReports, studentGradesMap, registrarQueue } = useApp();
 
   const activeStudentId = currentUser?.student_id_number || currentUser?.studentId || '2026-0001';
+  const myEnrollment = registrarQueue.find(q => q.studentIdNumber === activeStudentId || q.studentId === currentUser?.id);
   const myGrades = studentGradesMap[activeStudentId] || gradeReports || [];
-  const enrolledUnits = myGrades.reduce((sum, g) => sum + (Number(g.units) || 0), 0);
+  const gradedUnits = myGrades.reduce((sum, g) => sum + (Number(g.units) || 0), 0);
+  const enrolledUnits = myEnrollment ? (myEnrollment.totalUnits || 0) : gradedUnits;
+  const isEnrolled = enrolledUnits > 0 || !!myEnrollment;
 
   return (
     <div className="ssis-canvas">

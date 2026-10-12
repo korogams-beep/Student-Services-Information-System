@@ -4,7 +4,7 @@ import { Printer, Download, CheckCircle, FileText } from 'lucide-react';
 import { printIsolatedElement, downloadPdfFromElement } from '../utils/pdfExport';
 
 export const CertificateOfRegistrationView = () => {
-  const { currentUser, demoUsers, showToast, scheduleCourses, registrarQueue } = useApp();
+  const { currentUser, demoUsers, showToast, scheduleCourses, registrarQueue, studentEnrollmentSelections } = useApp();
 
   const isStudentUser = currentUser?.role === 'Student';
   const registeredStudents = demoUsers.filter(u => u.role === 'Student');
@@ -31,16 +31,19 @@ export const CertificateOfRegistrationView = () => {
          } : null);
   }
 
-  // Enrolled subjects for this student (from approved enrollment request or active schedule)
+  // Enrolled subjects for this student (from approved enrollment request or active selections)
   const studentIdToMatch = student?.student_id_number || student?.studentId || student?.id;
   const approvedEnrollment = registrarQueue?.find(q => 
     q.studentIdNumber === studentIdToMatch || 
     q.studentId === studentIdToMatch || 
     q.studentName === student?.name
   );
+  const studentSelectedIds = studentEnrollmentSelections?.[studentIdToMatch] || [];
+  const selectedFromCatalog = scheduleCourses.filter(c => studentSelectedIds.includes(c.id));
+
   const enrolledCourses = (approvedEnrollment?.courses && approvedEnrollment.courses.length > 0)
     ? approvedEnrollment.courses
-    : (isStudentUser ? scheduleCourses.filter(c => c.selected) : []);
+    : (selectedFromCatalog.length > 0 ? selectedFromCatalog : (isStudentUser ? scheduleCourses.filter(c => c.selected) : []));
   const totalUnits = enrolledCourses.reduce((sum, c) => sum + (Number(c.units) || 0), 0);
 
   const handlePrint = () => {

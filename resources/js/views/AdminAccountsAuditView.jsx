@@ -19,6 +19,9 @@ export const AdminAccountsAuditView = () => {
   const { 
     currentView,
     setCurrentView,
+    currentUser,
+    setCurrentUser,
+    setDemoUsers,
     adminUsersList, 
     setAdminUsersList, 
     auditLogsList, 
@@ -44,7 +47,11 @@ export const AdminAccountsAuditView = () => {
   const handleToggleStatus = (user) => {
     const newStatus = user.account === 'Active' ? 'Disabled' : 'Active';
     setAdminUsersList(prev =>
-      prev.map(u => u.id === user.id ? { ...u, account: newStatus } : u)
+      prev.map(u => (u.id === user.id || (u.email && u.email === user.email)) ? { ...u, account: newStatus } : u)
+    );
+
+    setDemoUsers(prev =>
+      prev.map(u => (u.id === user.id || (u.email && u.email === user.email)) ? { ...u, status: newStatus } : u)
     );
 
     showToast(`Account status for ${user.name} changed to ${newStatus}.`);
@@ -54,6 +61,39 @@ export const AdminAccountsAuditView = () => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
     }).catch(err => console.log('Client-side synced', err));
+  };
+
+  const handleRoleChange = (user, newRole) => {
+    if (user.role === newRole) return;
+    const oldRole = user.role;
+
+    // 1. Update in admin users list
+    setAdminUsersList(prev =>
+      prev.map(u => (u.id === user.id || (u.email && u.email === user.email)) ? { ...u, role: newRole } : u)
+    );
+
+    // 2. Synchronize in demoUsers
+    setDemoUsers(prev =>
+      prev.map(u => (u.id === user.id || (u.email && u.email === user.email)) ? { ...u, role: newRole } : u)
+    );
+
+    // 3. If currently logged-in user, update session
+    if (currentUser && (currentUser.id === user.id || (currentUser.email && currentUser.email === user.email))) {
+      setCurrentUser(prev => ({ ...prev, role: newRole }));
+    }
+
+    showToast(`Role for ${user.name} changed to ${newRole}.`);
+    recordAuditLog(`Role updated to ${newRole}`, `V. Ramos • ${user.name} (was ${oldRole})`);
+
+    fetch(`/api/admin/users/${user.id}/change-role`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: newRole }),
+    }).catch(err => console.log('Client-side synced', err));
+  };
+
+  const getRoleActiveCount = (roleName) => {
+    return adminUsersList.filter(u => u.role === roleName && u.account === 'Active').length;
   };
 
   const handleSaveSettings = (e) => {
@@ -175,13 +215,27 @@ export const AdminAccountsAuditView = () => {
                           </span>
                         </td>
                         <td>
-                          <span className={`badge ${
-                            user.role === 'Admin' ? 'badge-success' :
-                            user.role === 'Registrar' ? 'badge-review' :
-                            user.role === 'Cashier' ? 'badge-pending' : 'badge-danger'
-                          }`} style={{ backgroundColor: '#F1F5F9', color: '#1E293B', border: '1px solid #CBD5E1' }}>
-                            {user.role}
-                          </span>
+                          <select
+                            value={user.role}
+                            onChange={(e) => handleRoleChange(user, e.target.value)}
+                            style={{
+                              padding: '6px 12px',
+                              borderRadius: '6px',
+                              border: '1px solid #CBD5E1',
+                              fontSize: '12.5px',
+                              fontWeight: '600',
+                              backgroundColor: '#F8FAFC',
+                              color: '#0F172A',
+                              cursor: 'pointer',
+                              outline: 'none',
+                            }}
+                          >
+                            <option value="Student">Student</option>
+                            <option value="Registrar">Registrar</option>
+                            <option value="Cashier">Cashier</option>
+                            <option value="Department Staff">Department Staff</option>
+                            <option value="Admin">Admin</option>
+                          </select>
                         </td>
                         <td style={{ textAlign: 'right' }}>
                           <button
@@ -331,35 +385,35 @@ export const AdminAccountsAuditView = () => {
                   <td>Dashboard, Enrollment, Grades, Payments, Documents, Clearance</td>
                   <td>Read Personal Academic & Financial Transcript</td>
                   <td>Enroll Subjects, Request Documents, Pay Tuition</td>
-                  <td style={{ textAlign: 'right', fontWeight: '700' }}>8 Active</td>
+                  <td style={{ textAlign: 'right', fontWeight: '700' }}>{getRoleActiveCount('Student')} Active</td>
                 </tr>
                 <tr>
                   <td><strong style={{ color: '#5B21B6' }}>Registrar</strong></td>
                   <td>Enrollment Approvals, Academic Records, COR Archive, Reports</td>
                   <td>Full Academic Records & Section Transcripts</td>
                   <td>Approve Enrollments, Encode Grades, Release Documents</td>
-                  <td style={{ textAlign: 'right', fontWeight: '700' }}>1 Active</td>
+                  <td style={{ textAlign: 'right', fontWeight: '700' }}>{getRoleActiveCount('Registrar')} Active</td>
                 </tr>
                 <tr>
                   <td><strong style={{ color: '#92400E' }}>Cashier</strong></td>
                   <td>Process Payment, Recent Payments, Assessments, Receipts, Reports</td>
                   <td>Financial Assessments & Payment History</td>
                   <td>Process Tuition Payments, Issue Official Receipts, Reconcile</td>
-                  <td style={{ textAlign: 'right', fontWeight: '700' }}>1 Active</td>
+                  <td style={{ textAlign: 'right', fontWeight: '700' }}>{getRoleActiveCount('Cashier')} Active</td>
                 </tr>
                 <tr>
                   <td><strong style={{ color: '#1E40AF' }}>Department Staff</strong></td>
                   <td>Clearance Requests, Completed Archive, Rules, Compliance Reports</td>
                   <td>Department Student Liability & Equipment Records</td>
                   <td>Approve/Decline Clearance, Post Deficiency Remarks</td>
-                  <td style={{ textAlign: 'right', fontWeight: '700' }}>1 Active</td>
+                  <td style={{ textAlign: 'right', fontWeight: '700' }}>{getRoleActiveCount('Department Staff')} Active</td>
                 </tr>
                 <tr>
                   <td><strong style={{ color: '#166534' }}>Admin</strong></td>
                   <td>User Accounts, Audit Trail Logs, Roles Matrix, Security, Settings</td>
                   <td>Full System Database & Audit Trail</td>
                   <td>User Provisioning, Permission Override, System Configuration</td>
-                  <td style={{ textAlign: 'right', fontWeight: '700' }}>1 Active</td>
+                  <td style={{ textAlign: 'right', fontWeight: '700' }}>{getRoleActiveCount('Admin')} Active</td>
                 </tr>
               </tbody>
             </table>

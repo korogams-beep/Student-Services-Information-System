@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { X, UserPlus } from 'lucide-react';
 
 export const AddUserModal = () => {
-  const { isAddUserModalOpen, setIsAddUserModalOpen, setAdminUsersList, recordAuditLog, showToast } = useApp();
+  const { isAddUserModalOpen, setIsAddUserModalOpen, setAdminUsersList, setDemoUsers, recordAuditLog, showToast } = useApp();
   const [formData, setFormData] = useState({
     name: '',
     role: 'Student',
@@ -25,9 +25,14 @@ export const AddUserModal = () => {
       name: formData.name,
       role: formData.role,
       account: 'Active',
+      status: 'Active',
+      email: formData.email || `${formData.username.toLowerCase()}@cuyotech.edu.ph`,
+      username: formData.username,
+      initials: formData.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
     };
 
     setAdminUsersList(prev => [...prev, newUser]);
+    setDemoUsers(prev => [...prev, newUser]);
     recordAuditLog('Account created', `V. Ramos • ${newUser.name} (${newUser.role})`);
     showToast(`User ${newUser.name} provisioned successfully!`);
 

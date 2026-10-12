@@ -36,7 +36,7 @@ import { AdminAccountsAuditView } from './views/AdminAccountsAuditView';
 import { CheckCircle2 } from 'lucide-react';
 
 const MainLayout = () => {
-  const { currentView, toastMessage } = useApp();
+  const { currentView, currentUser, toastMessage } = useApp();
 
   // Route View component
   const renderCurrentView = () => {
@@ -103,7 +103,7 @@ const MainLayout = () => {
     }
   };
 
-  if (currentView === 'login') {
+  if (currentView === 'login' || !currentUser) {
     return (
       <>
         <LoginView />

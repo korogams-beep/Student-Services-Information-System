@@ -47,10 +47,67 @@ export const AppProvider = ({ children }) => {
     },
   ];
 
-  // Auth & Navigation state
-  const [demoUsers, setDemoUsers] = useState(initialUsers);
-  const [currentUser, setCurrentUser] = useState(initialUsers[0]);
-  const [currentView, setCurrentView] = useState('login');
+  // Auth & Navigation state with localStorage session persistence
+  const [demoUsers, setDemoUsers] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ssis_demo_users');
+      return saved ? JSON.parse(saved) : initialUsers;
+    } catch {
+      return initialUsers;
+    }
+  });
+
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ssis_current_user');
+      return saved ? JSON.parse(saved) : initialUsers[0];
+    } catch {
+      return initialUsers[0];
+    }
+  });
+
+  const [currentView, setCurrentView] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ssis_current_view');
+      return saved || 'login';
+    } catch {
+      return 'login';
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('ssis_demo_users', JSON.stringify(demoUsers));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [demoUsers]);
+
+  useEffect(() => {
+    if (currentUser) {
+      try {
+        localStorage.setItem('ssis_current_user', JSON.stringify(currentUser));
+      } catch (e) {
+        console.error(e);
+      }
+    } else {
+      try {
+        localStorage.removeItem('ssis_current_user');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (currentView) {
+      try {
+        localStorage.setItem('ssis_current_view', currentView);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, [currentView]);
   const [searchQuery, setSearchQuery] = useState('');
   const [toastMessage, setToastMessage] = useState(null);
   const [activeReceipt, setActiveReceipt] = useState(null);
@@ -86,6 +143,10 @@ export const AppProvider = ({ children }) => {
   // Student Document Requests Data (Starts empty; populated when student applies)
   const [documentRequests, setDocumentRequests] = useState([]);
 
+  // Per-student isolated states to prevent session bleeding
+  const [studentEnrollmentSelections, setStudentEnrollmentSelections] = useState({});
+  const [studentClearanceMap, setStudentClearanceMap] = useState({});
+
   // Student Clearance Data (Default: all 5 university departments Pending; 0 Cleared)
   const [clearanceList, setClearanceList] = useState([
     { id: 1, department: 'University Library', lastUpdated: 'Pending Review', status: 'Pending', remarks: 'Awaiting book return audit' },
@@ -119,12 +180,28 @@ export const AppProvider = ({ children }) => {
   ]);
 
   // Admin User Accounts & Audit Logs
-  const [adminUsersList, setAdminUsersList] = useState([
-    { id: 2, name: 'Ramon Alcantara', role: 'Registrar', account: 'Active', email: 'r.alcantara@cuyotech.edu.ph' },
-    { id: 3, name: 'Leah Navarro', role: 'Cashier', account: 'Active', email: 'l.navarro@cuyotech.edu.ph' },
-    { id: 4, name: 'Dina Flores', role: 'Department Staff', account: 'Active', email: 'd.flores@cuyotech.edu.ph' },
-    { id: 5, name: 'Victor Ramos', role: 'Admin', account: 'Active', email: 'v.ramos@cuyotech.edu.ph' },
-  ]);
+  const [adminUsersList, setAdminUsersList] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ssis_admin_users');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return [
+      { id: 2, name: 'Ramon Alcantara', role: 'Registrar', account: 'Active', email: 'r.alcantara@cuyotech.edu.ph' },
+      { id: 3, name: 'Leah Navarro', role: 'Cashier', account: 'Active', email: 'l.navarro@cuyotech.edu.ph' },
+      { id: 4, name: 'Dina Flores', role: 'Department Staff', account: 'Active', email: 'd.flores@cuyotech.edu.ph' },
+      { id: 5, name: 'Victor Ramos', role: 'Admin', account: 'Active', email: 'v.ramos@cuyotech.edu.ph' },
+    ];
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('ssis_admin_users', JSON.stringify(adminUsersList));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [adminUsersList]);
 
   const [auditLogsList, setAuditLogsList] = useState([
     { id: 1, time: '10:42 AM', action: 'System initialized', detail: 'CuyoTech SSIS Database connected', user: 'System' },
@@ -295,8 +372,8 @@ export const AppProvider = ({ children }) => {
       status: 'Unpaid',
       units: units,
       items: [
-        { id: 1, feeType: `Tuition & Laboratory (${units} units @ 1,500/unit)`, amount: tuitionAmount },
-        { id: 2, feeType: 'Registration, Library & Athletic Fee', amount: miscAmount },
+        { id: 1, category: `Tuition & Laboratory (${units} units @ 1,500/unit)`, feeType: `Tuition & Laboratory (${units} units @ 1,500/unit)`, amount: tuitionAmount },
+        { id: 2, category: 'Registration, Library & Athletic Fee', feeType: 'Registration, Library & Athletic Fee', amount: miscAmount },
       ]
     };
 
@@ -550,7 +627,16 @@ export const AppProvider = ({ children }) => {
 
   // Logout
   const handleLogout = () => {
+    setCurrentUser(null);
+    try {
+      localStorage.removeItem('ssis_current_user');
+      localStorage.setItem('ssis_current_view', 'login');
+    } catch (e) {
+      console.error(e);
+    }
     setCurrentView('login');
+    setScheduleCourses(prev => prev.map(c => ({ ...c, selected: false })));
+    setSearchQuery('');
     showToast('Logged out of CuyoTech University SSIS.');
   };
 
@@ -570,6 +656,11 @@ export const AppProvider = ({ children }) => {
       if (res.ok) {
         const data = await res.json();
         if (data.user) {
+          if (data.user.status === 'Disabled' || data.user.account === 'Disabled') {
+            showToast('This account has been deactivated. Please contact the administrator.');
+            return { success: false };
+          }
+
           setCurrentUser(data.user);
           setDemoUsers(prev => {
             if (!prev.some(u => u.id === data.user.id || u.email === data.user.email)) {
@@ -603,6 +694,12 @@ export const AppProvider = ({ children }) => {
           showToast(`Welcome back, ${data.user.name}!`);
           return { success: true, user: data.user };
         }
+      } else {
+        const errData = await res.json().catch(() => null);
+        if (errData?.message) {
+          showToast(errData.message);
+          return { success: false };
+        }
       }
     } catch (err) {
       console.log('Login API network error, trying local demo users:', err);
@@ -617,6 +714,11 @@ export const AppProvider = ({ children }) => {
     );
 
     if (found) {
+      if (found.status === 'Disabled' || found.account === 'Disabled') {
+        showToast('This account has been deactivated. Please contact the administrator.');
+        return { success: false };
+      }
+
       setCurrentUser(found);
       if (found.role === 'Student') {
         const sId = found.student_id_number;
@@ -668,6 +770,18 @@ export const AppProvider = ({ children }) => {
           setGradeReports([]);
           setAssessedFees([]);
           setDocumentRequests([]);
+
+          const freshClearance = [
+            { id: 1, department: 'University Library', lastUpdated: 'Pending Review', status: 'Pending', remarks: 'Awaiting book return audit' },
+            { id: 2, department: 'Computer Laboratory', lastUpdated: 'Pending Review', status: 'Pending', remarks: 'Awaiting workstation & equipment check' },
+            { id: 3, department: 'Guidance & Counseling', lastUpdated: 'Pending Review', status: 'Pending', remarks: 'Awaiting student counseling verification' },
+            { id: 4, department: 'Office of Student Affairs', lastUpdated: 'Pending Review', status: 'Pending', remarks: 'Awaiting student organization clearance' },
+            { id: 5, department: 'College Dean', lastUpdated: 'Pending Review', status: 'Pending', remarks: 'Awaiting Dean final sign-off' },
+          ];
+          setClearanceList(freshClearance);
+          setStudentClearanceMap(prev => ({ ...prev, [newUser.student_id_number]: freshClearance }));
+          setStudentEnrollmentSelections(prev => ({ ...prev, [newUser.student_id_number]: [] }));
+          setScheduleCourses(prev => prev.map(c => ({ ...c, selected: false })));
 
           setStudentAssessmentsList(prev => [
             { id: Date.now(), studentId: newUser.student_id_number, name: newUser.name, program: newUser.program, totalAssessed: 0.00, totalPaid: 0.00, balance: 0.00, status: 'Unassessed' },
@@ -732,6 +846,18 @@ export const AppProvider = ({ children }) => {
       setAssessedFees([]);
       setDocumentRequests([]);
 
+      const freshClearance = [
+        { id: 1, department: 'University Library', lastUpdated: 'Pending Review', status: 'Pending', remarks: 'Awaiting book return audit' },
+        { id: 2, department: 'Computer Laboratory', lastUpdated: 'Pending Review', status: 'Pending', remarks: 'Awaiting workstation & equipment check' },
+        { id: 3, department: 'Guidance & Counseling', lastUpdated: 'Pending Review', status: 'Pending', remarks: 'Awaiting student counseling verification' },
+        { id: 4, department: 'Office of Student Affairs', lastUpdated: 'Pending Review', status: 'Pending', remarks: 'Awaiting student organization clearance' },
+        { id: 5, department: 'College Dean', lastUpdated: 'Pending Review', status: 'Pending', remarks: 'Awaiting Dean final sign-off' },
+      ];
+      setClearanceList(freshClearance);
+      setStudentClearanceMap(prev => ({ ...prev, [studentIdNum]: freshClearance }));
+      setStudentEnrollmentSelections(prev => ({ ...prev, [studentIdNum]: [] }));
+      setScheduleCourses(prev => prev.map(c => ({ ...c, selected: false })));
+
       setStudentAssessmentsList(prev => [
         { id: Date.now(), studentId: studentIdNum, name: newUser.name, program: newUser.program, totalAssessed: 0.00, totalPaid: 0.00, balance: 0.00, status: 'Unassessed' },
         ...prev,
@@ -788,6 +914,21 @@ export const AppProvider = ({ children }) => {
             const newOnes = dbStudents.filter(s => !existingEmails.has(s.email));
             return [...prev, ...newOnes];
           });
+
+          // Sync database students into adminUsersList so admin can manage them
+          setAdminUsersList(prev => {
+            const existingIds = new Set(prev.map(p => p.id || p.email));
+            const newStudentsForAdmin = dbStudents
+              .filter(s => !existingIds.has(s.id) && !existingIds.has(s.email))
+              .map(s => ({
+                id: s.id,
+                name: s.name,
+                role: 'Student',
+                account: s.status || 'Active',
+                email: s.email,
+              }));
+            return [...prev, ...newStudentsForAdmin];
+          });
         }
       })
       .catch(err => console.log('Running in client state with real-time reactivity:', err));
@@ -797,6 +938,7 @@ export const AppProvider = ({ children }) => {
     <AppContext.Provider
       value={{
         demoUsers,
+        setDemoUsers,
         currentUser,
         setCurrentUser,
         currentView,
@@ -817,6 +959,10 @@ export const AppProvider = ({ children }) => {
         recordAuditLog,
 
         // Student Enrollment
+        studentEnrollmentSelections,
+        setStudentEnrollmentSelections,
+        studentClearanceMap,
+        setStudentClearanceMap,
         scheduleCourses,
         setScheduleCourses,
         enrollmentStatus,

@@ -8,11 +8,21 @@ export const StudentPaymentsView = () => {
     assessedFees, 
     paymentHistory, 
     outstandingBalance, 
+    studentAssessmentsList,
     setActiveReceipt 
   } = useApp();
 
   const activeStudentId = currentUser?.student_id_number || currentUser?.studentId || '2026-0001';
   const studentPayments = paymentHistory.filter(p => !p.studentId || p.studentId === activeStudentId);
+
+  // Strictly resolve active student's personal assessment record
+  const activeAssessment = studentAssessmentsList?.find(a => a.studentId === activeStudentId);
+  const displayAssessedFees = (activeAssessment?.items && activeAssessment.items.length > 0)
+    ? activeAssessment.items
+    : assessedFees;
+  const displayOutstandingBalance = activeAssessment !== undefined
+    ? Number(activeAssessment.balance || 0)
+    : Number(outstandingBalance || 0);
 
   const handleViewReceipt = (payment) => {
     setActiveReceipt({
@@ -38,7 +48,7 @@ export const StudentPaymentsView = () => {
       <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '32px', marginBottom: '40px', alignItems: 'stretch' }}>
         {/* Left Assessment Table */}
         <div className="ssis-table-container">
-          {assessedFees.length === 0 ? (
+          {displayAssessedFees.length === 0 ? (
             <div style={{ padding: '36px 20px', textAlign: 'center', color: '#64748B' }}>
               <CreditCard size={36} color="#94A3B8" style={{ margin: '0 auto 10px' }} />
               <h4 style={{ fontSize: '15px', fontWeight: '700', color: '#1E293B', marginBottom: '6px' }}>
@@ -57,9 +67,9 @@ export const StudentPaymentsView = () => {
                 </tr>
               </thead>
               <tbody>
-                {assessedFees.map(item => (
+                {displayAssessedFees.map(item => (
                   <tr key={item.id}>
-                    <td style={{ fontWeight: '500' }}>{item.category}</td>
+                    <td style={{ fontWeight: '500' }}>{item.category || item.feeType || 'Tuition Assessment'}</td>
                     <td style={{ textAlign: 'right', fontWeight: '600' }}>
                       PHP {Number(item.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </td>
@@ -76,10 +86,10 @@ export const StudentPaymentsView = () => {
             OUTSTANDING BALANCE
           </div>
           <div style={{ fontSize: '38px', fontWeight: '900', letterSpacing: '-0.5px', lineHeight: 1.1 }}>
-            PHP {Number(outstandingBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            PHP {displayOutstandingBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
           </div>
           <p style={{ fontSize: '12px', marginTop: '12px', opacity: 0.85, margin: '12px 0 0' }}>
-            {outstandingBalance > 0 
+            {displayOutstandingBalance > 0 
               ? 'Payable at the CuyoTech University Cashier counter (Counter 3).' 
               : 'No pending financial obligations for this academic term.'}
           </p>

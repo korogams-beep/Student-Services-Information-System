@@ -27,6 +27,7 @@ export const DepartmentClearanceView = () => {
     showToast,
     recordAuditLog,
     setClearanceList,
+    setStudentClearanceMap,
     searchQuery
   } = useApp();
 
@@ -67,6 +68,27 @@ export const DepartmentClearanceView = () => {
       } : c)
     );
 
+    if (item.studentId && setStudentClearanceMap) {
+      setStudentClearanceMap(prev => {
+        const studentList = prev[item.studentId] || [
+          { id: 1, department: 'University Library', lastUpdated: 'Pending Review', status: 'Pending', remarks: 'Awaiting book return audit' },
+          { id: 2, department: 'Computer Laboratory', lastUpdated: 'Pending Review', status: 'Pending', remarks: 'Awaiting workstation & equipment check' },
+          { id: 3, department: 'Guidance & Counseling', lastUpdated: 'Pending Review', status: 'Pending', remarks: 'Awaiting student counseling verification' },
+          { id: 4, department: 'Office of Student Affairs', lastUpdated: 'Pending Review', status: 'Pending', remarks: 'Awaiting student organization clearance' },
+          { id: 5, department: 'College Dean', lastUpdated: 'Pending Review', status: 'Pending', remarks: 'Awaiting Dean final sign-off' },
+        ];
+        return {
+          ...prev,
+          [item.studentId]: studentList.map(c => c.department === item.department ? {
+            ...c,
+            status: 'Cleared',
+            remarks: 'Cleared by Department Staff (D. Flores)',
+            lastUpdated: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          } : c)
+        };
+      });
+    }
+
     showToast(`Clearance approved for ${item.studentName} (${item.department}).`);
     recordAuditLog('Clearance approved', `D. Flores • ${item.studentName} (${item.department})`);
 
@@ -95,6 +117,27 @@ export const DepartmentClearanceView = () => {
       date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
     };
     setCompletedClearanceList(prev => [completedEntry, ...prev]);
+
+    if (item.studentId && setStudentClearanceMap) {
+      setStudentClearanceMap(prev => {
+        const studentList = prev[item.studentId] || [
+          { id: 1, department: 'University Library', lastUpdated: 'Pending Review', status: 'Pending', remarks: 'Awaiting book return audit' },
+          { id: 2, department: 'Computer Laboratory', lastUpdated: 'Pending Review', status: 'Pending', remarks: 'Awaiting workstation & equipment check' },
+          { id: 3, department: 'Guidance & Counseling', lastUpdated: 'Pending Review', status: 'Pending', remarks: 'Awaiting student counseling verification' },
+          { id: 4, department: 'Office of Student Affairs', lastUpdated: 'Pending Review', status: 'Pending', remarks: 'Awaiting student organization clearance' },
+          { id: 5, department: 'College Dean', lastUpdated: 'Pending Review', status: 'Pending', remarks: 'Awaiting Dean final sign-off' },
+        ];
+        return {
+          ...prev,
+          [item.studentId]: studentList.map(c => c.department === item.department ? {
+            ...c,
+            status: 'Deficient',
+            remarks: reason,
+            lastUpdated: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          } : c)
+        };
+      });
+    }
 
     showToast(`Clearance marked deficient for ${item.studentName}.`);
     recordAuditLog('Clearance declined', `D. Flores • ${item.studentName} - ${reason}`);

@@ -85,18 +85,37 @@ export const ReceiptModal = () => {
           <div style={{ borderTop: '1px solid #CBD5E1', borderBottom: '1px solid #CBD5E1', padding: '12px 0', marginBottom: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '6px' }}>
               <span>Tuition & Assessment Payment</span>
-              <span style={{ fontWeight: '700' }}>PHP {Number(activeReceipt.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+              <span style={{ fontWeight: '700' }}>PHP {Number(activeReceipt.amountApplied || activeReceipt.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#64748B' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#64748B', marginBottom: '4px' }}>
               <span>Payment Method:</span>
               <span style={{ fontWeight: '500' }}>{activeReceipt.method || 'Cash'}</span>
             </div>
+            {activeReceipt.tenderedAmount && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#64748B', marginBottom: '4px' }}>
+                <span>Amount Tendered / Received:</span>
+                <span style={{ fontWeight: '600' }}>PHP {Number(activeReceipt.tenderedAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+              </div>
+            )}
+            {Number(activeReceipt.changeDue || 0) > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#047857', fontWeight: '700', backgroundColor: '#ECFDF5', padding: '4px 6px', borderRadius: '4px', marginTop: '6px' }}>
+                <span>Change ("Sukli"):</span>
+                <span>PHP {Number(activeReceipt.changeDue).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+              </div>
+            )}
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', fontWeight: '800', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', fontWeight: '800', marginBottom: '8px' }}>
             <span>TOTAL AMOUNT PAID:</span>
-            <span>PHP {Number(activeReceipt.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+            <span>PHP {Number(activeReceipt.amountApplied || activeReceipt.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
           </div>
+
+          {activeReceipt.remainingBalance !== undefined && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#64748B', marginBottom: '18px' }}>
+              <span>Remaining Balance:</span>
+              <span style={{ fontWeight: '700' }}>PHP {Number(activeReceipt.remainingBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+            </div>
+          )}
 
           <div style={{ textAlign: 'center', fontSize: '11px', color: '#64748B', borderTop: '1px dashed #CBD5E1', paddingTop: '16px' }}>
             <p style={{ margin: '0 0 4px 0' }}>Cashier In-Charge: {activeReceipt.cashier || 'L. Navarro (Counter 3)'}</p>
