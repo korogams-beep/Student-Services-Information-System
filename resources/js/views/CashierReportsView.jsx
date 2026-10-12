@@ -83,7 +83,7 @@ export const CashierReportsView = () => {
         {/* Report Header */}
         <div style={{ textAlign: 'center', borderBottom: '2px solid #0F172A', paddingBottom: '20px', marginBottom: '28px' }}>
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-            <img src="/images/pnc-logo.png" alt="PNC Logo" style={{ width: '48px', height: '48px', objectFit: 'contain' }} />
+            <img src="/images/cuyotech-logo.png" alt="CuyoTech University Logo" style={{ width: '48px', height: '48px', objectFit: 'contain' }} />
             <div>
               <h2 style={{ fontSize: '20px', fontWeight: '900', letterSpacing: '0.5px', color: '#0F172A', margin: 0 }}>
                 CUYOTECH UNIVERSITY

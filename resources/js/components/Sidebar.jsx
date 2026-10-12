@@ -84,7 +84,7 @@ export const Sidebar = () => {
       {/* Brand Header with CuyoTech University Logo */}
       <div className="ssis-sidebar-brand" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '24px 20px' }}>
         <img 
-          src="/images/pnc-logo.png" 
+          src="/images/cuyotech-logo.png" 
           alt="CuyoTech University Logo" 
           style={{ width: '42px', height: '42px', objectFit: 'contain' }} 
         />

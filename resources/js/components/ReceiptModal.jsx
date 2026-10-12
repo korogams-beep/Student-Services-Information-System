@@ -50,7 +50,7 @@ export const ReceiptModal = () => {
         <div id="ssis-official-receipt-paper" className="receipt-paper printable-document">
           <div style={{ textAlign: 'center', borderBottom: '1px dashed #94A3B8', paddingBottom: '16px', marginBottom: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-              <img src="/images/pnc-logo.png" alt="CuyoTech Logo" style={{ width: '44px', height: '44px', objectFit: 'contain' }} />
+              <img src="/images/cuyotech-logo.png" alt="CuyoTech Logo" style={{ width: '44px', height: '44px', objectFit: 'contain' }} />
               <div>
                 <h2 style={{ fontSize: '18px', fontWeight: '900', letterSpacing: '0.5px', color: '#0F172A', margin: 0 }}>
                   CUYOTECH UNIVERSITY

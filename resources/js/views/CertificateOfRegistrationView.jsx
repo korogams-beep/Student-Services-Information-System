@@ -144,7 +144,7 @@ export const CertificateOfRegistrationView = () => {
           {/* Document Header */}
           <div style={{ textAlign: 'center', marginBottom: '18px', borderBottom: '2px solid #0F172A', paddingBottom: '14px' }}>
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-              <img src="/images/pnc-logo.png" alt="University Logo" style={{ width: '50px', height: '50px', objectFit: 'contain' }} />
+              <img src="/images/cuyotech-logo.png" alt="University Logo" style={{ width: '50px', height: '50px', objectFit: 'contain' }} />
               <div style={{ textAlign: 'center' }}>
                 <h2 style={{ fontSize: '19px', fontWeight: '900', letterSpacing: '0.5px', color: '#0F172A', margin: 0 }}>
                   CUYOTECH UNIVERSITY

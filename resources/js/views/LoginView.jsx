@@ -115,7 +115,7 @@ export const LoginView = () => {
           {/* Official CuyoTech Logo & Header */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
             <img 
-              src="/images/pnc-logo.png" 
+              src="/images/cuyotech-logo.png" 
               alt="CuyoTech University Logo" 
               style={{ width: '70px', height: '70px', objectFit: 'contain' }} 
             />

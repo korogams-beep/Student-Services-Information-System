@@ -171,7 +171,7 @@ class ErrorBoundary extends React.Component {
           padding: '24px',
           textAlign: 'center'
         }}>
-          <img src="/images/pnc-logo.png" alt="CuyoTech" style={{ width: '80px', height: '80px', marginBottom: '20px' }} />
+          <img src="/images/cuyotech-logo.png" alt="CuyoTech University Logo" style={{ width: '80px', height: '80px', marginBottom: '20px' }} />
           <h1 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px' }}>CuyoTech University — SSIS</h1>
           <p style={{ color: '#94A3B8', maxWidth: '480px', marginBottom: '24px', fontSize: '14px' }}>
             An unexpected interface error occurred. Please click below to reset and reload the application.
