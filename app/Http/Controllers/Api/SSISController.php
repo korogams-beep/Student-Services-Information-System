@@ -108,18 +108,19 @@ class SSISController extends Controller
     {
         $request->validate([
             'email' => 'required|email|unique:students,email|unique:admin_users,username',
+            'student_id_number' => 'nullable|string|unique:students,student_id_number',
             'password' => 'required|min:4',
-            'role' => 'required|string',
         ]);
 
-        $role = $request->input('role', 'Student');
+        // Public registration is strictly restricted to Student accounts
+        $role = 'Student';
         $rawName = trim((string) $request->input('name', ''));
         $nameParts = explode(' ', $rawName, 2);
         $firstName = $request->input('first_name', $nameParts[0] ?? 'New');
         $lastName = $request->input('last_name', $nameParts[1] ?? 'User');
         $passwordHash = Hash::make($request->input('password'));
 
-        if (strtolower($role) === 'student') {
+        if (true) {
             $studentIdNumber = $request->input('student_id_number')
                 ?: ('2026-'.str_pad((string) rand(1000, 9999), 5, '0', STR_PAD_LEFT));
 
@@ -255,6 +256,13 @@ class SSISController extends Controller
             ->first();
 
         if ($student) {
+            if ($student->account_status === 'Disabled') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Your student account has been deactivated. Please contact the University Registrar or Administrator.',
+                ], 403);
+            }
+
             $initials = strtoupper(substr($student->first_name, 0, 1).substr($student->last_name, 0, 1));
             $suffix = $student->year_level === 1 ? 'st Year' : ($student->year_level === 2 ? 'nd Year' : ($student->year_level === 3 ? 'rd Year' : 'th Year'));
 
@@ -284,6 +292,12 @@ class SSISController extends Controller
             ->first();
 
         if ($admin) {
+            if ($admin->account_status === 'Disabled') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Your staff account has been deactivated. Please contact the System Administrator.',
+                ], 403);
+            }
             $parts = explode(' ', $admin->name);
             $initials = strtoupper(substr($parts[0], 0, 1).(isset($parts[1]) ? substr($parts[1], 0, 1) : 'A'));
 
@@ -778,5 +792,74 @@ class SSISController extends Controller
             'success' => true,
             'user' => $newUser,
         ]);
+    }
+
+    /**
+     * Admin change user role
+     */
+    public function changeUserRole(Request $request, int $id): JsonResponse
+    {
+        $request->validate([
+            'role' => 'required|string',
+        ]);
+
+        $newRole = $request->input('role');
+        $adminId = AdminUser::where('role', 'Admin')->first()?->id;
+
+        $user = AdminUser::find($id);
+        if ($user) {
+            $oldRole = $user->role;
+            $user->role = $newRole;
+            $user->save();
+
+            AuditLog::record(
+                "Role changed from {$oldRole} to {$newRole} (V. Ramos • {$user->name})",
+                'admin_users',
+                $user->id,
+                $adminId
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => "Role updated to {$newRole}",
+                'user' => $user,
+            ]);
+        }
+
+        $student = Student::find($id);
+        if ($student) {
+            AuditLog::record(
+                "Role changed from Student to {$newRole} (V. Ramos • {$student->full_name})",
+                'students',
+                $student->id,
+                $adminId
+            );
+
+            if ($newRole !== 'Student') {
+                $adminUser = AdminUser::updateOrCreate(
+                    ['username' => $student->username],
+                    [
+                        'name' => $student->full_name,
+                        'password_hash' => $student->password_hash,
+                        'role' => $newRole,
+                        'account_status' => $student->account_status,
+                    ]
+                );
+
+                return response()->json([
+                    'success' => true,
+                    'message' => "Role updated to {$newRole}",
+                    'user' => $adminUser,
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => "Role updated to {$newRole}",
+                'student' => $student,
+            ]);
+        }
+
+        return response()->json(['success' => false, 'message' => 'User not found'], 404);
     }
 }

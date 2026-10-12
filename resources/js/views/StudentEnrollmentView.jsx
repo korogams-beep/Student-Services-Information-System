@@ -6,19 +6,30 @@ export const StudentEnrollmentView = () => {
   const { 
     currentUser,
     scheduleCourses, 
-    setScheduleCourses, 
+    studentEnrollmentSelections,
+    setStudentEnrollmentSelections,
+    registrarQueue,
     enrollmentStatus, 
     submitEnrollmentRequest,
     showToast
   } = useApp();
 
+  const activeStudentId = currentUser?.student_id_number || currentUser?.studentId || '2026-0001';
+  const myEnrollment = registrarQueue.find(q => q.studentIdNumber === activeStudentId || q.studentId === currentUser?.id);
+
+  // Resolve active student's selected courses
+  const currentSelections = studentEnrollmentSelections[activeStudentId] ?? 
+    (myEnrollment ? (myEnrollment.courses || []).map(c => c.id) : []);
+
   const toggleCourse = (id) => {
-    setScheduleCourses(prev =>
-      prev.map(c => c.id === id ? { ...c, selected: !c.selected } : c)
-    );
+    setStudentEnrollmentSelections(prev => {
+      const existing = prev[activeStudentId] ?? (myEnrollment ? (myEnrollment.courses || []).map(c => c.id) : []);
+      const updated = existing.includes(id) ? existing.filter(x => x !== id) : [...existing, id];
+      return { ...prev, [activeStudentId]: updated };
+    });
   };
 
-  const selectedCourses = scheduleCourses.filter(c => c.selected);
+  const selectedCourses = scheduleCourses.filter(c => currentSelections.includes(c.id));
   const selectedCount = selectedCourses.length;
   const totalUnits = selectedCourses.reduce((sum, c) => sum + (Number(c.units) || 0), 0);
 
@@ -59,7 +70,7 @@ export const StudentEnrollmentView = () => {
                   <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
                     <input
                       type="checkbox"
-                      checked={!!course.selected}
+                      checked={currentSelections.includes(course.id)}
                       onChange={() => toggleCourse(course.id)}
                       style={{ width: '16px', height: '16px', accentColor: '#1E293B', cursor: 'pointer' }}
                     />

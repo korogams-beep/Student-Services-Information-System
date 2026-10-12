@@ -14,7 +14,7 @@ export const StudentGradesView = () => {
   const [selectedTerm, setSelectedTerm] = useState('2nd Semester 2025–2026');
 
   // Determine active student grades
-  const activeStudentId = currentUser.student_id_number || currentUser.studentId || '2026-0001';
+  const activeStudentId = currentUser?.student_id_number || currentUser?.studentId || '2026-0001';
   const currentGrades = studentGradesMap[activeStudentId] || gradeReports || [];
 
   // Compute official academic standing & honors eligibility
@@ -34,7 +34,7 @@ export const StudentGradesView = () => {
           <div className="ssis-page-tag">CUYOTECH UNIVERSITY • ACADEMIC RECORDS</div>
           <h1 className="ssis-page-heading">Official Grade Report</h1>
           <p className="ssis-page-desc">
-            Academic performance for <strong>{currentUser.name}</strong> ({activeStudentId}) • {currentUser.program || 'Student'}.
+            Academic performance for <strong>{currentUser?.name || 'Student'}</strong> ({activeStudentId}) • {currentUser?.program || 'Student'}.
           </p>
         </div>
 

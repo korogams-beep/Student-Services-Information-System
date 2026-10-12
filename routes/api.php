@@ -30,4 +30,5 @@ Route::post('/clearance/{id}/decide', [SSISController::class, 'decideClearance']
 
 // Admin Operations
 Route::post('/admin/users/{id}/toggle-status', [SSISController::class, 'toggleUserStatus']);
+Route::post('/admin/users/{id}/change-role', [SSISController::class, 'changeUserRole']);
 Route::post('/admin/users', [SSISController::class, 'addUser']);

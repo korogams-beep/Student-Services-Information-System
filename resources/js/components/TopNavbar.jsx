@@ -110,15 +110,22 @@ export const TopNavbar = () => {
       { id: 'security_view', title: 'Admin • Security & Access Control', role: 'Admin' },
       { id: 'system_settings_view', title: 'Admin • University System Settings', role: 'Admin' },
     ];
-    const pages = allPages.filter(p => p.title.toLowerCase().includes(query) || p.id.includes(query));
+    // Strict RBAC filtering: Students only see Student pages!
+    const permittedPages = currentUser?.role === 'Admin'
+      ? allPages
+      : allPages.filter(p => p.role === currentUser?.role);
 
-    // 2. Students & Users
-    const users = demoUsers.filter(u => 
-      u.name?.toLowerCase().includes(query) || 
-      u.student_id_number?.toLowerCase().includes(query) || 
-      u.email?.toLowerCase().includes(query) ||
-      u.role?.toLowerCase().includes(query)
-    );
+    const pages = permittedPages.filter(p => p.title.toLowerCase().includes(query) || p.id.includes(query));
+
+    // 2. Students & Users - only institutional staff and admin can search user accounts
+    const users = currentUser?.role === 'Student'
+      ? []
+      : demoUsers.filter(u => 
+          u.name?.toLowerCase().includes(query) || 
+          u.student_id_number?.toLowerCase().includes(query) || 
+          u.email?.toLowerCase().includes(query) ||
+          u.role?.toLowerCase().includes(query)
+        );
 
     // 3. Courses / Subjects
     const courses = scheduleCourses.filter(c => 
@@ -126,12 +133,16 @@ export const TopNavbar = () => {
       c.title.toLowerCase().includes(query)
     );
 
-    // 4. Receipts & Payments
-    const receipts = paymentHistory.filter(p => 
-      p.reference?.toLowerCase().includes(query) || 
-      p.studentName?.toLowerCase().includes(query) ||
-      p.method?.toLowerCase().includes(query)
-    );
+    // 4. Receipts & Payments - students only see their own receipts
+    const receipts = paymentHistory.filter(p => {
+      const isMyReceipt = currentUser?.role !== 'Student' || 
+        (!p.studentId || p.studentId === currentUser?.student_id_number || p.studentName === currentUser?.name);
+      return isMyReceipt && (
+        p.reference?.toLowerCase().includes(query) || 
+        p.studentName?.toLowerCase().includes(query) ||
+        p.method?.toLowerCase().includes(query)
+      );
+    });
 
     // 5. Official Documents
     const docs = [
@@ -153,9 +164,17 @@ export const TopNavbar = () => {
     setSearchQuery('');
 
     if (type === 'page') {
+      if (currentUser?.role !== 'Admin' && item.role !== currentUser?.role) {
+        showToast('Access Denied: You do not have permission to view that page.');
+        return;
+      }
       setCurrentView(item.id);
       showToast(`Navigated to ${item.title}`);
     } else if (type === 'user') {
+      if (currentUser?.role === 'Student') {
+        showToast('Access Denied');
+        return;
+      }
       if (item.role === 'Student') {
         setCurrentView('student_records');
       } else {
@@ -350,7 +369,7 @@ export const TopNavbar = () => {
             title="Switch user perspective"
           >
             <UserCheck size={14} color="#F1B82D" />
-            <span>Role: {currentUser.role}</span>
+            <span>Role: {currentUser?.role || 'Guest'}</span>
             <ChevronDown size={14} />
           </button>
 
@@ -369,12 +388,15 @@ export const TopNavbar = () => {
                 zIndex: 100,
               }}
             >
-              <div style={{ fontSize: '11px', fontWeight: '700', color: '#94A3B8', padding: '6px 12px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                Select Active Perspective
+              <div style={{ fontSize: '10.5px', fontWeight: '800', color: '#94A3B8', padding: '6px 12px', textTransform: 'uppercase', letterSpacing: '0.8px', borderBottom: '1px solid #F1F5F9', marginBottom: '4px' }}>
+                Demo Perspective Switcher
               </div>
-              {demoUsers.slice(0, 8).map((u) => (
+              {demoUsers
+                .filter((u, index, self) => index === self.findIndex(t => (t.id && t.id === u.id) || (t.email && t.email === u.email) || (t.student_id_number && t.student_id_number === u.student_id_number)))
+                .slice(0, 7)
+                .map((u) => (
                 <button
-                  key={u.id || u.email}
+                  key={`perspective-${u.id || u.email || u.name}`}
                   onClick={() => {
                     switchRole(u.role, u);
                     setIsRoleDropdownOpen(false);
@@ -384,13 +406,13 @@ export const TopNavbar = () => {
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     width: '100%',
-                    padding: '9px 12px',
+                    padding: '8px 12px',
                     borderRadius: '8px',
                     border: 'none',
-                    backgroundColor: currentUser.email === u.email ? '#FBE8E9' : 'transparent',
-                    color: currentUser.email === u.email ? '#9F1239' : '#1E293B',
-                    fontSize: '13px',
-                    fontWeight: currentUser.email === u.email ? '700' : '500',
+                    backgroundColor: currentUser?.email === u.email ? '#FBE8E9' : 'transparent',
+                    color: currentUser?.email === u.email ? '#9F1239' : '#1E293B',
+                    fontSize: '12.5px',
+                    fontWeight: currentUser?.email === u.email ? '700' : '500',
                     cursor: 'pointer',
                     textAlign: 'left',
                   }}
@@ -413,10 +435,10 @@ export const TopNavbar = () => {
         {/* User Avatar Circle */}
         <div
           className="ssis-avatar"
-          title={`${currentUser.name} (${currentUser.role})`}
+          title={`${currentUser?.name || 'User'} (${currentUser?.role || ''})`}
           style={{
             backgroundColor: (() => {
-              switch (currentUser.role) {
+              switch (currentUser?.role) {
                 case 'Registrar': return '#EDE9FE';
                 case 'Cashier': return '#FEF3C7';
                 case 'Department Staff': return '#DBEAFE';
@@ -425,7 +447,7 @@ export const TopNavbar = () => {
               }
             })(),
             color: (() => {
-              switch (currentUser.role) {
+              switch (currentUser?.role) {
                 case 'Registrar': return '#5B21B6';
                 case 'Cashier': return '#92400E';
                 case 'Department Staff': return '#1E40AF';
@@ -435,20 +457,20 @@ export const TopNavbar = () => {
             })(),
           }}
         >
-          {currentUser.initials || 'MS'}
+          {currentUser?.initials || 'MS'}
         </div>
 
         {/* Role & Name Label */}
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <span style={{ fontSize: '13.5px', fontWeight: '700', color: '#0F172A', lineHeight: 1.2 }}>
-            {currentUser.name}
+            {currentUser?.name || 'User'}
           </span>
           <span
             className="ssis-user-role-label"
             style={{
               fontSize: '11.5px',
               color: (() => {
-                switch (currentUser.role) {
+                switch (currentUser?.role) {
                   case 'Registrar': return '#5B21B6';
                   case 'Cashier': return '#92400E';
                   case 'Department Staff': return '#1E40AF';
@@ -459,7 +481,7 @@ export const TopNavbar = () => {
               fontWeight: '600',
             }}
           >
-            {currentUser.role}
+            {currentUser?.role || ''}
           </span>
         </div>
       </div>

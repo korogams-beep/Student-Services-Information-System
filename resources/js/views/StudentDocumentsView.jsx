@@ -37,6 +37,13 @@ export const StudentDocumentsView = () => {
     }
   };
 
+  const activeStudentId = currentUser?.student_id_number || currentUser?.studentId || '2026-0001';
+  const myDocumentRequests = documentRequests.filter(doc => 
+    doc.studentId === activeStudentId || 
+    doc.studentIdNumber === activeStudentId || 
+    doc.studentName === currentUser?.name
+  );
+
   return (
     <div className="ssis-canvas">
       <div className="ssis-page-tag">CUYOTECH UNIVERSITY • RECORDS SERVICES</div>
@@ -103,7 +110,7 @@ export const StudentDocumentsView = () => {
             Request History
           </h3>
 
-          {documentRequests.length === 0 ? (
+          {myDocumentRequests.length === 0 ? (
             <div style={{ padding: '36px 20px', textAlign: 'center', color: '#64748B' }}>
               <Clock size={36} color="#94A3B8" style={{ margin: '0 auto 10px' }} />
               <p style={{ fontSize: '13.5px', margin: 0 }}>
@@ -120,7 +127,7 @@ export const StudentDocumentsView = () => {
                 </tr>
               </thead>
               <tbody>
-                {documentRequests.map(doc => (
+                {myDocumentRequests.map(doc => (
                   <tr key={doc.id}>
                     <td>
                       <div style={{ fontWeight: '600', color: '#0F172A' }}>{doc.request}</div>

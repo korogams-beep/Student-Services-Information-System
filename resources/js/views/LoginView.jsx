@@ -43,12 +43,23 @@ export const LoginView = () => {
       return;
     }
 
+    // Prevent duplicate Student ID
+    if (signUpStudentId.trim()) {
+      const isDuplicate = demoUsers.some(u => 
+        u.student_id_number && u.student_id_number.trim().toLowerCase() === signUpStudentId.trim().toLowerCase()
+      );
+      if (isDuplicate) {
+        alert(`Student ID number "${signUpStudentId.trim()}" is already registered. Please provide your unique Student ID.`);
+        return;
+      }
+    }
+
     setIsLoading(true);
     await signUpUser({
-      name: signUpName,
-      email: signUpEmail,
-      student_id_number: signUpStudentId || `2026-${Math.floor(10000 + Math.random() * 90000)}`,
-      role: signUpRole,
+      name: signUpName.trim(),
+      email: signUpEmail.trim(),
+      student_id_number: signUpStudentId.trim() || `2026-${Math.floor(10000 + Math.random() * 90000)}`,
+      role: 'Student', // Public signup is strictly Student
       program: signUpProgram,
       year_level: parseInt(signUpYearLevel, 10),
       password: signUpPassword,
@@ -163,28 +174,10 @@ export const LoginView = () => {
                 </button>
               ))}
 
-              {studentUsers.map((u, idx) => (
-                <button
-                  key={`student-${u.id || u.email}-${idx}`}
-                  onClick={() => handleSelectQuickUser(u)}
-                  style={{
-                    background: '#9F1239',
-                    border: '1px solid #BE123C',
-                    borderRadius: '9999px',
-                    padding: '6px 14px',
-                    color: '#FFE4E6',
-                    fontSize: '12px',
-                    fontWeight: '700',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {u.name} (Student)
-                </button>
-              ))}
             </div>
 
             <div style={{ marginTop: '16px', fontSize: '12px', color: '#CBD5E1', lineHeight: 1.5, backgroundColor: 'rgba(255,255,255,0.05)', padding: '10px 14px', borderRadius: '8px' }}>
-              ℹ️ <strong>Student Experience:</strong> Create your student account via the <strong>Create Account</strong> tab. Student accounts start fresh at default 0 and populate dynamically as Registrar, Cashier, and Department Staff process your records.
+              🔒 <strong>Student Security & Privacy:</strong> Student accounts must sign in using their unique Student ID or email and password. Quick-fill is restricted to staff demo credentials.
             </div>
           </div>
         </div>
@@ -376,23 +369,15 @@ export const LoginView = () => {
                 </div>
               </div>
 
-              <div className="ssis-form-group">
-                <label className="ssis-label">Role</label>
-                <select
-                  className="ssis-select"
-                  value={signUpRole}
-                  onChange={(e) => setSignUpRole(e.target.value)}
-                >
-                  <option value="Student">Student (Default 0 Records)</option>
-                  <option value="Registrar">Registrar</option>
-                  <option value="Cashier">Cashier</option>
-                  <option value="Department Staff">Department Staff</option>
-                  <option value="Admin">Admin</option>
-                </select>
+              <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px' }}>
+                <div>
+                  <span style={{ fontSize: '11px', color: '#64748B', display: 'block', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Account Role</span>
+                  <strong style={{ fontSize: '13.5px', color: '#0F172A' }}>Student Portal Account</strong>
+                </div>
+                <span className="badge badge-success" style={{ fontSize: '11px', padding: '3px 8px' }}>Default Role</span>
               </div>
 
-              {signUpRole === 'Student' && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '12px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '12px' }}>
                   <div className="ssis-form-group">
                     <label className="ssis-label">Academic Program</label>
                     <select
@@ -419,9 +404,8 @@ export const LoginView = () => {
                     </select>
                   </div>
                 </div>
-              )}
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div className="ssis-form-group">
                   <label className="ssis-label">Password</label>
                   <input
