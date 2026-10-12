@@ -1,49 +1,115 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+export const getRolePrefix = (role) => {
+  switch (role) {
+    case 'Registrar': return 'REG';
+    case 'Cashier': return 'CSH';
+    case 'Department Staff':
+    case 'DepartmentStaff': return 'STF';
+    case 'Admin': return 'ADM';
+    case 'Student':
+    default: return 'STU';
+  }
+};
+
+export const generateUniqueAccountId = (role, existingUsers = []) => {
+  const prefix = getRolePrefix(role);
+  const year = '2026';
+  let candidate = '';
+  let attempts = 0;
+  do {
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    candidate = `${prefix}-${year}-${randomNum}`;
+    attempts++;
+  } while (
+    attempts < 50 &&
+    existingUsers.some(u =>
+      (u.account_id && u.account_id.toLowerCase() === candidate.toLowerCase()) ||
+      (u.student_id_number && u.student_id_number.toLowerCase() === candidate.toLowerCase()) ||
+      (u.username && u.username.toLowerCase() === candidate.toLowerCase())
+    )
+  );
+  return candidate;
+};
+
+export const reassignRoleAccountId = (currentId, newRole, existingUsers = []) => {
+  const newPrefix = getRolePrefix(newRole);
+  const year = '2026';
+  // Try to preserve the unique numeric sequence from existing ID if available
+  const match = (currentId || '').match(/\d{4,}$/);
+  const suffixNum = match ? match[0] : Math.floor(1000 + Math.random() * 9000).toString();
+  let candidate = `${newPrefix}-${year}-${suffixNum}`;
+
+  let attempts = 0;
+  while (
+    attempts < 50 &&
+    existingUsers.some(u =>
+      ((u.account_id && u.account_id.toLowerCase() === candidate.toLowerCase() && u.account_id !== currentId) ||
+       (u.student_id_number && u.student_id_number.toLowerCase() === candidate.toLowerCase() && u.student_id_number !== currentId))
+    )
+  ) {
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    candidate = `${newPrefix}-${year}-${randomNum}`;
+    attempts++;
+  }
+  return candidate;
+};
+
 const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
   // Institutional Staff Accounts for CuyoTech University
-  // Per requirement: Dummy data is strictly for Cashier, Registrar, Dept Staff, and Admin.
-  // Student accounts start fresh with all default 0 upon Sign Up.
+  // Per requirement: Each account ID matches its assigned role (REG, CSH, STF, ADM, STU).
   const initialUsers = [
     {
       id: 2,
       name: 'Ramon Alcantara',
       email: 'r.alcantara@cuyotech.edu.ph',
       username: 'r.alcantara',
+      account_id: 'REG-2026-0001',
+      student_id_number: 'REG-2026-0001',
       role: 'Registrar',
       initials: 'RA',
       status: 'Active',
+      account: 'Active',
     },
     {
       id: 3,
       name: 'Leah Navarro',
       email: 'l.navarro@cuyotech.edu.ph',
       username: 'l.navarro',
+      account_id: 'CSH-2026-0001',
+      student_id_number: 'CSH-2026-0001',
       role: 'Cashier',
       initials: 'LN',
       counterNo: 3,
       status: 'Active',
+      account: 'Active',
     },
     {
       id: 4,
       name: 'Dina Flores',
       email: 'd.flores@cuyotech.edu.ph',
       username: 'd.flores',
+      account_id: 'STF-2026-0001',
+      student_id_number: 'STF-2026-0001',
       role: 'Department Staff',
       initials: 'DF',
       department: 'College of Computing Studies',
       status: 'Active',
+      account: 'Active',
     },
     {
       id: 5,
       name: 'Victor Ramos',
       email: 'v.ramos@cuyotech.edu.ph',
       username: 'v.ramos',
+      account_id: 'ADM-2026-0001',
+      student_id_number: 'ADM-2026-0001',
       role: 'Admin',
       initials: 'VR',
       status: 'Active',
+      account: 'Active',
     },
   ];
 
@@ -890,6 +956,7 @@ export const AppProvider = ({ children }) => {
     // Client-side fallback check
     const found = demoUsers.find(u =>
       (u.email?.toLowerCase() === emailOrId.toLowerCase()) ||
+      (u.account_id?.toLowerCase() === emailOrId.toLowerCase()) ||
       (u.student_id_number?.toLowerCase() === emailOrId.toLowerCase()) ||
       (u.username?.toLowerCase() === emailOrId.toLowerCase()) ||
       (u.name?.toLowerCase() === emailOrId.toLowerCase())
@@ -908,7 +975,7 @@ export const AppProvider = ({ children }) => {
 
       setCurrentUser(found);
       if (found.role === 'Student') {
-        const sId = found.student_id_number;
+        const sId = found.account_id || found.student_id_number;
         const studentGrades = studentGradesMap[sId] || [];
         setGradeReports(studentGrades);
         setCurrentView('dashboard');
@@ -927,22 +994,38 @@ export const AppProvider = ({ children }) => {
 
   // Sign Up / Register new account (Stored in MySQL backend and local state)
   // Per requirement: All student info starts as default 0.
+  // IDs strictly match the role prefix (STU, REG, CSH, STF, ADM).
   const signUpUser = async (formData) => {
+    const assignedRole = formData.role || 'Student';
+    const assignedId = formData.account_id || formData.student_id_number || generateUniqueAccountId(assignedRole, demoUsers);
+    const enrichedFormData = {
+      ...formData,
+      role: assignedRole,
+      account_id: assignedId,
+      student_id_number: assignedId,
+    };
+
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(enrichedFormData),
       });
 
       if (res.ok) {
         const data = await res.json();
-        const newUser = data.user;
+        const serverUser = data.user || {};
+        const newUser = {
+          ...serverUser,
+          account_id: serverUser.account_id || serverUser.student_id_number || assignedId,
+          student_id_number: serverUser.student_id_number || serverUser.account_id || assignedId,
+          role: serverUser.role || assignedRole,
+        };
 
         // Register in demoUsers & adminUsersList
         setDemoUsers(prev => [newUser, ...prev]);
         setAdminUsersList(prev => [
-          { id: newUser.id, name: newUser.name, role: newUser.role, account: 'Active', email: newUser.email },
+          { id: newUser.id, name: newUser.name, role: newUser.role, account: 'Active', email: newUser.email, account_id: newUser.account_id, student_id_number: newUser.student_id_number },
           ...prev,
         ]);
 
@@ -1000,25 +1083,26 @@ export const AppProvider = ({ children }) => {
 
     // Client-side fallback registration
     const fallbackId = Date.now();
-    const studentIdNum = formData.student_id_number || `2026-${Math.floor(10000 + Math.random() * 90000)}`;
-    const nameParts = formData.name.split(' ');
+    const nameParts = (formData.name || 'New User').trim().split(' ');
     const initials = (nameParts[0]?.[0] || 'U') + (nameParts[1]?.[0] || 'S');
 
     const newUser = {
       id: fallbackId,
       name: formData.name,
       email: formData.email,
-      student_id_number: studentIdNum,
-      role: formData.role || 'Student',
+      account_id: assignedId,
+      student_id_number: assignedId,
+      role: assignedRole,
       initials: initials.toUpperCase(),
       program: formData.program || 'BS Computer Science',
       yearLevel: formData.year_level ? `${formData.year_level} Year` : '1st Year',
       status: 'Active',
+      account: 'Active',
     };
 
     setDemoUsers(prev => [newUser, ...prev]);
     setAdminUsersList(prev => [
-      { id: newUser.id, name: newUser.name, role: newUser.role, account: 'Active', email: newUser.email },
+      { id: newUser.id, name: newUser.name, role: newUser.role, account: 'Active', email: newUser.email, account_id: assignedId, student_id_number: assignedId },
       ...prev,
     ]);
 
@@ -1026,7 +1110,7 @@ export const AppProvider = ({ children }) => {
       // Fresh student: ALL DEFAULT 0!
       setStudentGradesMap(prev => ({
         ...prev,
-        [studentIdNum]: [],
+        [assignedId]: [],
       }));
 
       setGradeReports([]);
@@ -1041,18 +1125,18 @@ export const AppProvider = ({ children }) => {
         { id: 5, department: 'College Dean', lastUpdated: 'Pending Review', status: 'Pending', remarks: 'Awaiting Dean final sign-off' },
       ];
       setClearanceList(freshClearance);
-      setStudentClearanceMap(prev => ({ ...prev, [studentIdNum]: freshClearance }));
-      setStudentEnrollmentSelections(prev => ({ ...prev, [studentIdNum]: [] }));
+      setStudentClearanceMap(prev => ({ ...prev, [assignedId]: freshClearance }));
+      setStudentEnrollmentSelections(prev => ({ ...prev, [assignedId]: [] }));
       setScheduleCourses(prev => prev.map(c => ({ ...c, selected: false })));
 
       setStudentAssessmentsList(prev => [
-        { id: Date.now(), studentId: studentIdNum, name: newUser.name, program: newUser.program, totalAssessed: 0.00, totalPaid: 0.00, balance: 0.00, status: 'Unassessed' },
+        { id: Date.now(), studentId: assignedId, name: newUser.name, program: newUser.program, totalAssessed: 0.00, totalPaid: 0.00, balance: 0.00, status: 'Unassessed' },
         ...prev,
       ]);
 
       setEncodeGradesList(prev => [
         ...prev,
-        { id: Date.now(), studentId: studentIdNum, studentName: newUser.name, grade: '1.75' },
+        { id: Date.now(), studentId: assignedId, studentName: newUser.name, grade: '1.75' },
       ]);
     }
 
@@ -1198,6 +1282,11 @@ export const AppProvider = ({ children }) => {
         setAdminUsersList,
         auditLogsList,
         setAuditLogsList,
+
+        // Role & Account ID Helpers
+        getRolePrefix,
+        generateUniqueAccountId,
+        reassignRoleAccountId,
       }}
     >
       {children}

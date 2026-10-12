@@ -415,5 +415,32 @@ Every reported issue is documented with its severity rating, exact reproduction 
 - **Root Cause**: Unit calculation ignored `studentEnrollmentSelections` during the active semester selection period.
 - **Resolution**: Calibrated `enrolledUnits` calculation to inspect `registrarQueue[activeStudentId].totalUnits`, `studentEnrollmentSelections[activeStudentId]`, and graded records sequentially, correctly displaying the enrolled unit load.
 
+### BUG-021: Lack of Role-Matched Account Identifiers and Unique Student ID Enforcement
+- **Category**: Identity & Access Management / Role-Matched Identifiers
+- **Severity**: **High**
+- **Status**: **Resolved**
+- **Files Affected**:
+  - [resources/js/context/AppContext.jsx](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/context/AppContext.jsx)
+  - [resources/js/views/LoginView.jsx](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/views/LoginView.jsx)
+  - [resources/js/components/AddUserModal.jsx](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/components/AddUserModal.jsx)
+  - [resources/js/views/AdminAccountsAuditView.jsx](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/views/AdminAccountsAuditView.jsx)
+  - [app/Http/Controllers/Api/SSISController.php](file:///c:/Users/Gams/Student-Services-Information-System/app/Http/Controllers/Api/SSISController.php)
+- **Description**: Account IDs lacked role-matching prefixes and strict uniqueness enforcement across students and provisioned accounts. Accounts created with differing roles did not reflect their assigned roles in their IDs, and when an administrator changed a user's role in Account Management, their ID prefix failed to re-align with their new role permissions.
+- **Root Cause**:
+  1. Student registration generated generic numeric IDs without consistent role prefixes (`STU-`) or cross-table duplicate collision validation.
+  2. `AddUserModal.jsx` lacked role-prefix auto-generation and uniqueness validation, and did not initialize clean 0 data partitions for new student accounts.
+  3. `AdminAccountsAuditView.jsx` only displayed IDs for Student accounts and failed to reassign ID prefixes upon role elevation or modification.
+- **Resolution**:
+  1. **Strict Role-Matched Prefixes**: Implemented `getRolePrefix()`, `generateUniqueAccountId()`, and `reassignRoleAccountId()` enforcing standard university role schemas:
+     - **Student**: `STU-2026-XXXX`
+     - **Registrar**: `REG-2026-XXXX`
+     - **Cashier**: `CSH-2026-XXXX`
+     - **Department Staff**: `STF-2026-XXXX`
+     - **Admin**: `ADM-2026-XXXX`
+  2. **Uniqueness Enforcement**: Enforced strict uniqueness validation on both sign up and admin account provisioning, preventing duplicate IDs across all accounts.
+  3. **Dynamic Role Elevation Re-alignment**: Whenever an Administrator reassigns a user's role in Account Management, the user's ID automatically re-aligns with the new role prefix while preserving unique numeric sequencing.
+  4. **Universal Account ID Badges**: Updated the User Accounts table in `AdminAccountsAuditView.jsx` to display role-matched ID badges for every account (Students, Staff, and Administrators alike).
+  5. **Flexible Authentication**: Allowed users to sign in using their role-matched ID, email, or username.
+
 ---
 *Report maintained and updated by Antigravity AI Assistant.*

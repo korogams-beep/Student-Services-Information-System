@@ -35,7 +35,9 @@ export const AdminAccountsAuditView = () => {
     setIsAddUserModalOpen,
     recordAuditLog,
     showToast,
-    searchQuery 
+    searchQuery,
+    reassignRoleAccountId,
+    getRolePrefix 
   } = useApp();
 
   const activeTab = ['user_accounts', 'audit_logs_view', 'roles_view', 'security_view', 'system_settings_view'].includes(currentView)
@@ -77,13 +79,18 @@ export const AdminAccountsAuditView = () => {
     const newRole = editUserRole;
     const newStatus = editUserStatus;
 
+    let updatedId = targetUser.account_id || targetUser.student_id_number;
+    if (newRole !== oldRole && reassignRoleAccountId) {
+      updatedId = reassignRoleAccountId(updatedId, newRole, demoUsers);
+    }
+
     // Update demoUsers which powers adminUsersList
     setDemoUsers(prev =>
       prev.map(u => (
         u.id === targetUser.id || 
         (u.email && targetUser.email && u.email === targetUser.email) ||
         (u.student_id_number && targetUser.student_id_number && u.student_id_number === targetUser.student_id_number)
-      ) ? { ...u, role: newRole, status: newStatus, account: newStatus } : u)
+      ) ? { ...u, role: newRole, account_id: updatedId, student_id_number: updatedId, status: newStatus, account: newStatus } : u)
     );
 
     // If currently logged-in user is updated
@@ -98,19 +105,19 @@ export const AdminAccountsAuditView = () => {
         localStorage.removeItem('ssis_current_user');
         showToast(`Your account was deactivated by administrator. Logged out.`);
       } else {
-        setCurrentUser(prev => ({ ...prev, role: newRole, status: newStatus, account: newStatus }));
+        setCurrentUser(prev => ({ ...prev, role: newRole, account_id: updatedId, student_id_number: updatedId, status: newStatus, account: newStatus }));
       }
     }
 
-    showToast(`Account updated: ${targetUser.name} (${newRole} • ${newStatus}).`);
-    recordAuditLog(`Account updated (${newRole} • ${newStatus})`, `V. Ramos • ${targetUser.name}`);
+    showToast(`Account updated: ${targetUser.name} (${newRole} • ID: ${updatedId} • ${newStatus}).`);
+    recordAuditLog(`Account updated (${newRole} • ${newStatus})`, `V. Ramos • ${targetUser.name} (ID: ${updatedId})`);
 
     // Call backend sync endpoints
     if (newRole !== oldRole) {
       fetch(`/api/admin/users/${targetUser.id}/change-role`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: newRole }),
+        body: JSON.stringify({ role: newRole, account_id: updatedId }),
       }).catch(err => console.log('Role sync note:', err));
     }
 
@@ -163,6 +170,8 @@ export const AdminAccountsAuditView = () => {
   const handleRoleChange = (user, newRole) => {
     if (user.role === newRole) return;
     const oldRole = user.role;
+    const currentId = user.account_id || user.student_id_number;
+    const updatedId = reassignRoleAccountId ? reassignRoleAccountId(currentId, newRole, demoUsers) : currentId;
 
     // Update in demoUsers
     setDemoUsers(prev =>
@@ -170,7 +179,7 @@ export const AdminAccountsAuditView = () => {
         u.id === user.id || 
         (u.email && user.email && u.email === user.email) ||
         (u.student_id_number && user.student_id_number && u.student_id_number === user.student_id_number)
-      ) ? { ...u, role: newRole } : u)
+      ) ? { ...u, role: newRole, account_id: updatedId, student_id_number: updatedId } : u)
     );
 
     // If currently logged-in user, update session role
@@ -179,16 +188,16 @@ export const AdminAccountsAuditView = () => {
       (currentUser.email && user.email && currentUser.email === user.email) ||
       (currentUser.student_id_number && user.student_id_number && currentUser.student_id_number === user.student_id_number)
     )) {
-      setCurrentUser(prev => ({ ...prev, role: newRole }));
+      setCurrentUser(prev => ({ ...prev, role: newRole, account_id: updatedId, student_id_number: updatedId }));
     }
 
-    showToast(`Role for ${user.name} changed to ${newRole}.`);
-    recordAuditLog(`Role updated to ${newRole}`, `V. Ramos • ${user.name} (was ${oldRole})`);
+    showToast(`Role for ${user.name} changed to ${newRole} (ID: ${updatedId}).`);
+    recordAuditLog(`Role updated to ${newRole}`, `V. Ramos • ${user.name} (was ${oldRole} • ID: ${updatedId})`);
 
     fetch(`/api/admin/users/${user.id}/change-role`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role: newRole }),
+      body: JSON.stringify({ role: newRole, account_id: updatedId }),
     }).catch(err => console.log('Client-side synced', err));
   };
 
@@ -416,11 +425,9 @@ export const AdminAccountsAuditView = () => {
                                 <span style={{ color: '#64748B', fontSize: '12px', display: 'block' }}>
                                   {user.email || `${user.username || 'user'}@cuyotech.edu.ph`}
                                 </span>
-                                {isStudent && user.student_id_number && (
-                                  <span style={{ fontSize: '11px', color: '#0284C7', fontWeight: '600' }}>
-                                    ID: {user.student_id_number} {user.program ? `• ${user.program}` : ''}
-                                  </span>
-                                )}
+                                <span style={{ fontSize: '11px', color: '#0284C7', fontWeight: '700', fontFamily: 'monospace', display: 'block', marginTop: '2px' }}>
+                                  ID: {user.account_id || user.student_id_number || 'N/A'} {user.program ? `• ${user.program}` : ''}
+                                </span>
                               </div>
                             </div>
                           </td>
@@ -582,9 +589,12 @@ export const AdminAccountsAuditView = () => {
                   <span style={{ fontSize: '12.5px', color: '#64748B', display: 'block', marginTop: '2px' }}>
                     {selectedUserForEdit.email || selectedUserForEdit.username}
                   </span>
-                  {selectedUserForEdit.student_id_number && (
-                    <span style={{ fontSize: '12px', color: '#0284C7', fontWeight: '600', display: 'block', marginTop: '4px' }}>
-                      Student ID: {selectedUserForEdit.student_id_number}
+                  {(selectedUserForEdit.account_id || selectedUserForEdit.student_id_number) && (
+                    <span style={{ fontSize: '12px', color: '#0284C7', fontWeight: '700', fontFamily: 'monospace', display: 'block', marginTop: '4px' }}>
+                      Account ID: {reassignRoleAccountId ? reassignRoleAccountId(selectedUserForEdit.account_id || selectedUserForEdit.student_id_number, editUserRole, demoUsers) : (selectedUserForEdit.account_id || selectedUserForEdit.student_id_number)}
+                      {editUserRole !== selectedUserForEdit.role && (
+                        <span style={{ color: '#D97706', fontSize: '11px', marginLeft: '6px' }}>(Updated for {editUserRole})</span>
+                      )}
                     </span>
                   )}
                 </div>

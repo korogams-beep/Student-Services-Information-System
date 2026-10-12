@@ -102,6 +102,37 @@ class SSISController extends Controller
     }
 
     /**
+     * Role Prefix Helper
+     */
+    public static function getRolePrefix(string $role): string
+    {
+        return match (trim($role)) {
+            'Registrar' => 'REG',
+            'Cashier' => 'CSH',
+            'Department Staff', 'DepartmentStaff' => 'STF',
+            'Admin' => 'ADM',
+            default => 'STU',
+        };
+    }
+
+    /**
+     * Generate Unique Role-Matched Account ID
+     */
+    public static function generateUniqueAccountId(string $role): string
+    {
+        $prefix = self::getRolePrefix($role);
+        $year = '2026';
+        do {
+            $num = str_pad((string) rand(1000, 9999), 4, '0', STR_PAD_LEFT);
+            $candidate = "{$prefix}-{$year}-{$num}";
+            $existsInStudent = Student::where('student_id_number', $candidate)->orWhere('username', $candidate)->exists();
+            $existsInAdmin = AdminUser::where('username', $candidate)->exists();
+        } while ($existsInStudent || $existsInAdmin);
+
+        return $candidate;
+    }
+
+    /**
      * User registration (Sign Up) for Students and Staff
      */
     public function register(Request $request): JsonResponse
@@ -120,110 +151,75 @@ class SSISController extends Controller
         $lastName = $request->input('last_name', $nameParts[1] ?? 'User');
         $passwordHash = Hash::make($request->input('password'));
 
-        if (true) {
-            $studentIdNumber = $request->input('student_id_number')
-                ?: ('2026-'.str_pad((string) rand(1000, 9999), 5, '0', STR_PAD_LEFT));
+        $rawId = $request->input('student_id_number') ?: $request->input('account_id');
+        $studentIdNumber = $rawId ? trim((string) $rawId) : self::generateUniqueAccountId('Student');
 
-            $programName = $request->input('program', 'BS Computer Science');
-            $program = Program::where('program_name', 'LIKE', "%{$programName}%")->first()
-                ?: Program::first();
+        $programName = $request->input('program', 'BS Computer Science');
+        $program = Program::where('program_name', 'LIKE', "%{$programName}%")->first()
+            ?: Program::first();
 
-            $yearLevel = (int) $request->input('year_level', 1);
-            $username = strtolower(explode('@', $request->email)[0]);
-
-            $student = Student::create([
-                'student_id_number' => $studentIdNumber,
-                'first_name' => $firstName,
-                'last_name' => $lastName,
-                'email' => $request->email,
-                'year_level' => $yearLevel,
-                'program_id' => $program?->id ?? 1,
-                'username' => $username,
-                'password_hash' => $passwordHash,
-                'account_status' => 'Active',
-            ]);
-
-            // Create initial financial assessment starting at default 0
-            $assessment = Assessment::create([
-                'student_id' => $student->id,
-                'school_year' => '2025-2026',
-                'semester' => 'Second Semester',
-                'total_amount' => 0.00,
-                'status' => 'Unassessed',
-                'date_assessed' => now()->toDateString(),
-            ]);
-
-            // Create default department clearances
-            $departments = Department::all();
-            foreach ($departments as $dept) {
-                Clearance::create([
-                    'student_id' => $student->id,
-                    'department_id' => $dept->id,
-                    'school_year' => '2025-2026',
-                    'semester' => 'Second Semester',
-                    'status' => 'Pending',
-                    'request_date' => now()->toDateString(),
-                    'remarks' => 'Awaiting department review',
-                ]);
-            }
-
-            AuditLog::record(
-                "New student account registered ({$student->full_name})",
-                'students',
-                $student->id,
-                null,
-                $student->id
-            );
-
-            $suffix = $yearLevel === 1 ? 'st Year' : ($yearLevel === 2 ? 'nd Year' : ($yearLevel === 3 ? 'rd Year' : 'th Year'));
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Account registered successfully!',
-                'user' => [
-                    'id' => $student->id,
-                    'name' => $student->full_name,
-                    'email' => $student->email,
-                    'student_id_number' => $student->student_id_number,
-                    'role' => 'Student',
-                    'initials' => strtoupper(substr($firstName, 0, 1).substr($lastName, 0, 1)),
-                    'program' => $program?->program_name ?? 'BS Computer Science',
-                    'yearLevel' => $yearLevel.$suffix,
-                    'status' => 'Active',
-                ],
-            ]);
-        }
-
-        // Staff / Admin registration
+        $yearLevel = (int) $request->input('year_level', 1);
         $username = strtolower(explode('@', $request->email)[0]);
-        $fullName = "{$firstName} {$lastName}";
-        $admin = AdminUser::create([
+
+        $student = Student::create([
+            'student_id_number' => $studentIdNumber,
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'email' => $request->email,
+            'year_level' => $yearLevel,
+            'program_id' => $program?->id ?? 1,
             'username' => $username,
-            'name' => $fullName,
             'password_hash' => $passwordHash,
-            'role' => $role,
             'account_status' => 'Active',
         ]);
 
+        // Create initial financial assessment starting at default 0
+        $assessment = Assessment::create([
+            'student_id' => $student->id,
+            'school_year' => '2025-2026',
+            'semester' => 'Second Semester',
+            'total_amount' => 0.00,
+            'status' => 'Unassessed',
+            'date_assessed' => now()->toDateString(),
+        ]);
+
+        // Create default department clearances
+        $departments = Department::all();
+        foreach ($departments as $dept) {
+            Clearance::create([
+                'student_id' => $student->id,
+                'department_id' => $dept->id,
+                'school_year' => '2025-2026',
+                'semester' => 'Second Semester',
+                'status' => 'Pending',
+                'request_date' => now()->toDateString(),
+                'remarks' => 'Awaiting department review',
+            ]);
+        }
+
         AuditLog::record(
-            "New {$role} account registered ({$fullName})",
-            'admin_users',
-            $admin->id,
-            $admin->id
+            "New student account registered ({$student->full_name})",
+            'students',
+            $student->id,
+            null,
+            $student->id
         );
 
-        $initials = strtoupper(substr($firstName, 0, 1).(isset($lastName[0]) ? substr($lastName, 0, 1) : 'S'));
+        $suffix = $yearLevel === 1 ? 'st Year' : ($yearLevel === 2 ? 'nd Year' : ($yearLevel === 3 ? 'rd Year' : 'th Year'));
 
         return response()->json([
             'success' => true,
-            'message' => "{$role} account registered successfully!",
+            'message' => 'Account registered successfully!',
             'user' => [
-                'id' => $admin->id,
-                'name' => $admin->name,
-                'email' => $request->email,
-                'username' => $admin->username,
-                'role' => $admin->role,
-                'initials' => $initials,
+                'id' => $student->id,
+                'name' => $student->full_name,
+                'email' => $student->email,
+                'account_id' => $student->student_id_number,
+                'student_id_number' => $student->student_id_number,
+                'role' => 'Student',
+                'initials' => strtoupper(substr($firstName, 0, 1).substr($lastName, 0, 1)),
+                'program' => $program?->program_name ?? 'BS Computer Science',
+                'yearLevel' => $yearLevel.$suffix,
                 'status' => 'Active',
             ],
         ]);
@@ -308,6 +304,8 @@ class SSISController extends Controller
                     'name' => $admin->name,
                     'email' => $admin->username.'@university.edu',
                     'username' => $admin->username,
+                    'account_id' => $admin->username,
+                    'student_id_number' => $admin->username,
                     'role' => $admin->role,
                     'initials' => $initials,
                     'department' => $admin->department?->department_name,
@@ -775,21 +773,93 @@ class SSISController extends Controller
         $request->validate([
             'name' => 'required|string',
             'role' => 'required|string',
-            'username' => 'required|string|unique:admin_users,username',
         ]);
 
+        $role = $request->input('role');
+        $rawId = $request->input('account_id') ?: $request->input('student_id_number');
+        if ($rawId) {
+            $accountId = trim((string) $rawId);
+        } else {
+            $accountId = self::generateUniqueAccountId($role);
+        }
+
+        $username = $request->input('username') ?: $accountId;
         $adminId = AdminUser::where('role', 'Admin')->first()?->id;
+
+        if ($role === 'Student') {
+            $rawName = trim((string) $request->name);
+            $nameParts = explode(' ', $rawName, 2);
+            $firstName = $nameParts[0] ?? 'New';
+            $lastName = $nameParts[1] ?? 'Student';
+            $email = $request->input('email') ?: strtolower($username).'@cuyotech.edu.ph';
+            $programName = $request->input('program', 'BS Computer Science');
+            $program = Program::where('program_name', 'LIKE', "%{$programName}%")->first() ?: Program::first();
+
+            $student = Student::create([
+                'student_id_number' => $accountId,
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'email' => $email,
+                'year_level' => 1,
+                'program_id' => $program?->id ?? 1,
+                'username' => $username,
+                'password_hash' => Hash::make('password'),
+                'account_status' => 'Active',
+            ]);
+
+            Assessment::create([
+                'student_id' => $student->id,
+                'school_year' => '2025-2026',
+                'semester' => 'Second Semester',
+                'total_amount' => 0.00,
+                'status' => 'Unassessed',
+                'date_assessed' => now()->toDateString(),
+            ]);
+
+            $departments = Department::all();
+            foreach ($departments as $dept) {
+                Clearance::create([
+                    'student_id' => $student->id,
+                    'department_id' => $dept->id,
+                    'school_year' => '2025-2026',
+                    'semester' => 'Second Semester',
+                    'status' => 'Pending',
+                    'request_date' => now()->toDateString(),
+                    'remarks' => 'Awaiting department review',
+                ]);
+            }
+
+            AuditLog::record(
+                "New account created (V. Ramos • {$student->full_name} • {$accountId})",
+                'students',
+                $student->id,
+                $adminId
+            );
+
+            return response()->json([
+                'success' => true,
+                'user' => [
+                    'id' => $student->id,
+                    'name' => $student->full_name,
+                    'role' => 'Student',
+                    'account_id' => $accountId,
+                    'student_id_number' => $accountId,
+                    'email' => $student->email,
+                    'account_status' => 'Active',
+                ],
+            ]);
+        }
 
         $newUser = AdminUser::create([
             'name' => $request->name,
-            'username' => $request->username,
-            'role' => $request->role,
+            'username' => $username,
+            'role' => $role,
             'password_hash' => Hash::make('password'),
             'account_status' => 'Active',
         ]);
 
         AuditLog::record(
-            "New account created (V. Ramos • {$newUser->name})",
+            "New account created (V. Ramos • {$newUser->name} • {$accountId})",
             'admin_users',
             $newUser->id,
             $adminId
@@ -797,7 +867,15 @@ class SSISController extends Controller
 
         return response()->json([
             'success' => true,
-            'user' => $newUser,
+            'user' => [
+                'id' => $newUser->id,
+                'name' => $newUser->name,
+                'role' => $newUser->role,
+                'account_id' => $accountId,
+                'student_id_number' => $accountId,
+                'username' => $newUser->username,
+                'account_status' => 'Active',
+            ],
         ]);
     }
 
@@ -811,6 +889,7 @@ class SSISController extends Controller
         ]);
 
         $newRole = $request->input('role');
+        $suppliedAccountId = $request->input('account_id');
         $adminId = AdminUser::where('role', 'Admin')->first()?->id;
 
         $user = AdminUser::find($id);
@@ -830,6 +909,7 @@ class SSISController extends Controller
                 'success' => true,
                 'message' => "Role updated to {$newRole}",
                 'user' => $user,
+                'account_id' => $suppliedAccountId,
             ]);
         }
 
@@ -857,6 +937,7 @@ class SSISController extends Controller
                     'success' => true,
                     'message' => "Role updated to {$newRole}",
                     'user' => $adminUser,
+                    'account_id' => $suppliedAccountId,
                 ]);
             }
 
@@ -864,6 +945,7 @@ class SSISController extends Controller
                 'success' => true,
                 'message' => "Role updated to {$newRole}",
                 'student' => $student,
+                'account_id' => $suppliedAccountId,
             ]);
         }
 

@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { User, Lock, Mail, GraduationCap, ShieldCheck, CheckCircle2, UserPlus, ArrowRight, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
 export const LoginView = () => {
-  const { loginWithCredentials, signUpUser, demoUsers } = useApp();
+  const { loginWithCredentials, signUpUser, demoUsers, generateUniqueAccountId } = useApp();
 
   const [mode, setMode] = useState('login'); // 'login' or 'signup'
   const [emailOrId, setEmailOrId] = useState('');
@@ -53,22 +53,33 @@ export const LoginView = () => {
       return;
     }
 
-    // Prevent duplicate Student ID
-    if (signUpStudentId.trim()) {
-      const isDuplicate = demoUsers.some(u => 
-        u.student_id_number && u.student_id_number.trim().toLowerCase() === signUpStudentId.trim().toLowerCase()
-      );
-      if (isDuplicate) {
-        alert(`Student ID number "${signUpStudentId.trim()}" is already registered. Please provide your unique Student ID.`);
-        return;
+    // Role-matched ID: ensure STU prefix and uniqueness per student
+    let finalStudentId = signUpStudentId.trim();
+    if (!finalStudentId) {
+      finalStudentId = generateUniqueAccountId ? generateUniqueAccountId('Student', demoUsers) : `STU-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+    } else {
+      // If user typed without role prefix, format with STU- prefix
+      if (!finalStudentId.startsWith('STU-') && !finalStudentId.startsWith('REG-') && !finalStudentId.startsWith('CSH-') && !finalStudentId.startsWith('STF-') && !finalStudentId.startsWith('ADM-')) {
+        finalStudentId = finalStudentId.startsWith('2026-') ? `STU-${finalStudentId}` : `STU-2026-${finalStudentId}`;
       }
+    }
+
+    // Strictly enforce unique ID per student across all accounts
+    const isDuplicate = demoUsers.some(u => 
+      (u.student_id_number && u.student_id_number.trim().toLowerCase() === finalStudentId.toLowerCase()) ||
+      (u.account_id && u.account_id.trim().toLowerCase() === finalStudentId.toLowerCase())
+    );
+    if (isDuplicate) {
+      alert(`Student ID "${finalStudentId}" is already registered. Each student must have a unique ID.`);
+      return;
     }
 
     setIsLoading(true);
     await signUpUser({
       name: signUpName.trim(),
       email: signUpEmail.trim(),
-      student_id_number: signUpStudentId.trim() || `2026-${Math.floor(10000 + Math.random() * 90000)}`,
+      account_id: finalStudentId,
+      student_id_number: finalStudentId,
       role: 'Student', // Always default to Student
       program: signUpProgram,
       year_level: parseInt(signUpYearLevel, 10),
@@ -78,7 +89,7 @@ export const LoginView = () => {
   };
 
   const handleSelectQuickUser = (user) => {
-    setEmailOrId(user.email || user.username || user.student_id_number);
+    setEmailOrId(user.account_id || user.student_id_number || user.email || user.username);
     setPassword('password');
   };
 
@@ -394,11 +405,11 @@ export const LoginView = () => {
                 </div>
 
                 <div className="ssis-form-group">
-                  <label className="ssis-label">Student ID Number</label>
+                  <label className="ssis-label">Student ID (Auto-Generated if Empty)</label>
                   <input
                     type="text"
                     className="ssis-input"
-                    placeholder="e.g. 2026-0001"
+                    placeholder="e.g. STU-2026-0001 (or auto-assigned)"
                     value={signUpStudentId}
                     onChange={(e) => setSignUpStudentId(e.target.value)}
                   />
