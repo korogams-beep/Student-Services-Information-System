@@ -645,12 +645,12 @@ export const AppProvider = ({ children }) => {
   };
 
   // Login with real credentials / Sign In
-  const loginWithCredentials = async (emailOrId, password, selectedRole) => {
+  const loginWithCredentials = async (emailOrId, password) => {
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email_or_id: emailOrId, password, role: selectedRole }),
+        body: JSON.stringify({ email_or_id: emailOrId, password }),
       });
 
       if (res.ok) {
