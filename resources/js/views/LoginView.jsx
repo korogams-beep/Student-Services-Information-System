@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { User, Lock, Mail, GraduationCap, ShieldCheck, CheckCircle2, UserPlus, ArrowRight } from 'lucide-react';
+import { User, Lock, Mail, GraduationCap, ShieldCheck, CheckCircle2, UserPlus, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
 export const LoginView = () => {
   const { loginWithCredentials, signUpUser, demoUsers } = useApp();
@@ -8,14 +8,17 @@ export const LoginView = () => {
   const [mode, setMode] = useState('login'); // 'login' or 'signup'
   const [emailOrId, setEmailOrId] = useState('');
   const [password, setPassword] = useState('password');
-  const [role, setRole] = useState('Student');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Sign up fields
+  // Password visibility toggles
+  const [showPassword, setShowPassword] = useState(false);
+  const [showSignUpPassword, setShowSignUpPassword] = useState(false);
+  const [showSignUpConfirmPassword, setShowSignUpConfirmPassword] = useState(false);
+
+  // Sign up fields (automatically defaults to Student)
   const [signUpName, setSignUpName] = useState('');
   const [signUpEmail, setSignUpEmail] = useState('');
   const [signUpStudentId, setSignUpStudentId] = useState('');
-  const [signUpRole, setSignUpRole] = useState('Student');
   const [signUpProgram, setSignUpProgram] = useState('BS Computer Science');
   const [signUpYearLevel, setSignUpYearLevel] = useState('1');
   const [signUpPassword, setSignUpPassword] = useState('');
@@ -28,7 +31,7 @@ export const LoginView = () => {
       return;
     }
     setIsLoading(true);
-    await loginWithCredentials(emailOrId, password, role);
+    await loginWithCredentials(emailOrId, password);
     setIsLoading(false);
   };
 
@@ -59,7 +62,7 @@ export const LoginView = () => {
       name: signUpName.trim(),
       email: signUpEmail.trim(),
       student_id_number: signUpStudentId.trim() || `2026-${Math.floor(10000 + Math.random() * 90000)}`,
-      role: 'Student', // Public signup is strictly Student
+      role: 'Student', // Always default to Student
       program: signUpProgram,
       year_level: parseInt(signUpYearLevel, 10),
       password: signUpPassword,
@@ -69,7 +72,6 @@ export const LoginView = () => {
 
   const handleSelectQuickUser = (user) => {
     setEmailOrId(user.email || user.username || user.student_id_number);
-    setRole(user.role);
     setPassword('password');
   };
 
@@ -274,31 +276,37 @@ export const LoginView = () => {
                 <label className="ssis-label">Password</label>
                 <div style={{ position: 'relative' }}>
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     className="ssis-input"
                     placeholder="Enter password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    style={{ paddingLeft: '38px' }}
+                    style={{ paddingLeft: '38px', paddingRight: '42px' }}
                   />
                   <Lock size={16} color="#94A3B8" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#64748B',
+                    }}
+                    title={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
                 </div>
-              </div>
-
-              <div className="ssis-form-group">
-                <label className="ssis-label">Login Perspective / Role</label>
-                <select
-                  className="ssis-select"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                >
-                  <option value="Student">Student</option>
-                  <option value="Registrar">Registrar</option>
-                  <option value="Cashier">Cashier</option>
-                  <option value="Department Staff">Department Staff</option>
-                  <option value="Admin">Admin</option>
-                </select>
               </div>
 
               <button
@@ -369,15 +377,7 @@ export const LoginView = () => {
                 </div>
               </div>
 
-              <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px' }}>
-                <div>
-                  <span style={{ fontSize: '11px', color: '#64748B', display: 'block', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Account Role</span>
-                  <strong style={{ fontSize: '13.5px', color: '#0F172A' }}>Student Portal Account</strong>
-                </div>
-                <span className="badge badge-success" style={{ fontSize: '11px', padding: '3px 8px' }}>Default Role</span>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '12px' }}>
                   <div className="ssis-form-group">
                     <label className="ssis-label">Academic Program</label>
                     <select
@@ -406,30 +406,78 @@ export const LoginView = () => {
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div className="ssis-form-group">
-                  <label className="ssis-label">Password</label>
-                  <input
-                    type="password"
-                    className="ssis-input"
-                    placeholder="Create password"
-                    value={signUpPassword}
-                    onChange={(e) => setSignUpPassword(e.target.value)}
-                    required
-                  />
-                </div>
+                  <div className="ssis-form-group">
+                    <label className="ssis-label">Password</label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type={showSignUpPassword ? 'text' : 'password'}
+                        className="ssis-input"
+                        placeholder="Create password"
+                        value={signUpPassword}
+                        onChange={(e) => setSignUpPassword(e.target.value)}
+                        required
+                        style={{ paddingRight: '42px' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowSignUpPassword(!showSignUpPassword)}
+                        style={{
+                          position: 'absolute',
+                          right: '12px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          padding: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#64748B',
+                        }}
+                        title={showSignUpPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showSignUpPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                  </div>
 
-                <div className="ssis-form-group">
-                  <label className="ssis-label">Confirm Password</label>
-                  <input
-                    type="password"
-                    className="ssis-input"
-                    placeholder="Repeat password"
-                    value={signUpConfirmPassword}
-                    onChange={(e) => setSignUpConfirmPassword(e.target.value)}
-                    required
-                  />
+                  <div className="ssis-form-group">
+                    <label className="ssis-label">Confirm Password</label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type={showSignUpConfirmPassword ? 'text' : 'password'}
+                        className="ssis-input"
+                        placeholder="Repeat password"
+                        value={signUpConfirmPassword}
+                        onChange={(e) => setSignUpConfirmPassword(e.target.value)}
+                        required
+                        style={{ paddingRight: '42px' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowSignUpConfirmPassword(!showSignUpConfirmPassword)}
+                        style={{
+                          position: 'absolute',
+                          right: '12px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          padding: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#64748B',
+                        }}
+                        title={showSignUpConfirmPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showSignUpConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
 
               <button
                 type="submit"

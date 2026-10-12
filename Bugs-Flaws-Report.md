@@ -45,6 +45,8 @@ Every reported issue is documented with its severity rating, exact reproduction 
 | **BUG-014** | Runtime Safety / Frontend | **High** | `activeStudentId` declared before `currentUser` destructuring in `StudentClearanceView.jsx` | **Resolved** |
 | **SEC-007** | Session Management / Auth | **High** | `handleLogout` failed to purge `currentUser` and `localStorage` session | **Resolved** |
 | **BUG-015** | Runtime Safety / Null Pointer | **Medium** | Unguarded property access on `currentUser` and `searchQuery` risking fatal unhandled exceptions | **Resolved** |
+| **FEAT-002** | Authentication / UX | **Medium** | Show/hide password visibility toggle (eye icon button) on Sign In and Register forms | **Resolved** |
+| **SEC-008** | Authentication / RBAC | **High** | Removal of role dropdown in Sign In and Register; system resolves role strictly by credentials, Register defaults to Student | **Resolved** |
 
 ---
 
@@ -289,6 +291,33 @@ Every reported issue is documented with its severity rating, exact reproduction 
 - **Description**: Direct unguarded property reads (such as `currentUser.name`, `currentUser.role`, and `searchQuery.toLowerCase()`) caused runtime risks when switching users, logging out, or clearing search.
 - **Root Cause**: Missing optional chaining (`?.`) and fallback defaults.
 - **Resolution**: Added optional chaining and safe fallback defaults across all navigation, header, and search filter components.
+---
+
+### FEAT-002: Password Visibility Toggle on Sign In and Registration
+- **Category**: Authentication / User Experience
+- **Severity**: **Medium**
+- **Status**: **Resolved**
+- **Files Affected**:
+  - [resources/js/views/LoginView.jsx](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/views/LoginView.jsx)
+- **Description**: Users previously could not verify the accuracy of their entered passwords, increasing credential input errors during sign in and new account creation.
+- **Resolution**: Integrated interactive show/hide password buttons featuring `Eye` and `EyeOff` icons from `lucide-react` across Sign In password, Registration password, and Confirm password input fields with accessible ARIA labels.
+
+---
+
+### SEC-008: Credential-Based Role Resolution & Elimination of Public Role Selectors
+- **Category**: Authentication / Role-Based Access Control
+- **Severity**: **High**
+- **Status**: **Resolved**
+- **Files Affected**:
+  - [resources/js/views/LoginView.jsx](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/views/LoginView.jsx)
+  - [resources/js/context/AppContext.jsx](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/context/AppContext.jsx)
+- **Description**: The Sign In interface previously displayed a "Login Perspective / Role" dropdown, and the Registration view contained a role indicator box. In production systems, authentication must dynamically discover user identity and assigned privileges solely from the supplied credentials, and public self-registration must strictly create default student accounts without exposing role selection.
+- **Root Cause**: Redundant client-side perspective selectors left over from earlier testing prototypes.
+- **Resolution**: 
+  - Completely removed the "Login Perspective / Role" dropdown from the Sign In form.
+  - Upgraded authentication flow in `AppContext.jsx` and `SSISController.php` to resolve and authorize user role automatically from matched credentials.
+  - Completely removed all role selectors and badges from the Create Account registration form; self-service accounts now silently and strictly default to `Student`.
+  - Re-assignment of roles remains strictly restricted to Administrators via the Admin Accounts Audit view.
 
 ---
 *Report maintained and updated by Antigravity AI Assistant.*
