@@ -196,21 +196,19 @@ export const AddUserModal = () => {
           </div>
 
           <div className="ssis-form-group">
-            <label className="ssis-label">Role-Matched Account ID *</label>
+            <label className="ssis-label">System-Generated Account ID ({getRolePrefix(formData.role)})</label>
             <div style={{ position: 'relative' }}>
               <input
                 type="text"
-                required
+                readOnly
                 className="ssis-input"
-                style={{ fontFamily: 'monospace', fontWeight: '700', color: '#0F172A', paddingLeft: '36px' }}
-                placeholder={`e.g. ${getRolePrefix(formData.role)}-2026-0001`}
+                style={{ fontFamily: 'monospace', fontWeight: '700', color: '#0F172A', paddingLeft: '36px', backgroundColor: '#F1F5F9', cursor: 'not-allowed' }}
                 value={formData.accountId}
-                onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
               />
               <Hash size={16} color="#64748B" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
             </div>
-            <span style={{ fontSize: '11.5px', color: '#0284C7', marginTop: '3px', display: 'block' }}>
-              ✓ Uniquely generated per user and prefixed according to the selected role.
+            <span style={{ fontSize: '11.5px', color: '#059669', marginTop: '3px', display: 'block', fontWeight: '600' }}>
+              🔒 System-generated unique identifier for {formData.role} role. Duplication is strictly prevented.
             </span>
           </div>
 

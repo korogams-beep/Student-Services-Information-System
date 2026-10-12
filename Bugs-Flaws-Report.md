@@ -441,6 +441,7 @@ Every reported issue is documented with its severity rating, exact reproduction 
   3. **Dynamic Role Elevation Re-alignment**: Whenever an Administrator reassigns a user's role in Account Management, the user's ID automatically re-aligns with the new role prefix while preserving unique numeric sequencing.
   4. **Universal Account ID Badges**: Updated the User Accounts table in `AdminAccountsAuditView.jsx` to display role-matched ID badges for every account (Students, Staff, and Administrators alike).
   5. **Flexible Authentication**: Allowed users to sign in using their role-matched ID, email, or username.
+  6. **Autonomous System ID Generation (Elimination of Manual ID Input)**: Completely removed the Student ID input field from the registration form. The system is exclusively responsible for generating collision-free unique IDs (`STU-2026-XXXX`), completely eliminating duplicate IDs or human input collisions.
 
 ---
 *Report maintained and updated by Antigravity AI Assistant.*

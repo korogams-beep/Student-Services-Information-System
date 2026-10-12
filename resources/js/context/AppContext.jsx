@@ -1073,7 +1073,7 @@ export const AppProvider = ({ children }) => {
         else if (newUser.role === 'Department Staff') setCurrentView('clearance_requests');
         else if (newUser.role === 'Admin') setCurrentView('user_accounts');
 
-        showToast(`Account created! Welcome to CuyoTech University, ${newUser.name}.`);
+        showToast(`Account created! Welcome, ${newUser.name}. Your official ID is ${newUser.student_id_number || newUser.account_id}.`);
         recordAuditLog('New account registered', `${newUser.name} (${newUser.role})`);
         return { success: true, user: newUser };
       }
@@ -1147,7 +1147,7 @@ export const AppProvider = ({ children }) => {
     else if (newUser.role === 'Department Staff') setCurrentView('clearance_requests');
     else if (newUser.role === 'Admin') setCurrentView('user_accounts');
 
-    showToast(`Account created! Welcome, ${newUser.name}.`);
+    showToast(`Account created! Welcome, ${newUser.name}. Your official ID is ${newUser.student_id_number || newUser.account_id}.`);
     recordAuditLog('New account registered', `${newUser.name} (${newUser.role})`);
     return { success: true, user: newUser };
   };

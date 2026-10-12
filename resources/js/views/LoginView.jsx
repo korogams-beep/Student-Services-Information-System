@@ -19,7 +19,6 @@ export const LoginView = () => {
   // Sign up fields (automatically defaults to Student)
   const [signUpName, setSignUpName] = useState('');
   const [signUpEmail, setSignUpEmail] = useState('');
-  const [signUpStudentId, setSignUpStudentId] = useState('');
   const [signUpProgram, setSignUpProgram] = useState('BS Computer Science');
   const [signUpYearLevel, setSignUpYearLevel] = useState('1');
   const [signUpPassword, setSignUpPassword] = useState('');
@@ -53,33 +52,16 @@ export const LoginView = () => {
       return;
     }
 
-    // Role-matched ID: ensure STU prefix and uniqueness per student
-    let finalStudentId = signUpStudentId.trim();
-    if (!finalStudentId) {
-      finalStudentId = generateUniqueAccountId ? generateUniqueAccountId('Student', demoUsers) : `STU-2026-${Math.floor(1000 + Math.random() * 9000)}`;
-    } else {
-      // If user typed without role prefix, format with STU- prefix
-      if (!finalStudentId.startsWith('STU-') && !finalStudentId.startsWith('REG-') && !finalStudentId.startsWith('CSH-') && !finalStudentId.startsWith('STF-') && !finalStudentId.startsWith('ADM-')) {
-        finalStudentId = finalStudentId.startsWith('2026-') ? `STU-${finalStudentId}` : `STU-2026-${finalStudentId}`;
-      }
-    }
-
-    // Strictly enforce unique ID per student across all accounts
-    const isDuplicate = demoUsers.some(u => 
-      (u.student_id_number && u.student_id_number.trim().toLowerCase() === finalStudentId.toLowerCase()) ||
-      (u.account_id && u.account_id.trim().toLowerCase() === finalStudentId.toLowerCase())
-    );
-    if (isDuplicate) {
-      alert(`Student ID "${finalStudentId}" is already registered. Each student must have a unique ID.`);
-      return;
-    }
+    // System automatically generates unique Student ID matching the Student role
+    // This strictly prevents duplicate IDs from being created across any account
+    const systemGeneratedStudentId = generateUniqueAccountId ? generateUniqueAccountId('Student', demoUsers) : `STU-2026-${Math.floor(1000 + Math.random() * 9000)}`;
 
     setIsLoading(true);
     await signUpUser({
       name: signUpName.trim(),
       email: signUpEmail.trim(),
-      account_id: finalStudentId,
-      student_id_number: finalStudentId,
+      account_id: systemGeneratedStudentId,
+      student_id_number: systemGeneratedStudentId,
       role: 'Student', // Always default to Student
       program: signUpProgram,
       year_level: parseInt(signUpYearLevel, 10),
@@ -391,29 +373,16 @@ export const LoginView = () => {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div className="ssis-form-group">
-                  <label className="ssis-label">Email Address</label>
-                  <input
-                    type="email"
-                    className="ssis-input"
-                    placeholder="name@pnc.edu.ph"
-                    value={signUpEmail}
-                    onChange={(e) => setSignUpEmail(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="ssis-form-group">
-                  <label className="ssis-label">Student ID (Auto-Generated if Empty)</label>
-                  <input
-                    type="text"
-                    className="ssis-input"
-                    placeholder="e.g. STU-2026-0001 (or auto-assigned)"
-                    value={signUpStudentId}
-                    onChange={(e) => setSignUpStudentId(e.target.value)}
-                  />
-                </div>
+              <div className="ssis-form-group">
+                <label className="ssis-label">Email Address</label>
+                <input
+                  type="email"
+                  className="ssis-input"
+                  placeholder="name@cuyotech.edu.ph"
+                  value={signUpEmail}
+                  onChange={(e) => setSignUpEmail(e.target.value)}
+                  required
+                />
               </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '12px' }}>
