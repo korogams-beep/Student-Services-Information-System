@@ -2,13 +2,23 @@ import React from 'react';
 import { useApp } from '../context/AppContext';
 
 export const StudentDashboardView = () => {
-  const { currentUser, setCurrentView, gradeReports, studentGradesMap, registrarQueue } = useApp();
+  const { 
+    currentUser, 
+    setCurrentView, 
+    gradeReports, 
+    studentGradesMap, 
+    registrarQueue,
+    studentEnrollmentSelections,
+    scheduleCourses
+  } = useApp();
 
   const activeStudentId = currentUser?.student_id_number || currentUser?.studentId || '2026-0001';
   const myEnrollment = registrarQueue.find(q => q.studentIdNumber === activeStudentId || q.studentId === currentUser?.id);
-  const myGrades = studentGradesMap[activeStudentId] || gradeReports || [];
+  const mySelections = (studentEnrollmentSelections && studentEnrollmentSelections[activeStudentId]) || [];
+  const selectedUnits = scheduleCourses ? scheduleCourses.filter(c => mySelections.includes(c.id)).reduce((s, c) => s + (Number(c.units) || 0), 0) : 0;
+  const myGrades = (studentGradesMap && studentGradesMap[activeStudentId]) || gradeReports || [];
   const gradedUnits = myGrades.reduce((sum, g) => sum + (Number(g.units) || 0), 0);
-  const enrolledUnits = myEnrollment ? (myEnrollment.totalUnits || 0) : gradedUnits;
+  const enrolledUnits = myEnrollment ? (myEnrollment.totalUnits || 0) : (selectedUnits > 0 ? selectedUnits : gradedUnits);
   const isEnrolled = enrolledUnits > 0 || !!myEnrollment;
 
   return (

@@ -13,16 +13,12 @@ export const StudentPaymentsView = () => {
   } = useApp();
 
   const activeStudentId = currentUser?.student_id_number || currentUser?.studentId || '2026-0001';
-  const studentPayments = paymentHistory.filter(p => !p.studentId || p.studentId === activeStudentId);
+  const studentPayments = paymentHistory.filter(p => p.studentId === activeStudentId);
 
-  // Strictly resolve active student's personal assessment record
+  // Strictly resolve active student's personal assessment record (no global leak)
   const activeAssessment = studentAssessmentsList?.find(a => a.studentId === activeStudentId);
-  const displayAssessedFees = (activeAssessment?.items && activeAssessment.items.length > 0)
-    ? activeAssessment.items
-    : assessedFees;
-  const displayOutstandingBalance = activeAssessment !== undefined
-    ? Number(activeAssessment.balance || 0)
-    : Number(outstandingBalance || 0);
+  const displayAssessedFees = activeAssessment?.items || [];
+  const displayOutstandingBalance = Number(activeAssessment?.balance ?? 0);
 
   const handleViewReceipt = (payment) => {
     setActiveReceipt({

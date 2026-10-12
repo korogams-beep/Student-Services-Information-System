@@ -130,7 +130,7 @@ export const CashierPaymentView = () => {
     recordAuditLog('Payment collected', `L. Navarro • ${targetName} (${newORNumber}): Tendered PHP ${cleanNum}, Applied PHP ${amountApplied}, Change PHP ${changeDue}`);
 
     // Persist to backend API if available
-    fetch('/api/cashier/payments', {
+    fetch('/api/cashier/payment', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

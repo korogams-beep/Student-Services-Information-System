@@ -47,32 +47,24 @@ export const AppProvider = ({ children }) => {
     },
   ];
 
-  const LEGACY_DUMMY_STUDENT_EMAILS = new Set([
-    'm.santos@cuyotech.edu.ph',
-    'm.reyes@cuyotech.edu.ph',
-    'a.cruz@cuyotech.edu.ph',
-    'p.mendoza@cuyotech.edu.ph',
-    'j.torres@cuyotech.edu.ph',
-    'c.diaz@cuyotech.edu.ph',
-    'j.tan@cuyotech.edu.ph',
-    'a.lim@cuyotech.edu.ph',
-    'maria.santos@university.edu',
-    'miguel.reyes@university.edu',
-    'angela.cruz@university.edu',
-    'paolo.mendoza@university.edu',
-    'jessa.torres@university.edu',
-    'carlo.diaz@university.edu',
-    'joyce.tan@university.edu',
-    'ana.lim@university.edu',
-    'maria.santos@cuyotech.edu.ph',
-    'miguel.reyes@cuyotech.edu.ph',
-    'angela.cruz@cuyotech.edu.ph',
-    'paolo.mendoza@cuyotech.edu.ph',
-    'jessa.torres@cuyotech.edu.ph',
-    'carlo.diaz@cuyotech.edu.ph',
-    'joyce.tan@cuyotech.edu.ph',
-    'ana.lim@cuyotech.edu.ph',
-  ]);
+  const isLegacyDummyStudent = (u) => {
+    if (u.role !== 'Student') return false;
+    const name = (u.name || '').trim().toLowerCase();
+    const email = (u.email || '').trim().toLowerCase();
+
+    const dummyNames = [
+      'maria santos', 'miguel reyes', 'angela cruz', 'paolo mendoza',
+      'jessa torres', 'carlo diaz', 'joyce tan', 'ana lim', 'ashley smith'
+    ];
+    if (dummyNames.some(d => name.includes(d))) return true;
+
+    const dummyEmailKeywords = [
+      'santos', 'reyes', 'cruz', 'mendoza', 'torres', 'diaz', 'tan', 'lim', 'ashley'
+    ];
+    if (dummyEmailKeywords.some(d => email.includes(d))) return true;
+
+    return false;
+  };
 
   // Auth & Navigation state with localStorage session persistence
   const [demoUsers, setDemoUsers] = useState(() => {
@@ -81,7 +73,7 @@ export const AppProvider = ({ children }) => {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          const cleansed = parsed.filter(u => !LEGACY_DUMMY_STUDENT_EMAILS.has(u.email?.toLowerCase()));
+          const cleansed = parsed.filter(u => !isLegacyDummyStudent(u));
           const existingEmails = new Set(cleansed.map(u => u.email?.toLowerCase()));
           const missingStaff = initialUsers.filter(s => !existingEmails.has(s.email?.toLowerCase()));
           return [...cleansed, ...missingStaff];
@@ -165,23 +157,66 @@ export const AppProvider = ({ children }) => {
   const [assessedFees, setAssessedFees] = useState([]);
 
   // Cashier Historical Payment Ledger
-  const [paymentHistory, setPaymentHistory] = useState([]);
+  const [paymentHistory, setPaymentHistory] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ssis_payment_history');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   // All student financial assessments directory
-  const [studentAssessmentsList, setStudentAssessmentsList] = useState([]);
+  const [studentAssessmentsList, setStudentAssessmentsList] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ssis_student_assessments');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   // Per-student grades database (Starts empty; populated when Registrar encodes grades)
-  const [studentGradesMap, setStudentGradesMap] = useState({});
+  const [studentGradesMap, setStudentGradesMap] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ssis_student_grades_map');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
 
   // Current logged in student's grade reports
   const [gradeReports, setGradeReports] = useState([]);
 
   // Student Document Requests Data (Starts empty; populated when student applies)
-  const [documentRequests, setDocumentRequests] = useState([]);
+  const [documentRequests, setDocumentRequests] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ssis_document_requests');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   // Per-student isolated states to prevent session bleeding
-  const [studentEnrollmentSelections, setStudentEnrollmentSelections] = useState({});
-  const [studentClearanceMap, setStudentClearanceMap] = useState({});
+  const [studentEnrollmentSelections, setStudentEnrollmentSelections] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ssis_student_enrollments');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  const [studentClearanceMap, setStudentClearanceMap] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ssis_student_clearance_map');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
 
   // Student Clearance Data (Default: all 5 university departments Pending; 0 Cleared)
   const [clearanceList, setClearanceList] = useState([
@@ -193,20 +228,85 @@ export const AppProvider = ({ children }) => {
   ]);
 
   // Registrar Enrollment Request Queue
-  const [registrarQueue, setRegistrarQueue] = useState([]);
+  const [registrarQueue, setRegistrarQueue] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ssis_registrar_queue');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [selectedQueueStudentId, setSelectedQueueStudentId] = useState(null);
 
   // Registrar Academic Records & Grade Encoding sheet
   const [encodeGradesList, setEncodeGradesList] = useState([]);
 
   // Registrar Document Requests Queue
-  const [registrarDocumentQueue, setRegistrarDocumentQueue] = useState([]);
+  const [registrarDocumentQueue, setRegistrarDocumentQueue] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ssis_document_requests');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   // Department Staff Clearance Queue (Starts empty; populated when students apply for clearance review)
-  const [departmentStaffClearanceQueue, setDepartmentStaffClearanceQueue] = useState([]);
+  const [departmentStaffClearanceQueue, setDepartmentStaffClearanceQueue] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ssis_dept_clearance_queue');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   // Department Staff Processed / Completed Clearance Archive
-  const [completedClearanceList, setCompletedClearanceList] = useState([]);
+  const [completedClearanceList, setCompletedClearanceList] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ssis_completed_clearance');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Persistent localStorage synchronization effects for academic/financial transactions
+  useEffect(() => {
+    try { localStorage.setItem('ssis_student_enrollments', JSON.stringify(studentEnrollmentSelections)); } catch (e) { console.error(e); }
+  }, [studentEnrollmentSelections]);
+
+  useEffect(() => {
+    try { localStorage.setItem('ssis_student_assessments', JSON.stringify(studentAssessmentsList)); } catch (e) { console.error(e); }
+  }, [studentAssessmentsList]);
+
+  useEffect(() => {
+    try { localStorage.setItem('ssis_payment_history', JSON.stringify(paymentHistory)); } catch (e) { console.error(e); }
+  }, [paymentHistory]);
+
+  useEffect(() => {
+    try { localStorage.setItem('ssis_student_clearance_map', JSON.stringify(studentClearanceMap)); } catch (e) { console.error(e); }
+  }, [studentClearanceMap]);
+
+  useEffect(() => {
+    try { localStorage.setItem('ssis_student_grades_map', JSON.stringify(studentGradesMap)); } catch (e) { console.error(e); }
+  }, [studentGradesMap]);
+
+  useEffect(() => {
+    try { localStorage.setItem('ssis_document_requests', JSON.stringify(documentRequests)); } catch (e) { console.error(e); }
+  }, [documentRequests]);
+
+  useEffect(() => {
+    try { localStorage.setItem('ssis_registrar_queue', JSON.stringify(registrarQueue)); } catch (e) { console.error(e); }
+  }, [registrarQueue]);
+
+  useEffect(() => {
+    try { localStorage.setItem('ssis_dept_clearance_queue', JSON.stringify(departmentStaffClearanceQueue)); } catch (e) { console.error(e); }
+  }, [departmentStaffClearanceQueue]);
+
+  useEffect(() => {
+    try { localStorage.setItem('ssis_completed_clearance', JSON.stringify(completedClearanceList)); } catch (e) { console.error(e); }
+  }, [completedClearanceList]);
 
   const [departmentRulesList, setDepartmentRulesList] = useState([
     { id: 1, title: 'Hardware & Equipment Return', description: 'All laboratory headsets, test cables, microcontroller units, and toolkits must be surrendered to the custodian in good physical condition.', active: true },
@@ -573,6 +673,22 @@ export const AppProvider = ({ children }) => {
       } : c)
     );
 
+    // Synchronize active student's isolated clearance map
+    if (studentId) {
+      setStudentClearanceMap(prev => {
+        const studentList = prev[studentId] || clearanceList;
+        return {
+          ...prev,
+          [studentId]: studentList.map(c => c.department === targetDepartment ? {
+            ...c,
+            lastUpdated: today,
+            status: 'Pending',
+            remarks: 'Clearance review submitted • Awaiting staff sign-off',
+          } : c)
+        };
+      });
+    }
+
     showToast(`Clearance review application for ${targetDepartment} submitted to Department Staff!`);
     recordAuditLog('Clearance applied', `${studentName} • ${targetDepartment}`);
 
@@ -623,6 +739,22 @@ export const AppProvider = ({ children }) => {
       } : c)
     );
 
+    // Synchronize active student's isolated clearance map
+    if (studentId) {
+      setStudentClearanceMap(prev => {
+        const studentList = prev[studentId] || clearanceList;
+        return {
+          ...prev,
+          [studentId]: studentList.map(c => deptNamesSet.has(c.department) ? {
+            ...c,
+            lastUpdated: today,
+            status: 'Pending',
+            remarks: 'Clearance review submitted \u2022 Awaiting staff sign-off',
+          } : c)
+        };
+      });
+    }
+
     recordAuditLog('Clearance applied (batch)', `${studentName} • ${pendingDeptList.length} departments`);
   };
 
@@ -645,6 +777,16 @@ export const AppProvider = ({ children }) => {
   const switchRole = (role, specificUser = null) => {
     const targetUser = specificUser || demoUsers.find(u => u.role.toLowerCase() === role.toLowerCase());
     if (targetUser) {
+      if (
+        targetUser.status === 'Deactivated' || 
+        targetUser.status === 'Disabled' || 
+        targetUser.account === 'Deactivated' || 
+        targetUser.account === 'Disabled'
+      ) {
+        showToast(`Cannot switch perspective: Account for ${targetUser.name} is deactivated.`);
+        return;
+      }
+
       setCurrentUser(targetUser);
 
       if (targetUser.role === 'Student') {
@@ -691,9 +833,14 @@ export const AppProvider = ({ children }) => {
       if (res.ok) {
         const data = await res.json();
         if (data.user) {
-          if (data.user.status === 'Disabled' || data.user.account === 'Disabled') {
+          if (
+            data.user.status === 'Disabled' || 
+            data.user.status === 'Deactivated' || 
+            data.user.account === 'Disabled' || 
+            data.user.account === 'Deactivated'
+          ) {
             showToast('This account has been deactivated. Please contact the administrator.');
-            return { success: false };
+            return { success: false, message: 'This account has been deactivated. Please contact the administrator.' };
           }
 
           setCurrentUser(data.user);
@@ -733,7 +880,7 @@ export const AppProvider = ({ children }) => {
         const errData = await res.json().catch(() => null);
         if (errData?.message) {
           showToast(errData.message);
-          return { success: false };
+          return { success: false, message: errData.message };
         }
       }
     } catch (err) {

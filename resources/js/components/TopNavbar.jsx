@@ -392,6 +392,7 @@ export const TopNavbar = () => {
                 Demo Perspective Switcher
               </div>
               {demoUsers
+                .filter(u => u.status !== 'Deactivated' && u.status !== 'Disabled' && u.account !== 'Deactivated' && u.account !== 'Disabled')
                 .filter((u, index, self) => index === self.findIndex(t => (t.id && t.id === u.id) || (t.email && t.email === u.email) || (t.student_id_number && t.student_id_number === u.student_id_number)))
                 .slice(0, 7)
                 .map((u) => (

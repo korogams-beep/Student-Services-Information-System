@@ -49,6 +49,10 @@ Every reported issue is documented with its severity rating, exact reproduction 
 | **SEC-008** | Authentication / RBAC | **High** | Removal of role dropdown in Sign In and Register; system resolves role strictly by credentials, Register defaults to Student | **Resolved** |
 | **BUG-016** | Admin RBAC / Count Accuracy | **High** | Phantom "8 Active" in Student role count cleansed; counts strictly bound to real active accounts | **Resolved** |
 | **FEAT-003** | Account Management / RBAC | **High** | Universal user governance with inline role elevation, dedicated edit modal, and immediate deactivation login enforcement | **Resolved** |
+| **BUG-017** | Persistence / Session Architecture | **Critical** | Browser refresh wiped student course enrollments, assessments, payments, document requests, and clearance applications | **Resolved** |
+| **BUG-018** | Academic / Clearance Workflow | **High** | Clearance review requests updated generic clearance list but failed to sync student's isolated clearance map | **Resolved** |
+| **BUG-019** | Cashier / API Routing | **Medium** | Cashier payment submission called `/api/cashier/payments` instead of singular route `/api/cashier/payment` | **Resolved** |
+| **BUG-020** | Academic Workflow / Dashboard UX | **Medium** | Dashboard enrolled units indicator failed to count selected courses prior to registrar approval | **Resolved** |
 
 ---
 
@@ -351,6 +355,65 @@ Every reported issue is documented with its severity rating, exact reproduction 
   - **Inline Role Elevation**: Added interactive role selector `<select>` directly in table rows allowing the Admin to reassign any account to Student, Registrar, Cashier, Department Staff, or Admin, with immediate audit logging.
   - **Dedicated Edit Modal**: Added a "Manage User Account" modal triggered via "Edit" button for detailed role and status management.
   - **Deactivation Enforcement**: Added prominent `Deactivate` / `Activate` buttons. When an account is deactivated, all active sessions are immediately purged. Deactivated users cannot authenticate or access any dashboard, displaying an alert banner: *"This account has been deactivated. Please contact the administrator."* Access is restored only when an administrator reactivates the account.
+
+---
+
+### BUG-017: Ephemeral Browser Memory Causing Complete State Loss on Page Refresh
+- **Category**: Persistence / Architecture
+- **Severity**: **Critical**
+- **Status**: **Resolved**
+- **Files Affected**:
+  - [resources/js/context/AppContext.jsx](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/context/AppContext.jsx)
+- **Description**: Whenever a user refreshed their browser (`F5`), newly enrolled subjects, assessment records, cashier payment history, departmental clearance progress, student grades, document requests, and administrative queues were wiped clean back to empty arrays and objects.
+- **Root Cause**: Only `currentUser`, `currentView`, and `demoUsers` were persisted to browser `localStorage`. All transactional and workflow data resided solely in volatile React state.
+- **Resolution**: Implemented persistent `localStorage` synchronization with lazy state initializers and reactive `useEffect` hooks for:
+  - `studentEnrollmentSelections` (`ssis_student_enrollments`)
+  - `studentAssessmentsList` (`ssis_student_assessments`)
+  - `paymentHistory` (`ssis_payment_history`)
+  - `studentClearanceMap` (`ssis_student_clearance_map`)
+  - `studentGradesMap` (`ssis_student_grades_map`)
+  - `documentRequests` (`ssis_document_requests`)
+  - `registrarQueue` (`ssis_registrar_queue`)
+  - `departmentStaffClearanceQueue` (`ssis_dept_clearance_queue`)
+  - `completedClearanceList` (`ssis_completed_clearance`)
+
+---
+
+### BUG-018: Clearance Progress Disconnect Between Student View and Department Review
+- **Category**: Academic / Clearance Workflow
+- **Severity**: **High**
+- **Status**: **Resolved**
+- **Files Affected**:
+  - [resources/js/context/AppContext.jsx](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/context/AppContext.jsx)
+  - [resources/js/views/StudentClearanceView.jsx](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/views/StudentClearanceView.jsx)
+- **Description**: When a student clicked "Request Review" for a clearance department, their personal clearance progress table remained stuck in its initial state without indicating that the request had been submitted for staff audit.
+- **Root Cause**: `applyForClearanceReview` and `applyForAllClearanceDepartments` only updated the global `clearanceList` instead of updating the student's isolated entry inside `studentClearanceMap[studentId]`.
+- **Resolution**: Updated clearance handlers in `AppContext.jsx` to synchronize both the global list and `studentClearanceMap[studentId]`, ensuring immediate real-time feedback and state persistence across portals.
+
+---
+
+### BUG-019: Cashier API Endpoint Plural Mismatch
+- **Category**: Cashier / API Routing
+- **Severity**: **Medium**
+- **Status**: **Resolved**
+- **Files Affected**:
+  - [resources/js/views/CashierPaymentView.jsx](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/views/CashierPaymentView.jsx)
+  - [routes/api.php](file:///c:/Users/Gams/Student-Services-Information-System/routes/api.php)
+- **Description**: Cashier point-of-sale terminal posted payments to `/api/cashier/payments` (plural), whereas Laravel API routes only declared `/api/cashier/payment` (singular), resulting in an HTTP 404 in production backends.
+- **Root Cause**: Pluralization discrepancy between frontend fetch call and backend route definition.
+- **Resolution**: Standardized the frontend fetch call in `CashierPaymentView.jsx` to `/api/cashier/payment` and added a route alias in `routes/api.php` so both endpoints succeed without error.
+
+---
+
+### BUG-020: Enrolled Units Mismatch in Student Dashboard Prior to Registrar Review
+- **Category**: Academic Workflow / Dashboard UX
+- **Severity**: **Medium**
+- **Status**: **Resolved**
+- **Files Affected**:
+  - [resources/js/views/StudentDashboardView.jsx](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/views/StudentDashboardView.jsx)
+- **Description**: After selecting courses in the Enrollment view, students returned to their Dashboard and saw "NOT YET ENROLLED • 0 UNITS" because the status pill only checked approved grade records or queue items with a strict `totalUnits` property.
+- **Root Cause**: Unit calculation ignored `studentEnrollmentSelections` during the active semester selection period.
+- **Resolution**: Calibrated `enrolledUnits` calculation to inspect `registrarQueue[activeStudentId].totalUnits`, `studentEnrollmentSelections[activeStudentId]`, and graded records sequentially, correctly displaying the enrolled unit load.
 
 ---
 *Report maintained and updated by Antigravity AI Assistant.*

@@ -256,7 +256,7 @@ class SSISController extends Controller
             ->first();
 
         if ($student) {
-            if ($student->account_status === 'Disabled') {
+            if ($student->account_status === 'Disabled' || $student->account_status === 'Deactivated') {
                 return response()->json([
                     'success' => false,
                     'message' => 'Your student account has been deactivated. Please contact the University Registrar or Administrator.',
@@ -292,7 +292,7 @@ class SSISController extends Controller
             ->first();
 
         if ($admin) {
-            if ($admin->account_status === 'Disabled') {
+            if ($admin->account_status === 'Disabled' || $admin->account_status === 'Deactivated') {
                 return response()->json([
                     'success' => false,
                     'message' => 'Your staff account has been deactivated. Please contact the System Administrator.',
@@ -726,8 +726,11 @@ class SSISController extends Controller
         $user = AdminUser::find($id);
         $adminId = AdminUser::where('role', 'Admin')->first()?->id;
 
+        $targetStatus = $request->input('status');
+        $resolvedStatus = $targetStatus ? (($targetStatus === 'Deactivated' || $targetStatus === 'Disabled') ? 'Disabled' : 'Active') : null;
+
         if ($user) {
-            $user->account_status = $user->account_status === 'Active' ? 'Disabled' : 'Active';
+            $user->account_status = $resolvedStatus ?: ($user->account_status === 'Active' ? 'Disabled' : 'Active');
             $user->save();
 
             AuditLog::record(
@@ -743,21 +746,25 @@ class SSISController extends Controller
             ]);
         }
 
-        $student = Student::findOrFail($id);
-        $student->account_status = $student->account_status === 'Active' ? 'Disabled' : 'Active';
-        $student->save();
+        $student = Student::find($id);
+        if ($student) {
+            $student->account_status = $resolvedStatus ?: ($student->account_status === 'Active' ? 'Disabled' : 'Active');
+            $student->save();
 
-        AuditLog::record(
-            "Account {$student->account_status} (V. Ramos • {$student->full_name})",
-            'students',
-            $student->id,
-            $adminId
-        );
+            AuditLog::record(
+                "Account {$student->account_status} (V. Ramos • {$student->full_name})",
+                'students',
+                $student->id,
+                $adminId
+            );
 
-        return response()->json([
-            'success' => true,
-            'student' => $student,
-        ]);
+            return response()->json([
+                'success' => true,
+                'student' => $student,
+            ]);
+        }
+
+        return response()->json(['success' => false, 'message' => 'User not found'], 404);
     }
 
     /**

@@ -79,14 +79,19 @@ export const AdminAccountsAuditView = () => {
 
     // Update demoUsers which powers adminUsersList
     setDemoUsers(prev =>
-      prev.map(u => (u.id === targetUser.id || (u.email && u.email === targetUser.email))
-        ? { ...u, role: newRole, status: newStatus, account: newStatus }
-        : u
-      )
+      prev.map(u => (
+        u.id === targetUser.id || 
+        (u.email && targetUser.email && u.email === targetUser.email) ||
+        (u.student_id_number && targetUser.student_id_number && u.student_id_number === targetUser.student_id_number)
+      ) ? { ...u, role: newRole, status: newStatus, account: newStatus } : u)
     );
 
     // If currently logged-in user is updated
-    if (currentUser && (currentUser.id === targetUser.id || (currentUser.email && currentUser.email === targetUser.email))) {
+    if (currentUser && (
+      currentUser.id === targetUser.id || 
+      (currentUser.email && targetUser.email && currentUser.email === targetUser.email) ||
+      (currentUser.student_id_number && targetUser.student_id_number && currentUser.student_id_number === targetUser.student_id_number)
+    )) {
       if (newStatus === 'Deactivated') {
         setCurrentUser(null);
         setCurrentView('login');
@@ -125,14 +130,19 @@ export const AdminAccountsAuditView = () => {
     const newStatus = isCurrentlyActive ? 'Deactivated' : 'Active';
 
     setDemoUsers(prev =>
-      prev.map(u => (u.id === user.id || (u.email && u.email === user.email))
-        ? { ...u, account: newStatus, status: newStatus }
-        : u
-      )
+      prev.map(u => (
+        u.id === user.id || 
+        (u.email && user.email && u.email === user.email) ||
+        (u.student_id_number && user.student_id_number && u.student_id_number === user.student_id_number)
+      ) ? { ...u, account: newStatus, status: newStatus } : u)
     );
 
     // If currently logged-in user is deactivated, log them out immediately
-    if (currentUser && (currentUser.id === user.id || (currentUser.email && currentUser.email === user.email)) && newStatus === 'Deactivated') {
+    if (currentUser && (
+      currentUser.id === user.id || 
+      (currentUser.email && user.email && currentUser.email === user.email) ||
+      (currentUser.student_id_number && user.student_id_number && currentUser.student_id_number === user.student_id_number)
+    ) && newStatus === 'Deactivated') {
       setCurrentUser(null);
       setCurrentView('login');
       localStorage.removeItem('ssis_current_user');
@@ -146,6 +156,7 @@ export const AdminAccountsAuditView = () => {
     fetch(`/api/admin/users/${user.id}/toggle-status`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus }),
     }).catch(err => console.log('Client-side synced', err));
   };
 
@@ -155,11 +166,19 @@ export const AdminAccountsAuditView = () => {
 
     // Update in demoUsers
     setDemoUsers(prev =>
-      prev.map(u => (u.id === user.id || (u.email && u.email === user.email)) ? { ...u, role: newRole } : u)
+      prev.map(u => (
+        u.id === user.id || 
+        (u.email && user.email && u.email === user.email) ||
+        (u.student_id_number && user.student_id_number && u.student_id_number === user.student_id_number)
+      ) ? { ...u, role: newRole } : u)
     );
 
     // If currently logged-in user, update session role
-    if (currentUser && (currentUser.id === user.id || (currentUser.email && currentUser.email === user.email))) {
+    if (currentUser && (
+      currentUser.id === user.id || 
+      (currentUser.email && user.email && currentUser.email === user.email) ||
+      (currentUser.student_id_number && user.student_id_number && currentUser.student_id_number === user.student_id_number)
+    )) {
       setCurrentUser(prev => ({ ...prev, role: newRole }));
     }
 

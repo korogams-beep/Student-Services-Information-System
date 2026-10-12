@@ -23,6 +23,7 @@ Route::post('/registrar/documents/{id}/release', [SSISController::class, 'releas
 // Cashier Operations
 Route::get('/cashier/data', [SSISController::class, 'getCashierData']);
 Route::post('/cashier/payment', [SSISController::class, 'recordPayment']);
+Route::post('/cashier/payments', [SSISController::class, 'recordPayment']);
 
 // Department Staff Operations
 Route::get('/clearance/data', [SSISController::class, 'getClearanceData']);
