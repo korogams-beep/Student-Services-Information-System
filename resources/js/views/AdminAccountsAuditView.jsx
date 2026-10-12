@@ -12,7 +12,13 @@ import {
   Key, 
   Save, 
   Server,
-  Filter
+  Filter,
+  Edit3,
+  UserCheck,
+  UserX,
+  AlertCircle,
+  X,
+  Shield
 } from 'lucide-react';
 
 export const AdminAccountsAuditView = () => {
@@ -21,6 +27,7 @@ export const AdminAccountsAuditView = () => {
     setCurrentView,
     currentUser,
     setCurrentUser,
+    demoUsers,
     setDemoUsers,
     adminUsersList, 
     setAdminUsersList, 
@@ -41,20 +48,99 @@ export const AdminAccountsAuditView = () => {
   const [isEnrollmentOpen, setIsEnrollmentOpen] = useState(true);
   const [tuitionPerUnit, setTuitionPerUnit] = useState('1,500.00');
 
+  // Filter state for User Accounts
+  const [userRoleFilter, setUserRoleFilter] = useState('ALL');
+
+  // Selected User for Edit Modal
+  const [selectedUserForEdit, setSelectedUserForEdit] = useState(null);
+  const [editUserRole, setEditUserRole] = useState('Student');
+  const [editUserStatus, setEditUserStatus] = useState('Active');
+
   // Audit Logs Filter
   const [auditModuleFilter, setAuditModuleFilter] = useState('ALL');
 
-  const handleToggleStatus = (user) => {
-    const newStatus = user.account === 'Active' ? 'Disabled' : 'Active';
-    setAdminUsersList(prev =>
-      prev.map(u => (u.id === user.id || (u.email && u.email === user.email)) ? { ...u, account: newStatus } : u)
+  const handleOpenEditModal = (user) => {
+    setSelectedUserForEdit(user);
+    setEditUserRole(user.role);
+    const isAct = (user.account === 'Active' || user.status === 'Active') &&
+                  user.account !== 'Deactivated' && user.status !== 'Deactivated' &&
+                  user.account !== 'Disabled' && user.status !== 'Disabled';
+    setEditUserStatus(isAct ? 'Active' : 'Deactivated');
+  };
+
+  const handleSaveUserEdit = (e) => {
+    e.preventDefault();
+    if (!selectedUserForEdit) return;
+
+    const targetUser = selectedUserForEdit;
+    const oldRole = targetUser.role;
+    const newRole = editUserRole;
+    const newStatus = editUserStatus;
+
+    // Update demoUsers which powers adminUsersList
+    setDemoUsers(prev =>
+      prev.map(u => (u.id === targetUser.id || (u.email && u.email === targetUser.email))
+        ? { ...u, role: newRole, status: newStatus, account: newStatus }
+        : u
+      )
     );
+
+    // If currently logged-in user is updated
+    if (currentUser && (currentUser.id === targetUser.id || (currentUser.email && currentUser.email === targetUser.email))) {
+      if (newStatus === 'Deactivated') {
+        setCurrentUser(null);
+        setCurrentView('login');
+        localStorage.removeItem('ssis_current_user');
+        showToast(`Your account was deactivated by administrator. Logged out.`);
+      } else {
+        setCurrentUser(prev => ({ ...prev, role: newRole, status: newStatus, account: newStatus }));
+      }
+    }
+
+    showToast(`Account updated: ${targetUser.name} (${newRole} • ${newStatus}).`);
+    recordAuditLog(`Account updated (${newRole} • ${newStatus})`, `V. Ramos • ${targetUser.name}`);
+
+    // Call backend sync endpoints
+    if (newRole !== oldRole) {
+      fetch(`/api/admin/users/${targetUser.id}/change-role`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: newRole }),
+      }).catch(err => console.log('Role sync note:', err));
+    }
+
+    fetch(`/api/admin/users/${targetUser.id}/toggle-status`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus }),
+    }).catch(err => console.log('Status sync note:', err));
+
+    setSelectedUserForEdit(null);
+  };
+
+  const handleToggleStatus = (user) => {
+    const isCurrentlyActive = (user.account === 'Active' || user.status === 'Active') &&
+                              user.account !== 'Deactivated' && user.status !== 'Deactivated' &&
+                              user.account !== 'Disabled' && user.status !== 'Disabled';
+    const newStatus = isCurrentlyActive ? 'Deactivated' : 'Active';
 
     setDemoUsers(prev =>
-      prev.map(u => (u.id === user.id || (u.email && u.email === user.email)) ? { ...u, status: newStatus } : u)
+      prev.map(u => (u.id === user.id || (u.email && u.email === user.email))
+        ? { ...u, account: newStatus, status: newStatus }
+        : u
+      )
     );
 
-    showToast(`Account status for ${user.name} changed to ${newStatus}.`);
+    // If currently logged-in user is deactivated, log them out immediately
+    if (currentUser && (currentUser.id === user.id || (currentUser.email && currentUser.email === user.email)) && newStatus === 'Deactivated') {
+      setCurrentUser(null);
+      setCurrentView('login');
+      localStorage.removeItem('ssis_current_user');
+      showToast(`Account for ${user.name} has been deactivated. User has been logged out.`);
+    } else {
+      showToast(`Account status for ${user.name} set to ${newStatus}.`);
+    }
+
     recordAuditLog(`Account ${newStatus.toLowerCase()}`, `V. Ramos • ${user.name}`);
 
     fetch(`/api/admin/users/${user.id}/toggle-status`, {
@@ -67,17 +153,12 @@ export const AdminAccountsAuditView = () => {
     if (user.role === newRole) return;
     const oldRole = user.role;
 
-    // 1. Update in admin users list
-    setAdminUsersList(prev =>
-      prev.map(u => (u.id === user.id || (u.email && u.email === user.email)) ? { ...u, role: newRole } : u)
-    );
-
-    // 2. Synchronize in demoUsers
+    // Update in demoUsers
     setDemoUsers(prev =>
       prev.map(u => (u.id === user.id || (u.email && u.email === user.email)) ? { ...u, role: newRole } : u)
     );
 
-    // 3. If currently logged-in user, update session
+    // If currently logged-in user, update session role
     if (currentUser && (currentUser.id === user.id || (currentUser.email && currentUser.email === user.email))) {
       setCurrentUser(prev => ({ ...prev, role: newRole }));
     }
@@ -92,8 +173,16 @@ export const AdminAccountsAuditView = () => {
     }).catch(err => console.log('Client-side synced', err));
   };
 
+  // Strictly dynamic active count per role (never hardcoded 8!)
   const getRoleActiveCount = (roleName) => {
-    return adminUsersList.filter(u => u.role === roleName && u.account === 'Active').length;
+    return demoUsers.filter(u =>
+      u.role === roleName &&
+      (u.account === 'Active' || u.status === 'Active') &&
+      u.account !== 'Deactivated' &&
+      u.status !== 'Deactivated' &&
+      u.account !== 'Disabled' &&
+      u.status !== 'Disabled'
+    ).length;
   };
 
   const handleSaveSettings = (e) => {
@@ -103,12 +192,22 @@ export const AdminAccountsAuditView = () => {
   };
 
   // Filter user accounts
-  const filteredUsers = adminUsersList.filter(u =>
-    !searchQuery ||
-    u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    u.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    u.account.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredUsers = adminUsersList.filter(u => {
+    const matchesSearch = !searchQuery ||
+      u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.student_id_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.account?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesRole = userRoleFilter === 'ALL' || 
+      (userRoleFilter === 'Student' && u.role === 'Student') ||
+      (userRoleFilter === 'Staff' && u.role !== 'Student') ||
+      (userRoleFilter === 'Active' && (u.account === 'Active' || u.status === 'Active') && u.account !== 'Deactivated' && u.status !== 'Deactivated') ||
+      (userRoleFilter === 'Deactivated' && (u.account === 'Deactivated' || u.status === 'Deactivated' || u.status === 'Disabled'));
+
+    return matchesSearch && matchesRole;
+  });
 
   // Filter audit logs
   const filteredLogs = auditLogsList.filter(l => {
@@ -182,93 +281,230 @@ export const AdminAccountsAuditView = () => {
       {/* VIEW 1: User Accounts Management */}
       {activeTab === 'user_accounts' && (
         <div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+          {/* Top Bar: Action & Quick Filter Pills */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => setUserRoleFilter('ALL')}
+                className={userRoleFilter === 'ALL' ? 'ssis-btn-primary' : 'ssis-btn-secondary'}
+                style={{ padding: '6px 14px', fontSize: '13px' }}
+              >
+                All Accounts ({adminUsersList.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setUserRoleFilter('Student')}
+                className={userRoleFilter === 'Student' ? 'ssis-btn-primary' : 'ssis-btn-secondary'}
+                style={{ padding: '6px 14px', fontSize: '13px' }}
+              >
+                Students ({adminUsersList.filter(u => u.role === 'Student').length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setUserRoleFilter('Staff')}
+                className={userRoleFilter === 'Staff' ? 'ssis-btn-primary' : 'ssis-btn-secondary'}
+                style={{ padding: '6px 14px', fontSize: '13px' }}
+              >
+                Staff & Admin ({adminUsersList.filter(u => u.role !== 'Student').length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setUserRoleFilter('Active')}
+                className={userRoleFilter === 'Active' ? 'ssis-btn-primary' : 'ssis-btn-secondary'}
+                style={{ padding: '6px 14px', fontSize: '13px' }}
+              >
+                Active ({adminUsersList.filter(u => (u.account === 'Active' || u.status === 'Active') && u.account !== 'Deactivated' && u.status !== 'Deactivated').length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setUserRoleFilter('Deactivated')}
+                className={userRoleFilter === 'Deactivated' ? 'ssis-btn-primary' : 'ssis-btn-secondary'}
+                style={{ padding: '6px 14px', fontSize: '13px' }}
+              >
+                Deactivated ({adminUsersList.filter(u => u.account === 'Deactivated' || u.status === 'Deactivated' || u.status === 'Disabled').length})
+              </button>
+            </div>
+
             <button
               onClick={() => setIsAddUserModalOpen(true)}
               className="ssis-btn-primary"
-              style={{ padding: '10px 20px', fontSize: '14px' }}
+              style={{ padding: '10px 20px', fontSize: '14px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
             >
               <Plus size={16} />
               <span>Add User Account</span>
             </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '32px', alignItems: 'start' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1.45fr 0.95fr', gap: '28px', alignItems: 'start' }}>
             <div className="ssis-table-container">
               <table className="ssis-table">
                 <thead>
                   <tr>
                     <th>Account Holder</th>
                     <th>Assigned Role</th>
-                    <th style={{ textAlign: 'right' }}>Account Status</th>
+                    <th>Status</th>
+                    <th style={{ textAlign: 'right' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredUsers.map(user => {
-                    const isActive = user.account === 'Active';
-                    return (
-                      <tr key={user.id || user.name}>
-                        <td>
-                          <strong style={{ color: '#0F172A' }}>{user.name}</strong>
-                          <span style={{ color: '#64748B', fontSize: '12px', display: 'block' }}>
-                            {user.email || `${user.name.toLowerCase().replace(/\s+/g, '.')}@university.edu`}
-                          </span>
-                        </td>
-                        <td>
-                          <select
-                            value={user.role}
-                            onChange={(e) => handleRoleChange(user, e.target.value)}
-                            style={{
-                              padding: '6px 12px',
-                              borderRadius: '6px',
-                              border: '1px solid #CBD5E1',
-                              fontSize: '12.5px',
-                              fontWeight: '600',
-                              backgroundColor: '#F8FAFC',
-                              color: '#0F172A',
-                              cursor: 'pointer',
-                              outline: 'none',
-                            }}
-                          >
-                            <option value="Student">Student</option>
-                            <option value="Registrar">Registrar</option>
-                            <option value="Cashier">Cashier</option>
-                            <option value="Department Staff">Department Staff</option>
-                            <option value="Admin">Admin</option>
-                          </select>
-                        </td>
-                        <td style={{ textAlign: 'right' }}>
-                          <button
-                            onClick={() => handleToggleStatus(user)}
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              cursor: 'pointer',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '8px',
-                              fontSize: '13.5px',
-                              color: isActive ? '#0F172A' : '#94A3B8',
-                              fontWeight: '600',
-                            }}
-                            title="Click to toggle active status"
-                          >
-                            <span>{user.account}</span>
+                  {filteredUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan="4" style={{ textAlign: 'center', padding: '36px', color: '#64748B' }}>
+                        No user accounts match the selected criteria.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredUsers.map(user => {
+                      const isActive = (user.account === 'Active' || user.status === 'Active') &&
+                                        user.account !== 'Deactivated' && user.status !== 'Deactivated' &&
+                                        user.account !== 'Disabled' && user.status !== 'Disabled';
+                      const isStudent = user.role === 'Student';
+
+                      const roleBadgeStyles = {
+                        Student: { bg: '#FFE4E6', color: '#9F1239', border: '#FECDD3' },
+                        Registrar: { bg: '#EDE9FE', color: '#5B21B6', border: '#DDD6FE' },
+                        Cashier: { bg: '#FEF3C7', color: '#92400E', border: '#FDE68A' },
+                        'Department Staff': { bg: '#DBEAFE', color: '#1E40AF', border: '#BFDBFE' },
+                        Admin: { bg: '#DCFCE7', color: '#166534', border: '#BBF7D0' },
+                      }[user.role] || { bg: '#F1F5F9', color: '#334155', border: '#CBD5E1' };
+
+                      return (
+                        <tr key={user.id || user.name || user.email}>
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <div
+                                style={{
+                                  width: '34px',
+                                  height: '34px',
+                                  borderRadius: '50%',
+                                  backgroundColor: roleBadgeStyles.bg,
+                                  color: roleBadgeStyles.color,
+                                  fontWeight: '800',
+                                  fontSize: '12px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {user.initials || user.name.slice(0, 2).toUpperCase()}
+                              </div>
+                              <div>
+                                <strong style={{ color: '#0F172A', display: 'block', fontSize: '13.5px' }}>
+                                  {user.name}
+                                </strong>
+                                <span style={{ color: '#64748B', fontSize: '12px', display: 'block' }}>
+                                  {user.email || `${user.username || 'user'}@cuyotech.edu.ph`}
+                                </span>
+                                {isStudent && user.student_id_number && (
+                                  <span style={{ fontSize: '11px', color: '#0284C7', fontWeight: '600' }}>
+                                    ID: {user.student_id_number} {user.program ? `• ${user.program}` : ''}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <select
+                              value={user.role}
+                              onChange={(e) => handleRoleChange(user, e.target.value)}
+                              style={{
+                                padding: '6px 12px',
+                                borderRadius: '6px',
+                                border: `1.5px solid ${roleBadgeStyles.border}`,
+                                fontSize: '12.5px',
+                                fontWeight: '700',
+                                backgroundColor: roleBadgeStyles.bg,
+                                color: roleBadgeStyles.color,
+                                cursor: 'pointer',
+                                outline: 'none',
+                              }}
+                              title="Select new role to update permissions"
+                            >
+                              <option value="Student">Student</option>
+                              <option value="Registrar">Registrar</option>
+                              <option value="Cashier">Cashier</option>
+                              <option value="Department Staff">Department Staff</option>
+                              <option value="Admin">Admin</option>
+                            </select>
+                          </td>
+                          <td>
                             <span
                               style={{
-                                display: 'inline-block',
-                                width: '9px',
-                                height: '9px',
-                                borderRadius: '50%',
-                                backgroundColor: isActive ? '#22C55E' : 'transparent',
-                                border: isActive ? 'none' : '1.5px solid #94A3B8',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                padding: '4px 10px',
+                                borderRadius: '12px',
+                                fontSize: '12px',
+                                fontWeight: '700',
+                                backgroundColor: isActive ? '#DCFCE7' : '#FEE2E2',
+                                color: isActive ? '#166534' : '#991B1B',
                               }}
-                            />
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                            >
+                              <span
+                                style={{
+                                  width: '7px',
+                                  height: '7px',
+                                  borderRadius: '50%',
+                                  backgroundColor: isActive ? '#22C55E' : '#EF4444',
+                                }}
+                              />
+                              {isActive ? 'Active' : 'Deactivated'}
+                            </span>
+                          </td>
+                          <td style={{ textAlign: 'right' }}>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                              <button
+                                type="button"
+                                onClick={() => handleToggleStatus(user)}
+                                style={{
+                                  padding: '5px 12px',
+                                  borderRadius: '6px',
+                                  fontSize: '12px',
+                                  fontWeight: '700',
+                                  cursor: 'pointer',
+                                  border: isActive ? '1px solid #FECACA' : '1px solid #BBF7D0',
+                                  backgroundColor: isActive ? '#FEF2F2' : '#F0FDF4',
+                                  color: isActive ? '#DC2626' : '#16A34A',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '5px',
+                                }}
+                                title={isActive ? 'Deactivate user access' : 'Reactivate user access'}
+                              >
+                                {isActive ? <UserX size={13} /> : <UserCheck size={13} />}
+                                <span>{isActive ? 'Deactivate' : 'Activate'}</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditModal(user)}
+                                style={{
+                                  padding: '5px 10px',
+                                  borderRadius: '6px',
+                                  fontSize: '12px',
+                                  fontWeight: '600',
+                                  cursor: 'pointer',
+                                  border: '1px solid #CBD5E1',
+                                  backgroundColor: '#F8FAFC',
+                                  color: '#334155',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                }}
+                                title="Edit user role and account status"
+                              >
+                                <Edit3 size={13} />
+                                <span>Edit</span>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </div>
@@ -278,21 +514,21 @@ export const AdminAccountsAuditView = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <h3 className="ssis-card-title" style={{ marginBottom: 0 }}>Recent Activity</h3>
                 <button
-                  onClick={() => setActiveTab('audit_logs_view')}
+                  onClick={() => setCurrentView('audit_logs_view')}
                   style={{ background: 'none', border: 'none', color: '#4338CA', fontSize: '12.5px', fontWeight: '600', cursor: 'pointer' }}
                 >
                   View All &rarr;
                 </button>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {auditLogsList.slice(0, 5).map(log => (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                {auditLogsList.slice(0, 6).map(log => (
                   <div key={log.id} style={{ display: 'flex', flexDirection: 'column', gap: '2px', borderBottom: '1px solid #F1F5F9', paddingBottom: '10px' }}>
-                    <div style={{ fontSize: '13.5px', color: '#1E293B', fontWeight: '600' }}>
-                      <span style={{ color: '#64748B', marginRight: '6px', fontSize: '12px' }}>{log.time}</span>
+                    <div style={{ fontSize: '13px', color: '#1E293B', fontWeight: '600' }}>
+                      <span style={{ color: '#64748B', marginRight: '6px', fontSize: '11.5px' }}>{log.time}</span>
                       {log.action}
                     </div>
-                    <div style={{ fontSize: '12.5px', color: '#64748B' }}>
+                    <div style={{ fontSize: '12px', color: '#64748B' }}>
                       {log.detail}
                     </div>
                   </div>
@@ -300,6 +536,152 @@ export const AdminAccountsAuditView = () => {
               </div>
             </div>
           </div>
+
+          {/* EDIT USER ACCOUNT MODAL */}
+          {selectedUserForEdit && (
+            <div className="ssis-modal-backdrop" onClick={() => setSelectedUserForEdit(null)}>
+              <div className="ssis-modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Shield size={22} color="#D97706" />
+                    <h3 style={{ fontSize: '19px', fontWeight: '700', color: '#0F172A', margin: 0 }}>
+                      Manage User Account
+                    </h3>
+                  </div>
+                  <button
+                    onClick={() => setSelectedUserForEdit(null)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748B' }}
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <div style={{ padding: '14px 16px', backgroundColor: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0', marginBottom: '20px' }}>
+                  <strong style={{ fontSize: '15px', color: '#0F172A', display: 'block' }}>
+                    {selectedUserForEdit.name}
+                  </strong>
+                  <span style={{ fontSize: '12.5px', color: '#64748B', display: 'block', marginTop: '2px' }}>
+                    {selectedUserForEdit.email || selectedUserForEdit.username}
+                  </span>
+                  {selectedUserForEdit.student_id_number && (
+                    <span style={{ fontSize: '12px', color: '#0284C7', fontWeight: '600', display: 'block', marginTop: '4px' }}>
+                      Student ID: {selectedUserForEdit.student_id_number}
+                    </span>
+                  )}
+                </div>
+
+                <form onSubmit={handleSaveUserEdit}>
+                  <div className="ssis-form-group" style={{ marginBottom: '18px' }}>
+                    <label className="ssis-label">Assigned Role</label>
+                    <select
+                      className="ssis-select"
+                      value={editUserRole}
+                      onChange={(e) => setEditUserRole(e.target.value)}
+                      required
+                    >
+                      <option value="Student">Student</option>
+                      <option value="Registrar">Registrar</option>
+                      <option value="Cashier">Cashier</option>
+                      <option value="Department Staff">Department Staff</option>
+                      <option value="Admin">Admin</option>
+                    </select>
+                    <span style={{ fontSize: '11.5px', color: '#64748B', marginTop: '4px', display: 'block' }}>
+                      Controls available workspaces, menus, and transaction authorizations.
+                    </span>
+                  </div>
+
+                  <div className="ssis-form-group" style={{ marginBottom: '20px' }}>
+                    <label className="ssis-label">Account Status</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                      <label
+                        style={{
+                          padding: '12px',
+                          borderRadius: '8px',
+                          border: editUserStatus === 'Active' ? '2px solid #22C55E' : '1px solid #CBD5E1',
+                          backgroundColor: editUserStatus === 'Active' ? '#F0FDF4' : '#FFFFFF',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          name="statusRadio"
+                          value="Active"
+                          checked={editUserStatus === 'Active'}
+                          onChange={() => setEditUserStatus('Active')}
+                        />
+                        <span style={{ fontWeight: '700', fontSize: '13.5px', color: '#166534' }}>Active</span>
+                      </label>
+
+                      <label
+                        style={{
+                          padding: '12px',
+                          borderRadius: '8px',
+                          border: editUserStatus === 'Deactivated' ? '2px solid #EF4444' : '1px solid #CBD5E1',
+                          backgroundColor: editUserStatus === 'Deactivated' ? '#FEF2F2' : '#FFFFFF',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          name="statusRadio"
+                          value="Deactivated"
+                          checked={editUserStatus === 'Deactivated'}
+                          onChange={() => setEditUserStatus('Deactivated')}
+                        />
+                        <span style={{ fontWeight: '700', fontSize: '13.5px', color: '#991B1B' }}>Deactivated</span>
+                      </label>
+                    </div>
+
+                    {editUserStatus === 'Deactivated' && (
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: '8px',
+                          marginTop: '10px',
+                          padding: '10px 12px',
+                          borderRadius: '6px',
+                          backgroundColor: '#FEF2F2',
+                          border: '1px solid #FECACA',
+                          fontSize: '12px',
+                          color: '#991B1B',
+                        }}
+                      >
+                        <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
+                        <span>
+                          Deactivated accounts cannot authenticate or access the portal until reactivated by an administrator.
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '24px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedUserForEdit(null)}
+                      className="ssis-btn-secondary"
+                      style={{ padding: '10px 18px', fontSize: '13.5px' }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="ssis-btn-primary"
+                      style={{ padding: '10px 22px', fontSize: '13.5px' }}
+                    >
+                      Save Changes
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

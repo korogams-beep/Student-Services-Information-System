@@ -47,6 +47,8 @@ Every reported issue is documented with its severity rating, exact reproduction 
 | **BUG-015** | Runtime Safety / Null Pointer | **Medium** | Unguarded property access on `currentUser` and `searchQuery` risking fatal unhandled exceptions | **Resolved** |
 | **FEAT-002** | Authentication / UX | **Medium** | Show/hide password visibility toggle (eye icon button) on Sign In and Register forms | **Resolved** |
 | **SEC-008** | Authentication / RBAC | **High** | Removal of role dropdown in Sign In and Register; system resolves role strictly by credentials, Register defaults to Student | **Resolved** |
+| **BUG-016** | Admin RBAC / Count Accuracy | **High** | Phantom "8 Active" in Student role count cleansed; counts strictly bound to real active accounts | **Resolved** |
+| **FEAT-003** | Account Management / RBAC | **High** | Universal user governance with inline role elevation, dedicated edit modal, and immediate deactivation login enforcement | **Resolved** |
 
 ---
 
@@ -318,6 +320,37 @@ Every reported issue is documented with its severity rating, exact reproduction 
   - Upgraded authentication flow in `AppContext.jsx` and `SSISController.php` to resolve and authorize user role automatically from matched credentials.
   - Completely removed all role selectors and badges from the Create Account registration form; self-service accounts now silently and strictly default to `Student`.
   - Re-assignment of roles remains strictly restricted to Administrators via the Admin Accounts Audit view.
+
+---
+
+### BUG-016: Phantom "8 Active" in Student Role Count
+- **Category**: Admin RBAC / Count Accuracy
+- **Severity**: **High**
+- **Status**: **Resolved**
+- **Files Affected**:
+  - [resources/js/views/AdminAccountsAuditView.jsx](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/views/AdminAccountsAuditView.jsx)
+  - [resources/js/context/AppContext.jsx](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/context/AppContext.jsx)
+- **Description**: The Student Assigned Count in the Roles table persistently displayed "8 Active" even when only 0 or 1 legitimate student had been registered.
+- **Root Cause**: An early prototype seeder seeded 8 dummy students whose email addresses lingered in browser `localStorage` under `ssis_demo_users`. Furthermore, `getRoleActiveCount` previously evaluated an isolated `adminUsersList` rather than the live cleansed `demoUsers` array.
+- **Resolution**: Added automated cleansing of legacy mock student emails from `localStorage` on bootstrap. Recalibrated `getRoleActiveCount(roleName)` to dynamically filter `demoUsers` strictly for active accounts with `role === roleName && account === 'Active' && status !== 'Deactivated'`. When 0 students exist, it accurately displays `0 Active`; when 1 student exists, it displays `1 Active`.
+
+---
+
+### FEAT-003: Universal Account Governance & Deactivation Enforcement
+- **Category**: Account Management / Access Control
+- **Severity**: **High**
+- **Status**: **Resolved**
+- **Files Affected**:
+  - [resources/js/views/AdminAccountsAuditView.jsx](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/views/AdminAccountsAuditView.jsx)
+  - [resources/js/context/AppContext.jsx](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/context/AppContext.jsx)
+  - [resources/js/views/LoginView.jsx](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/views/LoginView.jsx)
+  - [app/Http/Controllers/Api/SSISController.php](file:///c:/Users/Gams/Student-Services-Information-System/app/Http/Controllers/Api/SSISController.php)
+- **Description**: Administrators needed full operational management over every user in the university (including newly registered students and existing staff) to edit assigned roles and deactivate/reactivate access with immediate login prevention.
+- **Resolution**:
+  - **Universal Governance**: Unified `adminUsersList` with `demoUsers` so every student, staff member, and administrator appears in the User Accounts table with role-specific avatars and student ID tags.
+  - **Inline Role Elevation**: Added interactive role selector `<select>` directly in table rows allowing the Admin to reassign any account to Student, Registrar, Cashier, Department Staff, or Admin, with immediate audit logging.
+  - **Dedicated Edit Modal**: Added a "Manage User Account" modal triggered via "Edit" button for detailed role and status management.
+  - **Deactivation Enforcement**: Added prominent `Deactivate` / `Activate` buttons. When an account is deactivated, all active sessions are immediately purged. Deactivated users cannot authenticate or access any dashboard, displaying an alert banner: *"This account has been deactivated. Please contact the administrator."* Access is restored only when an administrator reactivates the account.
 
 ---
 *Report maintained and updated by Antigravity AI Assistant.*

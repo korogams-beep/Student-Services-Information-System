@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { User, Lock, Mail, GraduationCap, ShieldCheck, CheckCircle2, UserPlus, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { User, Lock, Mail, GraduationCap, ShieldCheck, CheckCircle2, UserPlus, ArrowRight, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
 export const LoginView = () => {
   const { loginWithCredentials, signUpUser, demoUsers } = useApp();
@@ -9,6 +9,7 @@ export const LoginView = () => {
   const [emailOrId, setEmailOrId] = useState('');
   const [password, setPassword] = useState('password');
   const [isLoading, setIsLoading] = useState(false);
+  const [loginError, setLoginError] = useState('');
 
   // Password visibility toggles
   const [showPassword, setShowPassword] = useState(false);
@@ -31,7 +32,13 @@ export const LoginView = () => {
       return;
     }
     setIsLoading(true);
-    await loginWithCredentials(emailOrId, password);
+    setLoginError('');
+    const res = await loginWithCredentials(emailOrId, password);
+    if (!res || !res.success) {
+      if (res?.message) {
+        setLoginError(res.message);
+      }
+    }
     setIsLoading(false);
   };
 
@@ -252,9 +259,30 @@ export const LoginView = () => {
               <h2 style={{ fontSize: '24px', fontWeight: '800', color: '#0F172A', marginBottom: '6px' }}>
                 Welcome to CuyoTech University
               </h2>
-              <p style={{ fontSize: '13.5px', color: '#64748B', marginBottom: '24px' }}>
+              <p style={{ fontSize: '13.5px', color: '#64748B', marginBottom: '20px' }}>
                 Sign in with your email or Student ID to access your portal
               </p>
+
+              {loginError && (
+                <div
+                  style={{
+                    padding: '12px 14px',
+                    borderRadius: '8px',
+                    backgroundColor: '#FEF2F2',
+                    border: '1px solid #FECACA',
+                    color: '#991B1B',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    marginBottom: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                  }}
+                >
+                  <AlertCircle size={18} style={{ flexShrink: 0 }} />
+                  <span>{loginError}</span>
+                </div>
+              )}
 
               <div className="ssis-form-group">
                 <label className="ssis-label">Email, Username, or Student ID</label>

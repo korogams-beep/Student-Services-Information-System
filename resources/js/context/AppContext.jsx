@@ -47,11 +47,47 @@ export const AppProvider = ({ children }) => {
     },
   ];
 
+  const LEGACY_DUMMY_STUDENT_EMAILS = new Set([
+    'm.santos@cuyotech.edu.ph',
+    'm.reyes@cuyotech.edu.ph',
+    'a.cruz@cuyotech.edu.ph',
+    'p.mendoza@cuyotech.edu.ph',
+    'j.torres@cuyotech.edu.ph',
+    'c.diaz@cuyotech.edu.ph',
+    'j.tan@cuyotech.edu.ph',
+    'a.lim@cuyotech.edu.ph',
+    'maria.santos@university.edu',
+    'miguel.reyes@university.edu',
+    'angela.cruz@university.edu',
+    'paolo.mendoza@university.edu',
+    'jessa.torres@university.edu',
+    'carlo.diaz@university.edu',
+    'joyce.tan@university.edu',
+    'ana.lim@university.edu',
+    'maria.santos@cuyotech.edu.ph',
+    'miguel.reyes@cuyotech.edu.ph',
+    'angela.cruz@cuyotech.edu.ph',
+    'paolo.mendoza@cuyotech.edu.ph',
+    'jessa.torres@cuyotech.edu.ph',
+    'carlo.diaz@cuyotech.edu.ph',
+    'joyce.tan@cuyotech.edu.ph',
+    'ana.lim@cuyotech.edu.ph',
+  ]);
+
   // Auth & Navigation state with localStorage session persistence
   const [demoUsers, setDemoUsers] = useState(() => {
     try {
       const saved = localStorage.getItem('ssis_demo_users');
-      return saved ? JSON.parse(saved) : initialUsers;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const cleansed = parsed.filter(u => !LEGACY_DUMMY_STUDENT_EMAILS.has(u.email?.toLowerCase()));
+          const existingEmails = new Set(cleansed.map(u => u.email?.toLowerCase()));
+          const missingStaff = initialUsers.filter(s => !existingEmails.has(s.email?.toLowerCase()));
+          return [...cleansed, ...missingStaff];
+        }
+      }
+      return initialUsers;
     } catch {
       return initialUsers;
     }
@@ -179,29 +215,28 @@ export const AppProvider = ({ children }) => {
     { id: 4, title: 'Locker Key Surrender', description: 'Department-assigned storage lockers must be emptied and keys returned to the department secretary.', active: false },
   ]);
 
-  // Admin User Accounts & Audit Logs
-  const [adminUsersList, setAdminUsersList] = useState(() => {
-    try {
-      const saved = localStorage.getItem('ssis_admin_users');
-      if (saved) return JSON.parse(saved);
-    } catch (e) {
-      console.error(e);
-    }
-    return [
-      { id: 2, name: 'Ramon Alcantara', role: 'Registrar', account: 'Active', email: 'r.alcantara@cuyotech.edu.ph' },
-      { id: 3, name: 'Leah Navarro', role: 'Cashier', account: 'Active', email: 'l.navarro@cuyotech.edu.ph' },
-      { id: 4, name: 'Dina Flores', role: 'Department Staff', account: 'Active', email: 'd.flores@cuyotech.edu.ph' },
-      { id: 5, name: 'Victor Ramos', role: 'Admin', account: 'Active', email: 'v.ramos@cuyotech.edu.ph' },
-    ];
-  });
+  // Admin User Accounts: Dynamically synchronized with demoUsers so ALL students, staff, and admins appear in User Accounts
+  const adminUsersList = demoUsers.map(u => ({
+    ...u,
+    account: (u.status === 'Disabled' || u.status === 'Deactivated' || u.account === 'Disabled' || u.account === 'Deactivated') ? 'Deactivated' : 'Active',
+    status: (u.status === 'Disabled' || u.status === 'Deactivated' || u.account === 'Disabled' || u.account === 'Deactivated') ? 'Deactivated' : 'Active',
+  }));
 
-  useEffect(() => {
-    try {
-      localStorage.setItem('ssis_admin_users', JSON.stringify(adminUsersList));
-    } catch (e) {
-      console.error(e);
-    }
-  }, [adminUsersList]);
+  const setAdminUsersList = (updater) => {
+    setDemoUsers(prev => {
+      const currentList = prev.map(u => ({
+        ...u,
+        account: (u.status === 'Disabled' || u.status === 'Deactivated' || u.account === 'Disabled' || u.account === 'Deactivated') ? 'Deactivated' : 'Active',
+        status: (u.status === 'Disabled' || u.status === 'Deactivated' || u.account === 'Disabled' || u.account === 'Deactivated') ? 'Deactivated' : 'Active',
+      }));
+      const next = typeof updater === 'function' ? updater(currentList) : updater;
+      return next.map(u => ({
+        ...u,
+        status: (u.account === 'Disabled' || u.account === 'Deactivated' || u.status === 'Disabled' || u.status === 'Deactivated') ? 'Deactivated' : 'Active',
+        account: (u.account === 'Disabled' || u.account === 'Deactivated' || u.status === 'Disabled' || u.status === 'Deactivated') ? 'Deactivated' : 'Active',
+      }));
+    });
+  };
 
   const [auditLogsList, setAuditLogsList] = useState([
     { id: 1, time: '10:42 AM', action: 'System initialized', detail: 'CuyoTech SSIS Database connected', user: 'System' },
@@ -714,9 +749,14 @@ export const AppProvider = ({ children }) => {
     );
 
     if (found) {
-      if (found.status === 'Disabled' || found.account === 'Disabled') {
+      if (
+        found.status === 'Disabled' || 
+        found.status === 'Deactivated' || 
+        found.account === 'Disabled' || 
+        found.account === 'Deactivated'
+      ) {
         showToast('This account has been deactivated. Please contact the administrator.');
-        return { success: false };
+        return { success: false, message: 'This account has been deactivated. Please contact the administrator.' };
       }
 
       setCurrentUser(found);
@@ -896,38 +936,25 @@ export const AppProvider = ({ children }) => {
           })));
         }
         if (data.studentsList && data.studentsList.length > 0) {
-          // Merge registered students into demoUsers
-          const dbStudents = data.studentsList.map(s => ({
-            id: s.id,
-            name: `${s.first_name} ${s.last_name}`,
-            email: s.email,
-            student_id_number: s.student_id_number,
-            role: 'Student',
-            initials: (s.first_name[0] || 'S') + (s.last_name[0] || 'T'),
-            program: s.program?.program_name || 'BS Computer Science',
-            yearLevel: `${s.year_level || 1} Year`,
-            status: s.account_status || 'Active',
-          }));
+          const dbStudents = data.studentsList
+            .filter(s => !LEGACY_DUMMY_STUDENT_EMAILS.has(s.email?.toLowerCase()))
+            .map(s => ({
+              id: s.id,
+              name: `${s.first_name} ${s.last_name}`,
+              email: s.email,
+              student_id_number: s.student_id_number,
+              role: 'Student',
+              initials: (s.first_name[0] || 'S') + (s.last_name[0] || 'T'),
+              program: s.program?.program_name || 'BS Computer Science',
+              yearLevel: `${s.year_level || 1} Year`,
+              status: s.account_status || 'Active',
+              account: s.account_status || 'Active',
+            }));
 
           setDemoUsers(prev => {
-            const existingEmails = new Set(prev.map(p => p.email));
-            const newOnes = dbStudents.filter(s => !existingEmails.has(s.email));
+            const existingEmails = new Set(prev.map(p => p.email?.toLowerCase()));
+            const newOnes = dbStudents.filter(s => !existingEmails.has(s.email?.toLowerCase()));
             return [...prev, ...newOnes];
-          });
-
-          // Sync database students into adminUsersList so admin can manage them
-          setAdminUsersList(prev => {
-            const existingIds = new Set(prev.map(p => p.id || p.email));
-            const newStudentsForAdmin = dbStudents
-              .filter(s => !existingIds.has(s.id) && !existingIds.has(s.email))
-              .map(s => ({
-                id: s.id,
-                name: s.name,
-                role: 'Student',
-                account: s.status || 'Active',
-                email: s.email,
-              }));
-            return [...prev, ...newStudentsForAdmin];
           });
         }
       })
