@@ -64,9 +64,9 @@ Every reported issue is documented with its severity rating, exact reproduction 
 - **Status**: **Resolved**
 - **Files Affected**:
   - [c:\Users\Gams\Student-Services-Information-System\.env](file:///c:/Users/Gams/Student-Services-Information-System/.env)
-- **Description**: The `.env` file contained a hardcoded database password consisting of personal name and date information (`brent042006`).
-- **Root Cause**: Developer local testing credential was committed into the environment configuration.
-- **Resolution**: Replaced `DB_PASSWORD=brent042006` with `DB_PASSWORD=password` in `.env` as specified.
+- **Description**: The `.env` file contained an unstandardized personal database password.
+- **Root Cause**: Developer local testing credential was present in the environment configuration.
+- **Resolution**: Replaced with standard `DB_PASSWORD=password` across local MySQL and `.env`.
 
 ---
 
