@@ -498,4 +498,23 @@ Every reported issue is documented with its severity rating, exact reproduction 
   3. Updated `StudentEnrollmentView.jsx` with single-click row and checkbox synchronization, and updated `submitEnrollmentRequest` to accurately persist all selected course IDs, total units, and queue data to `studentEnrollmentSelections` and `localStorage`.
 
 ---
+
+### BUG-025: Account Duplication in Admin User Accounts Due to Dual State Dispatch
+- **Category**: State Management / Admin User Accounts
+- **Severity**: **High**
+- **Status**: **Resolved**
+- **Files Affected**:
+  - [resources/js/context/AppContext.jsx](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/context/AppContext.jsx)
+  - [resources/js/components/AddUserModal.jsx](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/components/AddUserModal.jsx)
+  - [resources/js/views/AdminAccountsAuditView.jsx](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/views/AdminAccountsAuditView.jsx)
+- **Description**: In the Admin "Accounts & Audit Logs" table, newly created student accounts appeared duplicated in pairs. One row displayed full student metadata (`ID: STU-2026-XXXX • BS Computer Science`, initials `BU`), while an adjacent duplicate row displayed stripped metadata (`ID: STU-2026-XXXX`, initials `BR` computed from slice fallback, and no degree program). In addition, Ramon Alcantara (Registrar) showed `ID: N/A`.
+- **Root Cause**:
+  1. `adminUsersList` is dynamically projected from `demoUsers`. However, both `signUpUser` in `AppContext.jsx` and `AddUserModal.jsx` called `setDemoUsers(...)` and subsequently called `setAdminUsersList(...)`. Because `setAdminUsersList` also dispatches updates into `demoUsers` with a stripped object (omitting `program` and `initials`), every account creation dispatched two separate objects into `demoUsers`.
+  2. `AdminAccountsAuditView.jsx` lacked a fallback role-matched ID for staff when `account_id` was unassigned, resulting in `ID: N/A` for Ramon Alcantara.
+- **Resolution**:
+  1. Removed redundant `setAdminUsersList` calls from `signUpUser` in `AppContext.jsx` and `AddUserModal.jsx`.
+  2. Wrapped `adminUsersList` directly in `deduplicateUsers(demoUsers)`, automatically deduplicating existing duplicate items stored in browser `localStorage`.
+  3. Ensured `deduplicateUsers` preserves full program name, initials, and assigns role-matched IDs (`REG-2026-0001`, `CSH-2026-0001`, `STF-2026-0001`, `ADM-2026-0001`) to all staff members so `ID: N/A` never occurs.
+
+---
 *Report maintained and updated by Antigravity AI Assistant.*

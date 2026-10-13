@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useApp } from '../context/AppContext';
+import { useApp, deduplicateUsers } from '../context/AppContext';
 import { X, UserPlus, Shield, Hash } from 'lucide-react';
 
 export const AddUserModal = () => {
@@ -134,8 +134,7 @@ export const AddUserModal = () => {
       }
     }
 
-    setAdminUsersList(prev => [...prev, newUser]);
-    setDemoUsers(prev => [...prev, newUser]);
+    setDemoUsers(prev => deduplicateUsers([...prev, newUser]));
     recordAuditLog('Account provisioned', `V. Ramos • ${newUser.name} (${newUser.role} • ID: ${finalAccountId})`);
     showToast(`User ${newUser.name} provisioned with role ${newUser.role} (ID: ${finalAccountId})!`);
 

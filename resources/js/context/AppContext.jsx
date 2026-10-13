@@ -165,6 +165,8 @@ export const deduplicateUsers = (list) => {
           ...staffByRole[targetRole],
           status: u.status || staffByRole[targetRole].status,
           account: u.account || staffByRole[targetRole].account,
+          account_id: staffByRole[targetRole].account_id,
+          student_id_number: staffByRole[targetRole].student_id_number,
         };
       }
     }
@@ -190,6 +192,7 @@ export const deduplicateUsers = (list) => {
       const formattedYear = formatYearLevel(u.yearLevel || u.year_level);
       const studentObj = {
         ...u,
+        program: u.program || 'BS Computer Science',
         yearLevel: formattedYear,
         year_level: parseInt(formattedYear.charAt(0), 10) || 1,
       };
@@ -203,13 +206,20 @@ export const deduplicateUsers = (list) => {
         students[existingIdx] = {
           ...existing,
           ...studentObj,
+          program: existing.program || studentObj.program || 'BS Computer Science',
+          initials: (studentObj.initials && studentObj.initials.length >= 2)
+            ? studentObj.initials
+            : (existing.initials || studentObj.name.trim().split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()),
           yearLevel: formatYearLevel(highestYear),
           year_level: highestYear,
           student_id_number: existing.student_id_number || studentObj.student_id_number,
           account_id: existing.account_id || studentObj.account_id,
         };
       } else {
-        students.push(studentObj);
+        students.push({
+          ...studentObj,
+          initials: studentObj.initials || studentObj.name.trim().split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
+        });
       }
     });
 
@@ -470,25 +480,28 @@ export const AppProvider = ({ children }) => {
   ]);
 
   // Admin User Accounts: Dynamically synchronized with demoUsers so ALL students, staff, and admins appear in User Accounts
-  const adminUsersList = demoUsers.map(u => ({
-    ...u,
-    account: (u.status === 'Disabled' || u.status === 'Deactivated' || u.account === 'Disabled' || u.account === 'Deactivated') ? 'Deactivated' : 'Active',
-    status: (u.status === 'Disabled' || u.status === 'Deactivated' || u.account === 'Disabled' || u.account === 'Deactivated') ? 'Deactivated' : 'Active',
-  }));
+  // Strictly deduplicated so no account is ever listed twice
+  const adminUsersList = deduplicateUsers(demoUsers).map(u => {
+    const roleId = u.account_id || u.student_id_number || (
+      u.role === 'Registrar' ? 'REG-2026-0001' :
+      u.role === 'Cashier' ? 'CSH-2026-0001' :
+      (u.role === 'Department Staff' || u.role === 'DepartmentStaff') ? 'STF-2026-0001' :
+      u.role === 'Admin' ? 'ADM-2026-0001' : 'STU-2026-0001'
+    );
+    return {
+      ...u,
+      account_id: roleId,
+      student_id_number: roleId,
+      account: (u.status === 'Disabled' || u.status === 'Deactivated' || u.account === 'Disabled' || u.account === 'Deactivated') ? 'Deactivated' : 'Active',
+      status: (u.status === 'Disabled' || u.status === 'Deactivated' || u.account === 'Disabled' || u.account === 'Deactivated') ? 'Deactivated' : 'Active',
+    };
+  });
 
   const setAdminUsersList = (updater) => {
     setDemoUsers(prev => {
-      const currentList = prev.map(u => ({
-        ...u,
-        account: (u.status === 'Disabled' || u.status === 'Deactivated' || u.account === 'Disabled' || u.account === 'Deactivated') ? 'Deactivated' : 'Active',
-        status: (u.status === 'Disabled' || u.status === 'Deactivated' || u.account === 'Disabled' || u.account === 'Deactivated') ? 'Deactivated' : 'Active',
-      }));
+      const currentList = deduplicateUsers(prev);
       const next = typeof updater === 'function' ? updater(currentList) : updater;
-      return next.map(u => ({
-        ...u,
-        status: (u.account === 'Disabled' || u.account === 'Deactivated' || u.status === 'Disabled' || u.status === 'Deactivated') ? 'Deactivated' : 'Active',
-        account: (u.account === 'Disabled' || u.account === 'Deactivated' || u.status === 'Disabled' || u.status === 'Deactivated') ? 'Deactivated' : 'Active',
-      }));
+      return deduplicateUsers(next);
     });
   };
 
@@ -1136,12 +1149,8 @@ export const AppProvider = ({ children }) => {
           role: serverUser.role || assignedRole,
         };
 
-        // Register in demoUsers & adminUsersList
+        // Register strictly in demoUsers (adminUsersList is derived automatically)
         setDemoUsers(prev => deduplicateUsers([newUser, ...prev]));
-        setAdminUsersList(prev => [
-          { id: newUser.id, name: newUser.name, role: newUser.role, account: 'Active', email: newUser.email, account_id: newUser.account_id, student_id_number: newUser.student_id_number },
-          ...prev,
-        ]);
 
         if (newUser.role === 'Student') {
           // Fresh student: ALL DEFAULT 0!
@@ -1216,11 +1225,8 @@ export const AppProvider = ({ children }) => {
       account: 'Active',
     };
 
+    // Register strictly in demoUsers (adminUsersList is derived automatically)
     setDemoUsers(prev => deduplicateUsers([newUser, ...prev]));
-    setAdminUsersList(prev => [
-      { id: newUser.id, name: newUser.name, role: newUser.role, account: 'Active', email: newUser.email, account_id: assignedId, student_id_number: assignedId },
-      ...prev,
-    ]);
 
     if (newUser.role === 'Student') {
       // Fresh student: ALL DEFAULT 0!

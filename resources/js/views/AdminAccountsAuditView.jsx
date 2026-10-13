@@ -426,7 +426,12 @@ export const AdminAccountsAuditView = () => {
                                   {user.email || `${user.username || 'user'}@cuyotech.edu.ph`}
                                 </span>
                                 <span style={{ fontSize: '11px', color: '#0284C7', fontWeight: '700', fontFamily: 'monospace', display: 'block', marginTop: '2px' }}>
-                                  ID: {user.account_id || user.student_id_number || 'N/A'} {user.program ? `• ${user.program}` : ''}
+                                  ID: {user.account_id || user.student_id_number || (
+                                    user.role === 'Registrar' ? 'REG-2026-0001' :
+                                    user.role === 'Cashier' ? 'CSH-2026-0001' :
+                                    (user.role === 'Department Staff' || user.role === 'DepartmentStaff') ? 'STF-2026-0001' :
+                                    user.role === 'Admin' ? 'ADM-2026-0001' : 'STU-2026-0001'
+                                  )} {user.program ? `• ${user.program}` : ''}
                                 </span>
                               </div>
                             </div>
