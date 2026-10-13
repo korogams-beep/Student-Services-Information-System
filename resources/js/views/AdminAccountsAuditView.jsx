@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useApp } from '../context/AppContext';
+import { useApp, deduplicateUsers } from '../context/AppContext';
 import { 
   Users, 
   Clock, 
@@ -20,6 +20,26 @@ import {
   X,
   Shield
 } from 'lucide-react';
+
+// Strict Normalized Account Role & Status Helpers
+export const isStudentAccount = (u) => {
+  return ((u?.role || '').toLowerCase().trim() === 'student');
+};
+
+export const isStaffOrAdminAccount = (u) => {
+  const role = (u?.role || '').toLowerCase().trim();
+  return ['registrar', 'cashier', 'department staff', 'departmentstaff', 'admin', 'staff'].includes(role);
+};
+
+export const isAccountDeactivated = (u) => {
+  const acc = (u?.account || '').toLowerCase().trim();
+  const stat = (u?.status || '').toLowerCase().trim();
+  return acc === 'deactivated' || acc === 'disabled' || stat === 'deactivated' || stat === 'disabled';
+};
+
+export const isAccountActive = (u) => {
+  return !isAccountDeactivated(u);
+};
 
 export const AdminAccountsAuditView = () => {
   const { 
@@ -64,10 +84,7 @@ export const AdminAccountsAuditView = () => {
   const handleOpenEditModal = (user) => {
     setSelectedUserForEdit(user);
     setEditUserRole(user.role);
-    const isAct = (user.account === 'Active' || user.status === 'Active') &&
-                  user.account !== 'Deactivated' && user.status !== 'Deactivated' &&
-                  user.account !== 'Disabled' && user.status !== 'Disabled';
-    setEditUserStatus(isAct ? 'Active' : 'Deactivated');
+    setEditUserStatus(isAccountActive(user) ? 'Active' : 'Deactivated');
   };
 
   const handleSaveUserEdit = (e) => {
@@ -86,11 +103,13 @@ export const AdminAccountsAuditView = () => {
 
     // Update demoUsers which powers adminUsersList
     setDemoUsers(prev =>
-      prev.map(u => (
-        u.id === targetUser.id || 
-        (u.email && targetUser.email && u.email === targetUser.email) ||
-        (u.student_id_number && targetUser.student_id_number && u.student_id_number === targetUser.student_id_number)
-      ) ? { ...u, role: newRole, account_id: updatedId, student_id_number: updatedId, status: newStatus, account: newStatus } : u)
+      deduplicateUsers(
+        prev.map(u => (
+          u.id === targetUser.id || 
+          (u.email && targetUser.email && u.email === targetUser.email) ||
+          (u.student_id_number && targetUser.student_id_number && u.student_id_number === targetUser.student_id_number)
+        ) ? { ...u, role: newRole, account_id: updatedId, student_id_number: updatedId, status: newStatus, account: newStatus } : u)
+      )
     );
 
     // If currently logged-in user is updated
@@ -131,17 +150,17 @@ export const AdminAccountsAuditView = () => {
   };
 
   const handleToggleStatus = (user) => {
-    const isCurrentlyActive = (user.account === 'Active' || user.status === 'Active') &&
-                              user.account !== 'Deactivated' && user.status !== 'Deactivated' &&
-                              user.account !== 'Disabled' && user.status !== 'Disabled';
+    const isCurrentlyActive = isAccountActive(user);
     const newStatus = isCurrentlyActive ? 'Deactivated' : 'Active';
 
     setDemoUsers(prev =>
-      prev.map(u => (
-        u.id === user.id || 
-        (u.email && user.email && u.email === user.email) ||
-        (u.student_id_number && user.student_id_number && u.student_id_number === user.student_id_number)
-      ) ? { ...u, account: newStatus, status: newStatus } : u)
+      deduplicateUsers(
+        prev.map(u => (
+          u.id === user.id || 
+          (u.email && user.email && u.email === user.email) ||
+          (u.student_id_number && user.student_id_number && u.student_id_number === user.student_id_number)
+        ) ? { ...u, account: newStatus, status: newStatus } : u)
+      )
     );
 
     // If currently logged-in user is deactivated, log them out immediately
@@ -175,11 +194,13 @@ export const AdminAccountsAuditView = () => {
 
     // Update in demoUsers
     setDemoUsers(prev =>
-      prev.map(u => (
-        u.id === user.id || 
-        (u.email && user.email && u.email === user.email) ||
-        (u.student_id_number && user.student_id_number && u.student_id_number === user.student_id_number)
-      ) ? { ...u, role: newRole, account_id: updatedId, student_id_number: updatedId } : u)
+      deduplicateUsers(
+        prev.map(u => (
+          u.id === user.id || 
+          (u.email && user.email && u.email === user.email) ||
+          (u.student_id_number && user.student_id_number && u.student_id_number === user.student_id_number)
+        ) ? { ...u, role: newRole, account_id: updatedId, student_id_number: updatedId } : u)
+      )
     );
 
     // If currently logged-in user, update session role
@@ -203,14 +224,11 @@ export const AdminAccountsAuditView = () => {
 
   // Strictly dynamic active count per role (never hardcoded 8!)
   const getRoleActiveCount = (roleName) => {
-    return demoUsers.filter(u =>
-      u.role === roleName &&
-      (u.account === 'Active' || u.status === 'Active') &&
-      u.account !== 'Deactivated' &&
-      u.status !== 'Deactivated' &&
-      u.account !== 'Disabled' &&
-      u.status !== 'Disabled'
-    ).length;
+    return adminUsersList.filter(u => {
+      const roleMatches = (u.role || '').toLowerCase().trim() === roleName.toLowerCase().trim() ||
+        (roleName === 'Department Staff' && ((u.role || '').toLowerCase().trim() === 'departmentstaff' || (u.role || '').toLowerCase().trim() === 'department staff'));
+      return roleMatches && isAccountActive(u);
+    }).length;
   };
 
   const handleSaveSettings = (e) => {
@@ -221,18 +239,21 @@ export const AdminAccountsAuditView = () => {
 
   // Filter user accounts
   const filteredUsers = adminUsersList.filter(u => {
-    const matchesSearch = !searchQuery ||
-      u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.student_id_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.account?.toLowerCase().includes(searchQuery.toLowerCase());
+    const query = (searchQuery || '').trim().toLowerCase();
+    const matchesSearch = !query ||
+      (u.name && u.name.toLowerCase().includes(query)) ||
+      (u.role && u.role.toLowerCase().includes(query)) ||
+      (u.email && u.email.toLowerCase().includes(query)) ||
+      (u.student_id_number && u.student_id_number.toLowerCase().includes(query)) ||
+      (u.account_id && u.account_id.toLowerCase().includes(query)) ||
+      (u.account && u.account.toLowerCase().includes(query));
 
-    const matchesRole = userRoleFilter === 'ALL' || 
-      (userRoleFilter === 'Student' && u.role === 'Student') ||
-      (userRoleFilter === 'Staff' && u.role !== 'Student') ||
-      (userRoleFilter === 'Active' && (u.account === 'Active' || u.status === 'Active') && u.account !== 'Deactivated' && u.status !== 'Deactivated') ||
-      (userRoleFilter === 'Deactivated' && (u.account === 'Deactivated' || u.status === 'Deactivated' || u.status === 'Disabled'));
+    const matchesRole = 
+      userRoleFilter === 'ALL' || 
+      (userRoleFilter === 'Student' && isStudentAccount(u)) ||
+      (userRoleFilter === 'Staff' && isStaffOrAdminAccount(u)) ||
+      (userRoleFilter === 'Active' && isAccountActive(u)) ||
+      (userRoleFilter === 'Deactivated' && isAccountDeactivated(u));
 
     return matchesSearch && matchesRole;
   });
@@ -326,7 +347,7 @@ export const AdminAccountsAuditView = () => {
                 className={userRoleFilter === 'Student' ? 'ssis-btn-primary' : 'ssis-btn-secondary'}
                 style={{ padding: '6px 14px', fontSize: '13px' }}
               >
-                Students ({adminUsersList.filter(u => u.role === 'Student').length})
+                Students ({adminUsersList.filter(isStudentAccount).length})
               </button>
               <button
                 type="button"
@@ -334,7 +355,7 @@ export const AdminAccountsAuditView = () => {
                 className={userRoleFilter === 'Staff' ? 'ssis-btn-primary' : 'ssis-btn-secondary'}
                 style={{ padding: '6px 14px', fontSize: '13px' }}
               >
-                Staff & Admin ({adminUsersList.filter(u => u.role !== 'Student').length})
+                Staff & Admin ({adminUsersList.filter(isStaffOrAdminAccount).length})
               </button>
               <button
                 type="button"
@@ -342,7 +363,7 @@ export const AdminAccountsAuditView = () => {
                 className={userRoleFilter === 'Active' ? 'ssis-btn-primary' : 'ssis-btn-secondary'}
                 style={{ padding: '6px 14px', fontSize: '13px' }}
               >
-                Active ({adminUsersList.filter(u => (u.account === 'Active' || u.status === 'Active') && u.account !== 'Deactivated' && u.status !== 'Deactivated').length})
+                Active ({adminUsersList.filter(isAccountActive).length})
               </button>
               <button
                 type="button"
@@ -350,7 +371,7 @@ export const AdminAccountsAuditView = () => {
                 className={userRoleFilter === 'Deactivated' ? 'ssis-btn-primary' : 'ssis-btn-secondary'}
                 style={{ padding: '6px 14px', fontSize: '13px' }}
               >
-                Deactivated ({adminUsersList.filter(u => u.account === 'Deactivated' || u.status === 'Deactivated' || u.status === 'Disabled').length})
+                Deactivated ({adminUsersList.filter(isAccountDeactivated).length})
               </button>
             </div>
 
@@ -383,22 +404,21 @@ export const AdminAccountsAuditView = () => {
                       </td>
                     </tr>
                   ) : (
-                    filteredUsers.map(user => {
-                      const isActive = (user.account === 'Active' || user.status === 'Active') &&
-                                        user.account !== 'Deactivated' && user.status !== 'Deactivated' &&
-                                        user.account !== 'Disabled' && user.status !== 'Disabled';
-                      const isStudent = user.role === 'Student';
+                    filteredUsers.map((user, index) => {
+                      const isActive = isAccountActive(user);
+                      const isStudent = isStudentAccount(user);
 
                       const roleBadgeStyles = {
                         Student: { bg: '#FFE4E6', color: '#9F1239', border: '#FECDD3' },
                         Registrar: { bg: '#EDE9FE', color: '#5B21B6', border: '#DDD6FE' },
                         Cashier: { bg: '#FEF3C7', color: '#92400E', border: '#FDE68A' },
                         'Department Staff': { bg: '#DBEAFE', color: '#1E40AF', border: '#BFDBFE' },
+                        DepartmentStaff: { bg: '#DBEAFE', color: '#1E40AF', border: '#BFDBFE' },
                         Admin: { bg: '#DCFCE7', color: '#166534', border: '#BBF7D0' },
                       }[user.role] || { bg: '#F1F5F9', color: '#334155', border: '#CBD5E1' };
 
                       return (
-                        <tr key={user.id || user.name || user.email}>
+                        <tr key={`admin-user-row-${user.account_id || user.student_id_number || ''}-${user.email || ''}-${user.id || ''}-${index}`}>
                           <td>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                               <div

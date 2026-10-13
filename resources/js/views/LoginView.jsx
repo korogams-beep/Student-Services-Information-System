@@ -75,8 +75,8 @@ export const LoginView = () => {
     setPassword('password');
   };
 
-  const staffUsers = demoUsers.filter(u => u.role !== 'Student');
-  const studentUsers = demoUsers.filter(u => u.role === 'Student');
+  const staffUsers = demoUsers.filter(u => (u.role || '').toLowerCase() !== 'student');
+  const studentUsers = demoUsers.filter(u => (u.role || '').toLowerCase() === 'student');
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', width: '100%', backgroundColor: '#F8F9FA' }}>

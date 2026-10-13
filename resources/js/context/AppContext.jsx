@@ -157,27 +157,50 @@ export const deduplicateUsers = (list) => {
     staffByRole[s.role] = { ...s };
   });
 
+  // Track any custom or modified staff members beyond the base 4
+  const additionalStaff = [];
+
   list.forEach(u => {
-    if (u.role !== 'Student') {
+    const roleLower = (u.role || '').toLowerCase().trim();
+    if (roleLower !== 'student') {
       const targetRole = u.role === 'DepartmentStaff' ? 'Department Staff' : u.role;
       if (staffByRole[targetRole]) {
         staffByRole[targetRole] = {
           ...staffByRole[targetRole],
-          status: u.status || staffByRole[targetRole].status,
-          account: u.account || staffByRole[targetRole].account,
+          name: u.name || staffByRole[targetRole].name,
+          status: (u.account === 'Disabled' || u.account === 'Deactivated' || u.status === 'Disabled' || u.status === 'Deactivated') ? 'Deactivated' : 'Active',
+          account: (u.account === 'Disabled' || u.account === 'Deactivated' || u.status === 'Disabled' || u.status === 'Deactivated') ? 'Deactivated' : 'Active',
           account_id: staffByRole[targetRole].account_id,
           student_id_number: staffByRole[targetRole].student_id_number,
         };
+      } else {
+        const idKey = (u.account_id || u.student_id_number || '').toLowerCase().trim();
+        const emailKey = (u.email || '').toLowerCase().trim();
+        const existingStaffIdx = additionalStaff.findIndex(s =>
+          (idKey && (s.account_id || s.student_id_number || '').toLowerCase().trim() === idKey) ||
+          (emailKey && (s.email || '').toLowerCase().trim() === emailKey)
+        );
+        const normStatus = (u.account === 'Disabled' || u.account === 'Deactivated' || u.status === 'Disabled' || u.status === 'Deactivated') ? 'Deactivated' : 'Active';
+        const staffObj = {
+          ...u,
+          status: normStatus,
+          account: normStatus,
+        };
+        if (existingStaffIdx !== -1) {
+          additionalStaff[existingStaffIdx] = { ...additionalStaff[existingStaffIdx], ...staffObj };
+        } else {
+          additionalStaff.push(staffObj);
+        }
       }
     }
   });
 
-  const staffArray = Object.values(staffByRole);
+  const staffArray = [...Object.values(staffByRole), ...additionalStaff];
 
   // 2. Deduplicate student accounts strictly by ID, email, or normalized name
   const students = [];
   list
-    .filter(u => u.role === 'Student' && !isLegacyDummyStudent(u))
+    .filter(u => (u.role || '').toLowerCase().trim() === 'student' && !isLegacyDummyStudent(u))
     .forEach(u => {
       const idKey = (u.student_id_number || u.account_id || '').toLowerCase().trim();
       const emailKey = (u.email || '').toLowerCase().trim();
@@ -190,8 +213,12 @@ export const deduplicateUsers = (list) => {
       );
 
       const formattedYear = formatYearLevel(u.yearLevel || u.year_level);
+      const normStatus = (u.account === 'Disabled' || u.account === 'Deactivated' || u.status === 'Disabled' || u.status === 'Deactivated') ? 'Deactivated' : 'Active';
       const studentObj = {
         ...u,
+        role: 'Student',
+        status: normStatus,
+        account: normStatus,
         program: u.program || 'BS Computer Science',
         yearLevel: formattedYear,
         year_level: parseInt(formattedYear.charAt(0), 10) || 1,

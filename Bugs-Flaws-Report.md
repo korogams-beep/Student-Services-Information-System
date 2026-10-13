@@ -517,4 +517,25 @@ Every reported issue is documented with its severity rating, exact reproduction 
   3. Ensured `deduplicateUsers` preserves full program name, initials, and assigns role-matched IDs (`REG-2026-0001`, `CSH-2026-0001`, `STF-2026-0001`, `ADM-2026-0001`) to all staff members so `ID: N/A` never occurs.
 
 ---
+
+### BUG-026: Admin Account Management Filter Logic Flaw & React Key Collision
+- **Category**: Admin User Management / UI Filtering & React Reconciliation
+- **Severity**: **High**
+- **Status**: **Resolved**
+- **Files Affected**:
+  - [resources/js/views/AdminAccountsAuditView.jsx](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/views/AdminAccountsAuditView.jsx)
+  - [resources/js/context/AppContext.jsx](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/context/AppContext.jsx)
+  - [resources/js/views/LoginView.jsx](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/views/LoginView.jsx)
+- **Description**: In Admin User Accounts (`Manage Access & User Accounts`), clicking the quick-filter pills (`All Accounts`, `Students`, `Staff & Admin`, `Active`, `Deactivated`) did not filter accurately; newly registered accounts continued to show across mismatched filters or remained rendered on screen. Furthermore, pill count badges and table rows exhibited discrepancies.
+- **Root Cause**:
+  1. **React Virtual DOM Key Collision**: In `AdminAccountsAuditView.jsx`, table rows used `key={user.id || user.name || user.email}`. Multiple users shared identical names or emails (e.g. `brent User`), producing duplicate React keys. During React's reconciliation diffing, duplicate keys cause React to fail to unmount deleted/filtered DOM nodes, leaving "zombie" account rows rendered in the DOM even when the active filter excluded them.
+  2. **Filtering Inconsistency**: Role and status matching logic was non-normalized. For example, `Staff & Admin` used `u.role !== 'Student'`, which would inadvertently match any account with casing variances or unassigned roles, while `Active` and `Deactivated` checks did not handle all status permutations (`Disabled`, `Deactivated`, lowercase states).
+  3. **Pill Badge & Table Desynchronization**: Filter pill badge counters used ad-hoc inline filter callbacks that differed from the table's `filteredUsers` predicate, leading to count badge mismatches.
+- **Resolution**:
+  1. Created strictly normalized helper functions (`isStudentAccount`, `isStaffOrAdminAccount`, `isAccountActive`, `isAccountDeactivated`) that perform case-insensitive role and status evaluations.
+  2. Replaced the colliding `key` attribute on table rows with a globally unique composite key: `key={`admin-user-row-${user.account_id || user.student_id_number || ''}-${user.email || ''}-${user.id || ''}-${index}`}` to guarantee error-free React reconciliation and clean DOM updates.
+  3. Bound both the pill button badge counts and the `filteredUsers` filtering predicate directly to these identical helper functions, ensuring 100% synchronization.
+  4. Wrapped all administrative state updates (`handleSaveUserEdit`, `handleToggleStatus`, `handleRoleChange`) with `deduplicateUsers` so `localStorage` and client state remain strictly clean.
+
+---
 *Report maintained and updated by Antigravity AI Assistant.*
