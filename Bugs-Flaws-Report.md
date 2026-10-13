@@ -444,4 +444,58 @@ Every reported issue is documented with its severity rating, exact reproduction 
   6. **Autonomous System ID Generation (Elimination of Manual ID Input)**: Completely removed the Student ID input field from the registration form. The system is exclusively responsible for generating collision-free unique IDs (`STU-2026-XXXX`), completely eliminating duplicate IDs or human input collisions.
 
 ---
+
+### BUG-022: SQLite CONCAT Function Crash in Vercel Deployment & Authentication Lockout
+- **Category**: Database Compatibility / Authentication Architecture
+- **Severity**: **Critical**
+- **Status**: **Resolved**
+- **Files Affected**:
+  - [app/Http/Controllers/Api/SSISController.php](file:///c:/Users/Gams/Student-Services-Information-System/app/Http/Controllers/Api/SSISController.php)
+  - [resources/js/context/AppContext.jsx](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/context/AppContext.jsx)
+- **Description**: All user logins (students, staff, admin) failed on the live Vercel deployment with HTTP 500 error: `SQLSTATE[HY000]: General error: 1 no such function: CONCAT (Connection: sqlite, Database: /tmp/database.sqlite, SQL: select * from "students" where ("email" = ... or "student_id_number" = ... or "username" = ... or CONCAT(first_name, ' ', last_name) = ...) limit 1)`.
+- **Root Cause**: `SSISController::login()` utilized MySQL-specific `CONCAT(first_name, ' ', last_name)` inside raw SQL queries without verifying the database driver. Additionally, `AppContext.jsx` caught the 500 error from `/api/auth/login` and immediately threw an error toast without falling through to client-side credential verification.
+- **Resolution**:
+  1. Removed `CONCAT` from the SQL `where` clause in `Student` and `AdminUser` queries in `SSISController.php`. Implemented database-agnostic matching for email, student_id_number, and username, followed by PHP-level fallback full name comparison (`strcasecmp(trim($s->first_name . ' ' . $s->last_name), $loginInput) === 0`).
+  2. Enhanced `AdminUser` login lookup to support staff emails (`l.navarro@cuyotech.edu.ph`, `r.alcantara@cuyotech.edu.ph`), usernames, names, and role-matched IDs (`REG-2026-0001`, `CSH-2026-0001`, `STF-2026-0001`, `ADM-2026-0001`).
+  3. Added graceful fallback in `AppContext.jsx::loginWithCredentials`: if the backend throws an unhandled error or is offline, credentials automatically fall through to client-side validation so users are never locked out of the portal.
+
+---
+
+### BUG-023: Disappearance of Institutional Registrar Account in Perspective Switcher & Account Lists
+- **Category**: State Management / Identity & Access Control
+- **Severity**: **High**
+- **Status**: **Resolved**
+- **Files Affected**:
+  - [resources/js/context/AppContext.jsx](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/context/AppContext.jsx)
+  - [resources/js/components/TopNavbar.jsx](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/components/TopNavbar.jsx)
+- **Description**: Creating a student account caused the Ramon Alcantara (Registrar) account to disappear from the perspective switcher and account selection lists.
+- **Root Cause**:
+  1. `TopNavbar.jsx` deduplicated accounts using `index === self.findIndex(t => (t.id && t.id === u.id)...)`. Because staff accounts in `initialUsers` had numeric IDs (`id: 2`), when a student was created or fetched from the database with auto-increment ID `2`, `t.id === u.id` evaluated to true, incorrectly removing the Registrar as a duplicate of the student.
+  2. `TopNavbar.jsx` applied an arbitrary `.slice(0, 7)` limit, trimming out accounts when new students were added.
+- **Resolution**:
+  1. Defined `INSTITUTIONAL_STAFF` with dedicated unique keys (`staff-registrar`, `staff-cashier`, `staff-dept`, `staff-admin`) and anchored them in `deduplicateUsers()`, guaranteeing all four institutional staff accounts are permanently retained in `demoUsers`.
+  2. Removed numeric `id` collision matching across roles, ensuring accounts are only deduplicated by exact email or unique role-matched IDs (`REG-2026-0001`).
+  3. Removed `.slice(0, 7)` from `TopNavbar.jsx` and added a scrollable container (`maxHeight: '360px', overflowY: 'auto'`) so all accounts remain accessible.
+
+---
+
+### BUG-024: Student Duplication Across Year Levels & Multi-Subject Enrollment Selection Persistence
+- **Category**: Academic Workflow / Enrollment & Masterlist
+- **Severity**: **High**
+- **Status**: **Resolved**
+- **Files Affected**:
+  - [resources/js/context/AppContext.jsx](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/context/AppContext.jsx)
+  - [resources/js/views/StudentEnrollmentView.jsx](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/views/StudentEnrollmentView.jsx)
+- **Description**:
+  1. In the Registrar Student Directory and Cashier quick-select chips, the same student appeared twice (once as 1st Year and once as 3rd Year).
+  2. When selecting multiple course subjects in the Enrollment view and clicking "Submit Enrollment Request", only 1 subject was recorded in the enrollment queue.
+- **Root Cause**:
+  1. `demoUsers` merged backend students and local students without unifying records across casing, normalized names, or year level differences. Numeric year levels were mapped inconsistently (`3 Year` vs `3rd Year`).
+  2. In `StudentEnrollmentView.jsx`, checkbox event propagation and missing state persistence in `submitEnrollmentRequest` prevented multiple selected course IDs from being saved into `studentEnrollmentSelections[activeStudentId]` and `localStorage`.
+- **Resolution**:
+  1. Created `formatYearLevel(val)` standardizing all year levels across the application (`1st Year`, `2nd Year`, `3rd Year`, `4th Year`).
+  2. Created `deduplicateUsers()` in `AppContext.jsx` that merges student entries by `student_id_number`, `email`, and normalized `name`, retaining the correct year level (e.g. 3rd Year) and preventing duplicates.
+  3. Updated `StudentEnrollmentView.jsx` with single-click row and checkbox synchronization, and updated `submitEnrollmentRequest` to accurately persist all selected course IDs, total units, and queue data to `studentEnrollmentSelections` and `localStorage`.
+
+---
 *Report maintained and updated by Antigravity AI Assistant.*

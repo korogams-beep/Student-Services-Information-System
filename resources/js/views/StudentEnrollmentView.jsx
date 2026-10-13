@@ -14,7 +14,7 @@ export const StudentEnrollmentView = () => {
     showToast
   } = useApp();
 
-  const activeStudentId = currentUser?.student_id_number || currentUser?.studentId || '2026-0001';
+  const activeStudentId = currentUser?.student_id_number || currentUser?.studentId || currentUser?.account_id || 'STU-2026-0001';
   const myEnrollment = registrarQueue.find(q => q.studentIdNumber === activeStudentId || q.studentId === currentUser?.id);
 
   // Resolve active student's selected courses
@@ -65,27 +65,42 @@ export const StudentEnrollmentView = () => {
               </tr>
             </thead>
             <tbody>
-              {scheduleCourses.map(course => (
-                <tr key={course.id} style={{ cursor: 'pointer' }} onClick={() => toggleCourse(course.id)}>
-                  <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
-                    <input
-                      type="checkbox"
-                      checked={currentSelections.includes(course.id)}
-                      onChange={() => toggleCourse(course.id)}
-                      style={{ width: '16px', height: '16px', accentColor: '#1E293B', cursor: 'pointer' }}
-                    />
-                  </td>
-                  <td style={{ fontWeight: '600', color: '#0F172A', fontFamily: 'monospace' }}>
-                    {course.code}
-                  </td>
-                  <td style={{ fontWeight: '500' }}>{course.title}</td>
-                  <td>{course.units}.0</td>
-                  <td style={{ color: '#475569', fontSize: '13px' }}>{course.schedule}</td>
-                  <td>
-                    <span className="badge badge-success">{course.slots} slots</span>
-                  </td>
-                </tr>
-              ))}
+              {scheduleCourses.map(course => {
+                const isSelected = currentSelections.includes(course.id);
+                return (
+                  <tr 
+                    key={course.id} 
+                    style={{ 
+                      cursor: 'pointer',
+                      backgroundColor: isSelected ? '#FAF5F5' : 'transparent',
+                      transition: 'background-color 0.15s ease'
+                    }} 
+                    onClick={() => toggleCourse(course.id)}
+                  >
+                    <td style={{ textAlign: 'center' }}>
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => {}}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleCourse(course.id);
+                        }}
+                        style={{ width: '16px', height: '16px', accentColor: '#1E293B', cursor: 'pointer' }}
+                      />
+                    </td>
+                    <td style={{ fontWeight: '600', color: '#0F172A', fontFamily: 'monospace' }}>
+                      {course.code}
+                    </td>
+                    <td style={{ fontWeight: '500' }}>{course.title}</td>
+                    <td>{course.units}.0</td>
+                    <td style={{ color: '#475569', fontSize: '13px' }}>{course.schedule}</td>
+                    <td>
+                      <span className="badge badge-success">{course.slots} slots</span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

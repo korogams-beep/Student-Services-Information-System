@@ -17,6 +17,7 @@ use App\Models\Section;
 use App\Models\Student;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class SSISController extends Controller
@@ -246,10 +247,25 @@ class SSISController extends Controller
             ->where(function ($q) use ($loginInput) {
                 $q->where('email', $loginInput)
                     ->orWhere('student_id_number', $loginInput)
-                    ->orWhere('username', $loginInput)
-                    ->orWhereRaw("CONCAT(first_name, ' ', last_name) = ?", [$loginInput]);
+                    ->orWhere('username', $loginInput);
             })
             ->first();
+
+        // Fallback: match by full name if not found by unique IDs
+        if (! $student) {
+            $student = Student::with([
+                'program',
+                'enrollments.section.course',
+                'enrollments.grade',
+                'assessments.items',
+                'assessments.payments',
+                'clearances.department',
+            ])
+                ->get()
+                ->first(function ($s) use ($loginInput) {
+                    return strcasecmp(trim($s->first_name.' '.$s->last_name), $loginInput) === 0;
+                });
+        }
 
         if ($student) {
             if ($student->account_status === 'Disabled' || $student->account_status === 'Deactivated') {
@@ -268,10 +284,12 @@ class SSISController extends Controller
                     'id' => $student->id,
                     'name' => $student->full_name,
                     'email' => $student->email,
+                    'account_id' => $student->student_id_number,
                     'student_id_number' => $student->student_id_number,
                     'role' => 'Student',
                     'initials' => $initials,
                     'program' => $student->program?->program_name ?? 'BS Computer Science',
+                    'year_level' => $student->year_level,
                     'yearLevel' => $student->year_level.$suffix,
                     'status' => $student->account_status,
                 ],
@@ -279,11 +297,28 @@ class SSISController extends Controller
             ]);
         }
 
-        // Check AdminUser table
+        // Check AdminUser table - support emails (l.navarro@cuyotech.edu.ph), usernames (l.navarro), names, and role IDs (REG-..., CSH-...)
+        $usernameCandidate = $loginInput;
+        if (str_contains($loginInput, '@')) {
+            $usernameCandidate = explode('@', $loginInput)[0];
+        }
+
+        $roleFromId = match (strtoupper(substr($loginInput, 0, 3))) {
+            'REG' => 'Registrar',
+            'CSH' => 'Cashier',
+            'STF' => 'DepartmentStaff',
+            'ADM' => 'Admin',
+            default => null,
+        };
+
         $admin = AdminUser::with('department')
-            ->where(function ($q) use ($loginInput) {
+            ->where(function ($q) use ($loginInput, $usernameCandidate, $roleFromId) {
                 $q->where('username', $loginInput)
+                    ->orWhere('username', $usernameCandidate)
                     ->orWhere('name', 'LIKE', "%{$loginInput}%");
+                if ($roleFromId) {
+                    $q->orWhere('role', $roleFromId);
+                }
             })
             ->first();
 
@@ -297,16 +332,25 @@ class SSISController extends Controller
             $parts = explode(' ', $admin->name);
             $initials = strtoupper(substr($parts[0], 0, 1).(isset($parts[1]) ? substr($parts[1], 0, 1) : 'A'));
 
+            $staffId = match ($admin->role) {
+                'Registrar' => 'REG-2026-0001',
+                'Cashier' => 'CSH-2026-0001',
+                'DepartmentStaff' => 'STF-2026-0001',
+                'Admin' => 'ADM-2026-0001',
+                default => 'ADM-2026-0001',
+            };
+            $staffEmail = str_contains($loginInput, '@') ? $loginInput : ($admin->username.'@cuyotech.edu.ph');
+
             return response()->json([
                 'success' => true,
                 'user' => [
                     'id' => $admin->id,
                     'name' => $admin->name,
-                    'email' => $admin->username.'@university.edu',
+                    'email' => $staffEmail,
                     'username' => $admin->username,
-                    'account_id' => $admin->username,
-                    'student_id_number' => $admin->username,
-                    'role' => $admin->role,
+                    'account_id' => $staffId,
+                    'student_id_number' => $staffId,
+                    'role' => $admin->role === 'DepartmentStaff' ? 'Department Staff' : $admin->role,
                     'initials' => $initials,
                     'department' => $admin->department?->department_name,
                     'status' => $admin->account_status,
@@ -407,7 +451,13 @@ class SSISController extends Controller
                 } elseif (! empty($item['student_id'])) {
                     $studentQuery->where('id', $item['student_id']);
                 } elseif (! empty($item['studentName'])) {
-                    $studentQuery->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$item['studentName']}%"]);
+                    $targetName = trim((string) $item['studentName']);
+                    $driver = DB::connection()->getDriverName();
+                    if ($driver === 'sqlite') {
+                        $studentQuery->whereRaw("(first_name || ' ' || last_name) LIKE ?", ["%{$targetName}%"]);
+                    } else {
+                        $studentQuery->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$targetName}%"]);
+                    }
                 }
                 $foundStudent = $studentQuery->first();
 

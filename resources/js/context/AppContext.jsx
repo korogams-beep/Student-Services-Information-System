@@ -57,80 +57,167 @@ export const reassignRoleAccountId = (currentId, newRole, existingUsers = []) =>
 
 const AppContext = createContext();
 
-export const AppProvider = ({ children }) => {
-  // Institutional Staff Accounts for CuyoTech University
-  // Per requirement: Each account ID matches its assigned role (REG, CSH, STF, ADM, STU).
-  const initialUsers = [
-    {
-      id: 2,
-      name: 'Ramon Alcantara',
-      email: 'r.alcantara@cuyotech.edu.ph',
-      username: 'r.alcantara',
-      account_id: 'REG-2026-0001',
-      student_id_number: 'REG-2026-0001',
-      role: 'Registrar',
-      initials: 'RA',
-      status: 'Active',
-      account: 'Active',
-    },
-    {
-      id: 3,
-      name: 'Leah Navarro',
-      email: 'l.navarro@cuyotech.edu.ph',
-      username: 'l.navarro',
-      account_id: 'CSH-2026-0001',
-      student_id_number: 'CSH-2026-0001',
-      role: 'Cashier',
-      initials: 'LN',
-      counterNo: 3,
-      status: 'Active',
-      account: 'Active',
-    },
-    {
-      id: 4,
-      name: 'Dina Flores',
-      email: 'd.flores@cuyotech.edu.ph',
-      username: 'd.flores',
-      account_id: 'STF-2026-0001',
-      student_id_number: 'STF-2026-0001',
-      role: 'Department Staff',
-      initials: 'DF',
-      department: 'College of Computing Studies',
-      status: 'Active',
-      account: 'Active',
-    },
-    {
-      id: 5,
-      name: 'Victor Ramos',
-      email: 'v.ramos@cuyotech.edu.ph',
-      username: 'v.ramos',
-      account_id: 'ADM-2026-0001',
-      student_id_number: 'ADM-2026-0001',
-      role: 'Admin',
-      initials: 'VR',
-      status: 'Active',
-      account: 'Active',
-    },
+export const INSTITUTIONAL_STAFF = [
+  {
+    id: 'staff-registrar',
+    name: 'Ramon Alcantara',
+    email: 'r.alcantara@cuyotech.edu.ph',
+    username: 'r.alcantara',
+    account_id: 'REG-2026-0001',
+    student_id_number: 'REG-2026-0001',
+    role: 'Registrar',
+    initials: 'RA',
+    status: 'Active',
+    account: 'Active',
+  },
+  {
+    id: 'staff-cashier',
+    name: 'Leah Navarro',
+    email: 'l.navarro@cuyotech.edu.ph',
+    username: 'l.navarro',
+    account_id: 'CSH-2026-0001',
+    student_id_number: 'CSH-2026-0001',
+    role: 'Cashier',
+    initials: 'LN',
+    counterNo: 3,
+    status: 'Active',
+    account: 'Active',
+  },
+  {
+    id: 'staff-dept',
+    name: 'Dina Flores',
+    email: 'd.flores@cuyotech.edu.ph',
+    username: 'd.flores',
+    account_id: 'STF-2026-0001',
+    student_id_number: 'STF-2026-0001',
+    role: 'Department Staff',
+    initials: 'DF',
+    department: 'College of Computing Studies',
+    status: 'Active',
+    account: 'Active',
+  },
+  {
+    id: 'staff-admin',
+    name: 'Victor Ramos',
+    email: 'v.ramos@cuyotech.edu.ph',
+    username: 'v.ramos',
+    account_id: 'ADM-2026-0001',
+    student_id_number: 'ADM-2026-0001',
+    role: 'Admin',
+    initials: 'VR',
+    status: 'Active',
+    account: 'Active',
+  },
+];
+
+export const formatYearLevel = (val) => {
+  if (!val) return '1st Year';
+  const str = String(val).trim();
+  if (/^[1-4](st|nd|rd|th)\s+Year$/i.test(str)) {
+    const digit = str.charAt(0);
+    const suffix = digit === '1' ? 'st' : digit === '2' ? 'nd' : digit === '3' ? 'rd' : 'th';
+    return `${digit}${suffix} Year`;
+  }
+  const match = str.match(/\d+/);
+  const num = match ? parseInt(match[0], 10) : 1;
+  switch (num) {
+    case 1: return '1st Year';
+    case 2: return '2nd Year';
+    case 3: return '3rd Year';
+    case 4: return '4th Year';
+    default: return `${num}th Year`;
+  }
+};
+
+export const isLegacyDummyStudent = (u) => {
+  if (u.role !== 'Student') return false;
+  const name = (u.name || '').trim().toLowerCase();
+  const email = (u.email || '').trim().toLowerCase();
+
+  const dummyNames = [
+    'maria santos', 'miguel reyes', 'angela cruz', 'paolo mendoza',
+    'jessa torres', 'carlo diaz', 'joyce tan', 'ana lim', 'ashley smith'
   ];
+  if (dummyNames.some(d => name.includes(d))) return true;
 
-  const isLegacyDummyStudent = (u) => {
-    if (u.role !== 'Student') return false;
-    const name = (u.name || '').trim().toLowerCase();
-    const email = (u.email || '').trim().toLowerCase();
+  const dummyEmailKeywords = [
+    'santos', 'reyes', 'cruz', 'mendoza', 'torres', 'diaz', 'tan', 'lim', 'ashley'
+  ];
+  if (dummyEmailKeywords.some(d => email.includes(d))) return true;
 
-    const dummyNames = [
-      'maria santos', 'miguel reyes', 'angela cruz', 'paolo mendoza',
-      'jessa torres', 'carlo diaz', 'joyce tan', 'ana lim', 'ashley smith'
-    ];
-    if (dummyNames.some(d => name.includes(d))) return true;
+  return false;
+};
 
-    const dummyEmailKeywords = [
-      'santos', 'reyes', 'cruz', 'mendoza', 'torres', 'diaz', 'tan', 'lim', 'ashley'
-    ];
-    if (dummyEmailKeywords.some(d => email.includes(d))) return true;
+export const deduplicateUsers = (list) => {
+  if (!Array.isArray(list)) return [...INSTITUTIONAL_STAFF];
 
-    return false;
-  };
+  // 1. Always retain all 4 institutional staff members in demoUsers
+  const staffByRole = {};
+  INSTITUTIONAL_STAFF.forEach(s => {
+    staffByRole[s.role] = { ...s };
+  });
+
+  list.forEach(u => {
+    if (u.role !== 'Student') {
+      const targetRole = u.role === 'DepartmentStaff' ? 'Department Staff' : u.role;
+      if (staffByRole[targetRole]) {
+        staffByRole[targetRole] = {
+          ...staffByRole[targetRole],
+          status: u.status || staffByRole[targetRole].status,
+          account: u.account || staffByRole[targetRole].account,
+        };
+      }
+    }
+  });
+
+  const staffArray = Object.values(staffByRole);
+
+  // 2. Deduplicate student accounts strictly by ID, email, or normalized name
+  const students = [];
+  list
+    .filter(u => u.role === 'Student' && !isLegacyDummyStudent(u))
+    .forEach(u => {
+      const idKey = (u.student_id_number || u.account_id || '').toLowerCase().trim();
+      const emailKey = (u.email || '').toLowerCase().trim();
+      const nameKey = (u.name || '').toLowerCase().trim();
+
+      const existingIdx = students.findIndex(s =>
+        (idKey && (s.student_id_number || s.account_id || '').toLowerCase().trim() === idKey) ||
+        (emailKey && (s.email || '').toLowerCase().trim() === emailKey) ||
+        (nameKey && (s.name || '').toLowerCase().trim() === nameKey)
+      );
+
+      const formattedYear = formatYearLevel(u.yearLevel || u.year_level);
+      const studentObj = {
+        ...u,
+        yearLevel: formattedYear,
+        year_level: parseInt(formattedYear.charAt(0), 10) || 1,
+      };
+
+      if (existingIdx !== -1) {
+        const existing = students[existingIdx];
+        const existingYearNum = parseInt(String(existing.yearLevel || existing.year_level || 1).charAt(0), 10) || 1;
+        const newYearNum = parseInt(String(studentObj.yearLevel || studentObj.year_level || 1).charAt(0), 10) || 1;
+        const highestYear = Math.max(existingYearNum, newYearNum);
+
+        students[existingIdx] = {
+          ...existing,
+          ...studentObj,
+          yearLevel: formatYearLevel(highestYear),
+          year_level: highestYear,
+          student_id_number: existing.student_id_number || studentObj.student_id_number,
+          account_id: existing.account_id || studentObj.account_id,
+        };
+      } else {
+        students.push(studentObj);
+      }
+    });
+
+  return [...staffArray, ...students];
+};
+
+export const AppProvider = ({ children }) => {
+  const initialUsers = INSTITUTIONAL_STAFF;
 
   // Auth & Navigation state with localStorage session persistence
   const [demoUsers, setDemoUsers] = useState(() => {
@@ -139,10 +226,7 @@ export const AppProvider = ({ children }) => {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          const cleansed = parsed.filter(u => !isLegacyDummyStudent(u));
-          const existingEmails = new Set(cleansed.map(u => u.email?.toLowerCase()));
-          const missingStaff = initialUsers.filter(s => !existingEmails.has(s.email?.toLowerCase()));
-          return [...cleansed, ...missingStaff];
+          return deduplicateUsers(parsed);
         }
       }
       return initialUsers;
@@ -374,6 +458,10 @@ export const AppProvider = ({ children }) => {
     try { localStorage.setItem('ssis_completed_clearance', JSON.stringify(completedClearanceList)); } catch (e) { console.error(e); }
   }, [completedClearanceList]);
 
+  useEffect(() => {
+    try { localStorage.setItem('ssis_student_enrollments', JSON.stringify(studentEnrollmentSelections)); } catch (e) { console.error(e); }
+  }, [studentEnrollmentSelections]);
+
   const [departmentRulesList, setDepartmentRulesList] = useState([
     { id: 1, title: 'Hardware & Equipment Return', description: 'All laboratory headsets, test cables, microcontroller units, and toolkits must be surrendered to the custodian in good physical condition.', active: true },
     { id: 2, title: 'Workstation Cleanliness & Audit', description: 'Terminals must be checked for unauthorized software or personal local data before semester end.', active: true },
@@ -507,14 +595,21 @@ export const AppProvider = ({ children }) => {
 
     const totalUnitsCount = selected.reduce((sum, c) => sum + (Number(c.units) || 3), 0);
     const today = new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+    const activeStudentId = currentUser?.student_id_number || currentUser?.studentId || currentUser?.account_id || 'STU-2026-0001';
+
+    // Persist active student selections immediately
+    setStudentEnrollmentSelections(prev => ({
+      ...prev,
+      [activeStudentId]: selected.map(c => c.id),
+    }));
 
     const newQueueItem = {
       id: Date.now(),
       studentId: currentUser?.id || 1,
       studentName: currentUser?.name || 'Student',
-      studentIdNumber: currentUser?.student_id_number || currentUser?.studentId || '2026-0001',
+      studentIdNumber: activeStudentId,
       program: currentUser?.program || 'BS Computer Science',
-      yearLevel: currentUser?.year_level ? `${currentUser.year_level} Year` : '2nd Year',
+      yearLevel: formatYearLevel(currentUser?.yearLevel || currentUser?.year_level),
       courses: selected,
       totalUnits: totalUnitsCount,
       submittedAt: today,
@@ -523,7 +618,7 @@ export const AppProvider = ({ children }) => {
     };
 
     setEnrollmentStatus('Pending');
-    setRegistrarQueue(prev => [newQueueItem, ...prev.filter(q => q.studentIdNumber !== newQueueItem.studentIdNumber)]);
+    setRegistrarQueue(prev => [newQueueItem, ...prev.filter(q => q.studentIdNumber !== activeStudentId)]);
     setSelectedQueueStudentId(newQueueItem.id);
 
     showToast(`Enrollment request for ${selected.length} subjects (${totalUnitsCount} units) submitted to Registrar!`);
@@ -553,8 +648,16 @@ export const AppProvider = ({ children }) => {
     // Update student's enrollmentStatus
     setEnrollmentStatus('Approved');
 
+    // Ensure student selections are synced with all approved courses
+    if (targetItem.courses && targetItem.courses.length > 0) {
+      setStudentEnrollmentSelections(prev => ({
+        ...prev,
+        [targetItem.studentIdNumber]: targetItem.courses.map(c => c.id),
+      }));
+    }
+
     // Create fee assessment for Cashier
-    const units = targetItem.totalUnits || 3;
+    const units = targetItem.totalUnits || (targetItem.courses ? targetItem.courses.reduce((sum, c) => sum + (Number(c.units) || 3), 0) : 3);
     const tuitionAmount = units * 1500;
     const miscAmount = 2500;
     const totalAssessedAmount = tuitionAmount + miscAmount;
@@ -909,17 +1012,17 @@ export const AppProvider = ({ children }) => {
             return { success: false, message: 'This account has been deactivated. Please contact the administrator.' };
           }
 
-          setCurrentUser(data.user);
-          setDemoUsers(prev => {
-            if (!prev.some(u => u.id === data.user.id || u.email === data.user.email)) {
-              return [data.user, ...prev];
-            }
-            return prev;
-          });
+          const matchedUser = {
+            ...data.user,
+            yearLevel: formatYearLevel(data.user.yearLevel || data.user.year_level),
+          };
+
+          setCurrentUser(matchedUser);
+          setDemoUsers(prev => deduplicateUsers([matchedUser, ...prev]));
 
           // Sync student data if logging in as student
-          if (data.user.role === 'Student') {
-            const sId = data.user.student_id_number;
+          if (matchedUser.role === 'Student') {
+            const sId = matchedUser.student_id_number || matchedUser.account_id;
             const grades = studentGradesMap[sId] || [];
             setGradeReports(grades);
 
@@ -934,33 +1037,44 @@ export const AppProvider = ({ children }) => {
             }
 
             setCurrentView('dashboard');
-          } else if (data.user.role === 'Registrar') setCurrentView('approvals');
-          else if (data.user.role === 'Cashier') setCurrentView('process_payment');
-          else if (data.user.role === 'Department Staff') setCurrentView('clearance_requests');
-          else if (data.user.role === 'Admin') setCurrentView('user_accounts');
+          } else if (matchedUser.role === 'Registrar') setCurrentView('approvals');
+          else if (matchedUser.role === 'Cashier') setCurrentView('process_payment');
+          else if (matchedUser.role === 'Department Staff' || matchedUser.role === 'DepartmentStaff') setCurrentView('clearance_requests');
+          else if (matchedUser.role === 'Admin') setCurrentView('user_accounts');
 
-          showToast(`Welcome back, ${data.user.name}!`);
-          return { success: true, user: data.user };
+          showToast(`Welcome back, ${matchedUser.name}!`);
+          return { success: true, user: matchedUser };
         }
       } else {
         const errData = await res.json().catch(() => null);
-        if (errData?.message) {
+        if (res.status === 403 && errData?.message) {
           showToast(errData.message);
           return { success: false, message: errData.message };
         }
+        console.warn('Backend login non-200, attempting client fallback:', errData);
       }
     } catch (err) {
       console.log('Login API network error, trying local demo users:', err);
     }
 
-    // Client-side fallback check
-    const found = demoUsers.find(u =>
-      (u.email?.toLowerCase() === emailOrId.toLowerCase()) ||
-      (u.account_id?.toLowerCase() === emailOrId.toLowerCase()) ||
-      (u.student_id_number?.toLowerCase() === emailOrId.toLowerCase()) ||
-      (u.username?.toLowerCase() === emailOrId.toLowerCase()) ||
-      (u.name?.toLowerCase() === emailOrId.toLowerCase())
-    );
+    // Client-side fallback check across demoUsers & INSTITUTIONAL_STAFF
+    const searchTarget = emailOrId.toLowerCase().trim();
+    const allCandidates = deduplicateUsers(demoUsers);
+    const found = allCandidates.find(u => {
+      const email = (u.email || '').toLowerCase().trim();
+      const accountId = (u.account_id || '').toLowerCase().trim();
+      const studentId = (u.student_id_number || '').toLowerCase().trim();
+      const username = (u.username || '').toLowerCase().trim();
+      const name = (u.name || '').toLowerCase().trim();
+      const prefix = email.split('@')[0];
+
+      return email === searchTarget ||
+        accountId === searchTarget ||
+        studentId === searchTarget ||
+        username === searchTarget ||
+        name === searchTarget ||
+        (searchTarget.includes('@') && prefix === searchTarget.split('@')[0]);
+    });
 
     if (found) {
       if (
@@ -981,15 +1095,15 @@ export const AppProvider = ({ children }) => {
         setCurrentView('dashboard');
       } else if (found.role === 'Registrar') setCurrentView('approvals');
       else if (found.role === 'Cashier') setCurrentView('process_payment');
-      else if (found.role === 'Department Staff') setCurrentView('clearance_requests');
+      else if (found.role === 'Department Staff' || found.role === 'DepartmentStaff') setCurrentView('clearance_requests');
       else if (found.role === 'Admin') setCurrentView('user_accounts');
 
       showToast(`Welcome back, ${found.name}!`);
-      return { success: true };
+      return { success: true, user: found };
     }
 
-    showToast(`User not found. Please register or check credentials.`);
-    return { success: false };
+    showToast(`No matching account found for "${emailOrId}". Please register or check credentials.`);
+    return { success: false, message: `No matching account found for "${emailOrId}".` };
   };
 
   // Sign Up / Register new account (Stored in MySQL backend and local state)
@@ -1023,7 +1137,7 @@ export const AppProvider = ({ children }) => {
         };
 
         // Register in demoUsers & adminUsersList
-        setDemoUsers(prev => [newUser, ...prev]);
+        setDemoUsers(prev => deduplicateUsers([newUser, ...prev]));
         setAdminUsersList(prev => [
           { id: newUser.id, name: newUser.name, role: newUser.role, account: 'Active', email: newUser.email, account_id: newUser.account_id, student_id_number: newUser.student_id_number },
           ...prev,
@@ -1086,6 +1200,7 @@ export const AppProvider = ({ children }) => {
     const nameParts = (formData.name || 'New User').trim().split(' ');
     const initials = (nameParts[0]?.[0] || 'U') + (nameParts[1]?.[0] || 'S');
 
+    const formattedYear = formatYearLevel(formData.year_level);
     const newUser = {
       id: fallbackId,
       name: formData.name,
@@ -1095,12 +1210,13 @@ export const AppProvider = ({ children }) => {
       role: assignedRole,
       initials: initials.toUpperCase(),
       program: formData.program || 'BS Computer Science',
-      yearLevel: formData.year_level ? `${formData.year_level} Year` : '1st Year',
+      yearLevel: formattedYear,
+      year_level: parseInt(formattedYear.charAt(0), 10) || 1,
       status: 'Active',
       account: 'Active',
     };
 
-    setDemoUsers(prev => [newUser, ...prev]);
+    setDemoUsers(prev => deduplicateUsers([newUser, ...prev]));
     setAdminUsersList(prev => [
       { id: newUser.id, name: newUser.name, role: newUser.role, account: 'Active', email: newUser.email, account_id: assignedId, student_id_number: assignedId },
       ...prev,
@@ -1168,7 +1284,7 @@ export const AppProvider = ({ children }) => {
         }
         if (data.studentsList && data.studentsList.length > 0) {
           const dbStudents = data.studentsList
-            .filter(s => !LEGACY_DUMMY_STUDENT_EMAILS.has(s.email?.toLowerCase()))
+            .filter(s => !isLegacyDummyStudent(s))
             .map(s => ({
               id: s.id,
               name: `${s.first_name} ${s.last_name}`,
@@ -1177,16 +1293,13 @@ export const AppProvider = ({ children }) => {
               role: 'Student',
               initials: (s.first_name[0] || 'S') + (s.last_name[0] || 'T'),
               program: s.program?.program_name || 'BS Computer Science',
-              yearLevel: `${s.year_level || 1} Year`,
+              yearLevel: formatYearLevel(s.year_level),
+              year_level: s.year_level || 1,
               status: s.account_status || 'Active',
               account: s.account_status || 'Active',
             }));
 
-          setDemoUsers(prev => {
-            const existingEmails = new Set(prev.map(p => p.email?.toLowerCase()));
-            const newOnes = dbStudents.filter(s => !existingEmails.has(s.email?.toLowerCase()));
-            return [...prev, ...newOnes];
-          });
+          setDemoUsers(prev => deduplicateUsers([...prev, ...dbStudents]));
         }
       })
       .catch(err => console.log('Running in client state with real-time reactivity:', err));

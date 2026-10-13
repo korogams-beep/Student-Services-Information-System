@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useApp } from '../context/AppContext';
+import { useApp, deduplicateUsers } from '../context/AppContext';
 import { 
   Search, 
   ChevronDown, 
@@ -391,44 +391,44 @@ export const TopNavbar = () => {
               <div style={{ fontSize: '10.5px', fontWeight: '800', color: '#94A3B8', padding: '6px 12px', textTransform: 'uppercase', letterSpacing: '0.8px', borderBottom: '1px solid #F1F5F9', marginBottom: '4px' }}>
                 Demo Perspective Switcher
               </div>
-              {demoUsers
-                .filter(u => u.status !== 'Deactivated' && u.status !== 'Disabled' && u.account !== 'Deactivated' && u.account !== 'Disabled')
-                .filter((u, index, self) => index === self.findIndex(t => (t.id && t.id === u.id) || (t.email && t.email === u.email) || (t.student_id_number && t.student_id_number === u.student_id_number)))
-                .slice(0, 7)
-                .map((u) => (
-                <button
-                  key={`perspective-${u.id || u.email || u.name}`}
-                  onClick={() => {
-                    switchRole(u.role, u);
-                    setIsRoleDropdownOpen(false);
-                  }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    width: '100%',
-                    padding: '8px 12px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    backgroundColor: currentUser?.email === u.email ? '#FBE8E9' : 'transparent',
-                    color: currentUser?.email === u.email ? '#9F1239' : '#1E293B',
-                    fontSize: '12.5px',
-                    fontWeight: currentUser?.email === u.email ? '700' : '500',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                  }}
-                >
-                  <div>
-                    <div>{u.name}</div>
-                    <div style={{ fontSize: '11px', color: '#64748B' }}>
-                      {u.role} {u.student_id_number ? `(${u.student_id_number})` : ''}
+              <div style={{ maxHeight: '360px', overflowY: 'auto' }}>
+                {deduplicateUsers(demoUsers)
+                  .filter(u => u.status !== 'Deactivated' && u.status !== 'Disabled' && u.account !== 'Deactivated' && u.account !== 'Disabled')
+                  .map((u) => (
+                  <button
+                    key={`perspective-${u.role}-${u.account_id || u.student_id_number || u.email || u.name}`}
+                    onClick={() => {
+                      switchRole(u.role, u);
+                      setIsRoleDropdownOpen(false);
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      width: '100%',
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      backgroundColor: currentUser?.email === u.email ? '#FBE8E9' : 'transparent',
+                      color: currentUser?.email === u.email ? '#9F1239' : '#1E293B',
+                      fontSize: '12.5px',
+                      fontWeight: currentUser?.email === u.email ? '700' : '500',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <div>
+                      <div>{u.name}</div>
+                      <div style={{ fontSize: '11px', color: '#64748B' }}>
+                        {u.role} {u.student_id_number ? `(${u.student_id_number})` : ''}
+                      </div>
                     </div>
-                  </div>
-                  <span style={{ fontSize: '11px', background: '#F1F5F9', padding: '2px 6px', borderRadius: '4px' }}>
-                    {u.initials || 'U'}
-                  </span>
-                </button>
-              ))}
+                    <span style={{ fontSize: '11px', background: '#F1F5F9', padding: '2px 6px', borderRadius: '4px' }}>
+                      {u.initials || 'U'}
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>
