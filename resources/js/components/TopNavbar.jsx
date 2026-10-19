@@ -1,9 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useApp, deduplicateUsers } from '../context/AppContext';
+import { useApp } from '../context/AppContext';
 import { 
   Search, 
-  ChevronDown, 
-  UserCheck, 
   X, 
   GraduationCap, 
   BookOpen, 
@@ -13,6 +11,7 @@ import {
   Navigation,
   User
 } from 'lucide-react';
+import { ThemeToggle } from './ThemeToggle';
 
 export const TopNavbar = () => {
   const { 
@@ -21,7 +20,6 @@ export const TopNavbar = () => {
     setCurrentView,
     searchQuery, 
     setSearchQuery, 
-    switchRole, 
     demoUsers,
     setActiveReceipt,
     paymentHistory,
@@ -29,7 +27,6 @@ export const TopNavbar = () => {
     showToast
   } = useApp();
 
-  const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchContainerRef = useRef(null);
 
@@ -236,8 +233,8 @@ export const TopNavbar = () => {
           {isSearchOpen && searchQuery.trim() && searchResults && (
             <div className="ssis-search-results-overlay">
               {searchResults.totalResults === 0 ? (
-                <div style={{ padding: '24px 16px', textAlign: 'center', color: '#64748B', fontSize: '13.5px' }}>
-                  No matches found for <strong style={{ color: '#0F172A' }}>"{searchQuery}"</strong>
+                <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-muted, #94A3B8)', fontSize: '13.5px' }}>
+                  No matches found for <strong style={{ color: 'var(--text-main, #F8FAFC)' }}>"{searchQuery}"</strong>
                 </div>
               ) : (
                 <>
@@ -255,8 +252,8 @@ export const TopNavbar = () => {
                             <User size={15} />
                           </div>
                           <div style={{ flex: 1 }}>
-                            <div style={{ fontWeight: '600', color: '#0F172A' }}>{u.name}</div>
-                            <div style={{ fontSize: '12px', color: '#64748B' }}>
+                            <div style={{ fontWeight: '600', color: 'var(--text-main)' }}>{u.name}</div>
+                            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                               {u.student_id_number ? `ID: ${u.student_id_number} • ` : ''}{u.role} {u.program ? `• ${u.program}` : ''}
                             </div>
                           </div>
@@ -279,8 +276,8 @@ export const TopNavbar = () => {
                             <GraduationCap size={15} />
                           </div>
                           <div style={{ flex: 1 }}>
-                            <div style={{ fontWeight: '600', color: '#0F172A' }}>{c.code} — {c.title}</div>
-                            <div style={{ fontSize: '12px', color: '#64748B' }}>{c.units} units • {c.schedule}</div>
+                            <div style={{ fontWeight: '600', color: 'var(--text-main)' }}>{c.code} — {c.title}</div>
+                            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{c.units} units • {c.schedule}</div>
                           </div>
                         </button>
                       ))}
@@ -301,8 +298,8 @@ export const TopNavbar = () => {
                             <Receipt size={15} />
                           </div>
                           <div style={{ flex: 1 }}>
-                            <div style={{ fontWeight: '600', color: '#0F172A' }}>{r.reference} • PHP {Number(r.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
-                            <div style={{ fontSize: '12px', color: '#64748B' }}>{r.studentName} • {r.date} ({r.method})</div>
+                            <div style={{ fontWeight: '600', color: 'var(--text-main)' }}>{r.reference} • PHP {Number(r.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+                            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{r.studentName} • {r.date} ({r.method})</div>
                           </div>
                         </button>
                       ))}
@@ -323,8 +320,8 @@ export const TopNavbar = () => {
                             <FileText size={15} />
                           </div>
                           <div style={{ flex: 1 }}>
-                            <div style={{ fontWeight: '600', color: '#0F172A' }}>{d.title}</div>
-                            <div style={{ fontSize: '12px', color: '#64748B' }}>Official Academic Form</div>
+                            <div style={{ fontWeight: '600', color: 'var(--text-main)' }}>{d.title}</div>
+                            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Official Academic Form</div>
                           </div>
                         </button>
                       ))}
@@ -341,12 +338,12 @@ export const TopNavbar = () => {
                           className="ssis-search-item"
                           onClick={() => handleSelectResult(p, 'page')}
                         >
-                          <div className="ssis-search-icon-badge" style={{ backgroundColor: '#F1F5F9', color: '#475569' }}>
+                          <div className="ssis-search-icon-badge" style={{ backgroundColor: 'var(--card-border, #334155)', color: 'var(--text-main, #F8FAFC)' }}>
                             <Navigation size={15} />
                           </div>
                           <div style={{ flex: 1 }}>
-                            <div style={{ fontWeight: '600', color: '#0F172A' }}>{p.title}</div>
-                            <div style={{ fontSize: '12px', color: '#64748B' }}>Workspace tab • {p.role}</div>
+                            <div style={{ fontWeight: '600', color: 'var(--text-main)' }}>{p.title}</div>
+                            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Workspace tab • {p.role}</div>
                           </div>
                         </button>
                       ))}
@@ -361,77 +358,8 @@ export const TopNavbar = () => {
         {/* System Online Status dot */}
         <div className="ssis-status-dot" title="Database Connected (MySQL 8.0 • Online)" style={{ backgroundColor: '#22C55E' }} />
 
-        {/* Quick Role Switcher Dropdown */}
-        <div style={{ position: 'relative' }}>
-          <button
-            onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-            className="ssis-role-switcher-btn"
-            title="Switch user perspective"
-          >
-            <UserCheck size={14} color="#F1B82D" />
-            <span>Role: {currentUser?.role || 'Guest'}</span>
-            <ChevronDown size={14} />
-          </button>
-
-          {isRoleDropdownOpen && (
-            <div
-              style={{
-                position: 'absolute',
-                top: 'calc(100% + 8px)',
-                right: 0,
-                backgroundColor: '#FFFFFF',
-                borderRadius: '12px',
-                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.12)',
-                border: '1px solid #E2E8F0',
-                padding: '8px',
-                width: '260px',
-                zIndex: 100,
-              }}
-            >
-              <div style={{ fontSize: '10.5px', fontWeight: '800', color: '#94A3B8', padding: '6px 12px', textTransform: 'uppercase', letterSpacing: '0.8px', borderBottom: '1px solid #F1F5F9', marginBottom: '4px' }}>
-                Demo Perspective Switcher
-              </div>
-              <div style={{ maxHeight: '360px', overflowY: 'auto' }}>
-                {deduplicateUsers(demoUsers)
-                  .filter(u => u.status !== 'Deactivated' && u.status !== 'Disabled' && u.account !== 'Deactivated' && u.account !== 'Disabled')
-                  .map((u) => (
-                  <button
-                    key={`perspective-${u.role}-${u.account_id || u.student_id_number || u.email || u.name}`}
-                    onClick={() => {
-                      switchRole(u.role, u);
-                      setIsRoleDropdownOpen(false);
-                    }}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      width: '100%',
-                      padding: '8px 12px',
-                      borderRadius: '8px',
-                      border: 'none',
-                      backgroundColor: currentUser?.email === u.email ? '#FBE8E9' : 'transparent',
-                      color: currentUser?.email === u.email ? '#9F1239' : '#1E293B',
-                      fontSize: '12.5px',
-                      fontWeight: currentUser?.email === u.email ? '700' : '500',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                    }}
-                  >
-                    <div>
-                      <div>{u.name}</div>
-                      <div style={{ fontSize: '11px', color: '#64748B' }}>
-                        {u.role} {u.student_id_number ? `(${u.student_id_number})` : ''}
-                      </div>
-                    </div>
-                    <span style={{ fontSize: '11px', background: '#F1F5F9', padding: '2px 6px', borderRadius: '4px' }}>
-                      {u.initials || 'U'}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+        {/* Theme Switcher Toggle */}
+        <ThemeToggle size="compact" showLabel={true} />
 
         {/* User Avatar Circle */}
         <div
@@ -463,7 +391,7 @@ export const TopNavbar = () => {
 
         {/* Role & Name Label */}
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontSize: '13.5px', fontWeight: '700', color: '#0F172A', lineHeight: 1.2 }}>
+          <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--text-main, #0F172A)', lineHeight: 1.2 }}>
             {currentUser?.name || 'User'}
           </span>
           <span

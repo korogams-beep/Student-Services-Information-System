@@ -64,31 +64,31 @@ export const CashierRecentPaymentsView = () => {
       {/* Summary KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '28px' }}>
         <div className="ssis-card" style={{ padding: '20px 24px' }}>
-          <div style={{ fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase' }}>Filtered Collections</div>
-          <div style={{ fontSize: '26px', fontWeight: '800', color: '#0F172A', marginTop: '6px' }}>
+          <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted, #94A3B8)', textTransform: 'uppercase' }}>Filtered Collections</div>
+          <div style={{ fontSize: '26px', fontWeight: '800', color: 'var(--text-main, #F8FAFC)', marginTop: '6px' }}>
             PHP {totalCollected.toLocaleString('en-US', { minimumFractionDigits: 2 })}
           </div>
-          <div style={{ fontSize: '12px', color: '#166534', marginTop: '4px', fontWeight: '600' }}>
+          <div style={{ fontSize: '12px', color: '#4ADE80', marginTop: '4px', fontWeight: '600' }}>
             ✓ Verified with University Vault
           </div>
         </div>
 
         <div className="ssis-card" style={{ padding: '20px 24px' }}>
-          <div style={{ fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase' }}>Transactions Count</div>
-          <div style={{ fontSize: '26px', fontWeight: '800', color: '#0F172A', marginTop: '6px' }}>
+          <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted, #94A3B8)', textTransform: 'uppercase' }}>Transactions Count</div>
+          <div style={{ fontSize: '26px', fontWeight: '800', color: 'var(--text-main, #F8FAFC)', marginTop: '6px' }}>
             {filteredPayments.length} Receipts
           </div>
-          <div style={{ fontSize: '12px', color: '#64748B', marginTop: '4px' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted, #94A3B8)', marginTop: '4px' }}>
             Active cashier shift
           </div>
         </div>
 
         <div className="ssis-card" style={{ padding: '20px 24px' }}>
-          <div style={{ fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase' }}>Cashier on Duty</div>
-          <div style={{ fontSize: '26px', fontWeight: '800', color: '#92400E', marginTop: '6px' }}>
+          <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted, #94A3B8)', textTransform: 'uppercase' }}>Cashier on Duty</div>
+          <div style={{ fontSize: '26px', fontWeight: '800', color: '#F59E0B', marginTop: '6px' }}>
             Counter 3
           </div>
-          <div style={{ fontSize: '12px', color: '#64748B', marginTop: '4px' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted, #94A3B8)', marginTop: '4px' }}>
             Leah Navarro • Term 2025–2026
           </div>
         </div>
@@ -111,20 +111,20 @@ export const CashierRecentPaymentsView = () => {
           <tbody>
             {filteredPayments.map(p => (
               <tr key={p.id || p.reference}>
-                <td style={{ color: '#475569', fontSize: '13.5px' }}>{p.date}</td>
-                <td style={{ fontWeight: '700', color: '#0F172A' }}>
-                  <span style={{ fontFamily: 'monospace', backgroundColor: '#F1F5F9', padding: '3px 8px', borderRadius: '4px' }}>
+                <td style={{ color: 'var(--text-muted, #94A3B8)', fontSize: '13.5px' }}>{p.date}</td>
+                <td style={{ fontWeight: '700', color: 'var(--text-main, #F8FAFC)' }}>
+                  <span style={{ fontFamily: 'monospace', backgroundColor: 'var(--card-border, #1E293B)', padding: '3px 8px', borderRadius: '4px', color: 'var(--text-main, #F8FAFC)' }}>
                     {p.reference}
                   </span>
                 </td>
                 <td>
-                  <strong style={{ color: '#0F172A' }}>{p.studentName || 'Student'}</strong>
-                  <span style={{ color: '#64748B', fontSize: '12px', display: 'block' }}>
+                  <strong style={{ color: 'var(--text-main, #F8FAFC)' }}>{p.studentName || 'Student'}</strong>
+                  <span style={{ color: 'var(--text-muted, #94A3B8)', fontSize: '12px', display: 'block' }}>
                     {p.studentId || '2026-0001'}
                   </span>
                 </td>
-                <td style={{ color: '#334155' }}>{p.method || 'Cash'}</td>
-                <td style={{ textAlign: 'right', fontWeight: '700', color: '#0F172A' }}>
+                <td style={{ color: 'var(--text-muted, #94A3B8)' }}>{p.method || 'Cash'}</td>
+                <td style={{ textAlign: 'right', fontWeight: '700', color: 'var(--text-main, #F8FAFC)' }}>
                   PHP {Number(p.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </td>
                 <td style={{ textAlign: 'center' }}>

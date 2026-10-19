@@ -4,6 +4,7 @@ import { X, UserPlus, Shield, Hash } from 'lucide-react';
 
 export const AddUserModal = () => {
   const { 
+    currentUser,
     isAddUserModalOpen, 
     setIsAddUserModalOpen, 
     setAdminUsersList, 
@@ -141,7 +142,10 @@ export const AddUserModal = () => {
     // Server-side sync
     fetch('/api/admin/users', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-User-Role': currentUser?.role || 'Admin',
+      },
       body: JSON.stringify({
         name: newUser.name,
         role: newUser.role,
@@ -164,11 +168,11 @@ export const AddUserModal = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <UserPlus size={22} color="#F1B82D" />
-            <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#0F172A', margin: 0 }}>Provision New Account</h3>
+            <h3 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-main, #F8FAFC)', margin: 0 }}>Provision New Account</h3>
           </div>
           <button
             onClick={() => setIsAddUserModalOpen(false)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748B' }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted, #94A3B8)' }}
           >
             <X size={20} />
           </button>
@@ -189,7 +193,7 @@ export const AddUserModal = () => {
               <option value="Department Staff">Department Staff (STF-)</option>
               <option value="Admin">Admin (ADM-)</option>
             </select>
-            <span style={{ fontSize: '11.5px', color: '#64748B', marginTop: '4px', display: 'block' }}>
+            <span style={{ fontSize: '11.5px', color: 'var(--text-muted, #94A3B8)', marginTop: '4px', display: 'block' }}>
               Account ID prefix dynamically matches the assigned role ({getRolePrefix(formData.role)}-2026-XXXX).
             </span>
           </div>
@@ -201,10 +205,10 @@ export const AddUserModal = () => {
                 type="text"
                 readOnly
                 className="ssis-input"
-                style={{ fontFamily: 'monospace', fontWeight: '700', color: '#0F172A', paddingLeft: '36px', backgroundColor: '#F1F5F9', cursor: 'not-allowed' }}
+                style={{ fontFamily: 'monospace', fontWeight: '700', color: 'var(--text-main, #F8FAFC)', paddingLeft: '36px', backgroundColor: 'var(--input-bg, #0F172A)', cursor: 'not-allowed' }}
                 value={formData.accountId}
               />
-              <Hash size={16} color="#64748B" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+              <Hash size={16} color="#94A3B8" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
             </div>
             <span style={{ fontSize: '11.5px', color: '#059669', marginTop: '3px', display: 'block', fontWeight: '600' }}>
               🔒 System-generated unique identifier for {formData.role} role. Duplication is strictly prevented.

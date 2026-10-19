@@ -111,9 +111,9 @@ export const StudentDocumentsView = () => {
           </h3>
 
           {myDocumentRequests.length === 0 ? (
-            <div style={{ padding: '36px 20px', textAlign: 'center', color: '#64748B' }}>
+            <div style={{ padding: '36px 20px', textAlign: 'center', color: 'var(--text-muted, #94A3B8)' }}>
               <Clock size={36} color="#94A3B8" style={{ margin: '0 auto 10px' }} />
-              <p style={{ fontSize: '13.5px', margin: 0 }}>
+              <p style={{ fontSize: '13.5px', margin: 0, color: 'var(--text-muted, #94A3B8)' }}>
                 No document requests submitted yet. Use the form to submit an official request to the Registrar.
               </p>
             </div>
@@ -130,14 +130,14 @@ export const StudentDocumentsView = () => {
                 {myDocumentRequests.map(doc => (
                   <tr key={doc.id}>
                     <td>
-                      <div style={{ fontWeight: '600', color: '#0F172A' }}>{doc.request}</div>
-                      <div style={{ fontSize: '12px', color: '#64748B' }}>{doc.purpose} ({doc.copies} copy)</div>
+                      <div style={{ fontWeight: '600', color: 'var(--text-main, #0F172A)' }}>{doc.request}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted, #64748B)' }}>{doc.purpose} ({doc.copies} copy)</div>
                     </td>
-                    <td style={{ color: '#475569', fontSize: '13px' }}>{doc.submitted}</td>
+                    <td style={{ color: 'var(--text-muted, #475569)', fontSize: '13px' }}>{doc.submitted}</td>
                     <td style={{ textAlign: 'right' }}>
                       {getStatusBadge(doc.status)}
                       {doc.approvedBy && (
-                        <div style={{ fontSize: '11px', color: '#64748B', marginTop: '3px' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted, #64748B)', marginTop: '3px' }}>
                           by {doc.approvedBy}
                         </div>
                       )}

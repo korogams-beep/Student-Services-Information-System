@@ -45,12 +45,12 @@ export const StudentPaymentsView = () => {
         {/* Left Assessment Table */}
         <div className="ssis-table-container">
           {displayAssessedFees.length === 0 ? (
-            <div style={{ padding: '36px 20px', textAlign: 'center', color: '#64748B' }}>
+            <div style={{ padding: '36px 20px', textAlign: 'center', color: 'var(--text-muted, #94A3B8)' }}>
               <CreditCard size={36} color="#94A3B8" style={{ margin: '0 auto 10px' }} />
-              <h4 style={{ fontSize: '15px', fontWeight: '700', color: '#1E293B', marginBottom: '6px' }}>
+              <h4 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-main, #F8FAFC)', marginBottom: '6px' }}>
                 No Fee Assessment Yet
               </h4>
-              <p style={{ fontSize: '13px', margin: 0 }}>
+              <p style={{ fontSize: '13px', margin: 0, color: 'var(--text-muted, #94A3B8)' }}>
                 Your account is currently at default 0. Once your enrollment is approved and assessed by the Cashiering Office, fee categories will appear here.
               </p>
             </div>
@@ -99,9 +99,9 @@ export const StudentPaymentsView = () => {
         </h3>
         
         {studentPayments.length === 0 ? (
-          <div style={{ padding: '36px 20px', textAlign: 'center', color: '#64748B' }}>
+          <div style={{ padding: '36px 20px', textAlign: 'center', color: 'var(--text-muted, #94A3B8)' }}>
             <Receipt size={36} color="#94A3B8" style={{ margin: '0 auto 10px' }} />
-            <p style={{ fontSize: '13.5px', margin: 0 }}>
+            <p style={{ fontSize: '13.5px', margin: 0, color: 'var(--text-muted, #94A3B8)' }}>
               No payments recorded yet. Official receipts will be archived here once payment is processed at the Cashier counter.
             </p>
           </div>
@@ -119,12 +119,12 @@ export const StudentPaymentsView = () => {
             <tbody>
               {studentPayments.map(payment => (
                 <tr key={payment.id}>
-                  <td style={{ color: '#475569' }}>{payment.date}</td>
-                  <td style={{ fontWeight: '600', color: '#0F172A', fontFamily: 'monospace' }}>
+                  <td style={{ color: 'var(--text-muted, #475569)' }}>{payment.date}</td>
+                  <td style={{ fontWeight: '600', color: 'var(--text-main, #0F172A)', fontFamily: 'monospace' }}>
                     {payment.reference}
                   </td>
                   <td>{payment.method}</td>
-                  <td style={{ textAlign: 'right', fontWeight: '700', color: '#166534' }}>
+                  <td style={{ textAlign: 'right', fontWeight: '700', color: '#22C55E' }}>
                     PHP {Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </td>
                   <td style={{ textAlign: 'center' }}>

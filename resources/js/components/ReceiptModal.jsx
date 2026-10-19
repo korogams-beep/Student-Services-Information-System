@@ -36,11 +36,11 @@ export const ReceiptModal = () => {
         <div className="ssis-modal-header no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <CheckCircle size={22} color="#16A34A" />
-            <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#0F172A' }}>Official Payment Receipt</h3>
+            <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-main, #F8FAFC)' }}>Official Payment Receipt</h3>
           </div>
           <button
             onClick={() => setActiveReceipt(null)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748B' }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted, #94A3B8)' }}
           >
             <X size={20} />
           </button>

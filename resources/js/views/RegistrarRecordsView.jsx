@@ -14,6 +14,7 @@ const OFFICIAL_COURSES = [
 
 export const RegistrarRecordsView = () => {
   const { 
+    currentUser,
     demoUsers,
     encodeGradesList, 
     setEncodeGradesList, 
@@ -75,7 +76,10 @@ export const RegistrarRecordsView = () => {
     // Persist to MySQL database backend
     fetch('/api/registrar/grades/save', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-User-Role': currentUser?.role || 'Registrar',
+      },
       body: JSON.stringify({
         subject_code: selectedSubject,
         grades: encodeGradesList.map(g => ({
@@ -119,13 +123,13 @@ export const RegistrarRecordsView = () => {
               </div>
               <div>
                 <h3 className="ssis-card-title" style={{ margin: 0 }}>Course Grade Sheet</h3>
-                <p style={{ fontSize: '13px', color: '#64748B', margin: 0 }}>Term: 2nd Semester AY 2025–2026</p>
+                <p style={{ fontSize: '13px', color: 'var(--text-muted, #94A3B8)', margin: 0 }}>Term: 2nd Semester AY 2025–2026</p>
               </div>
             </div>
 
             {/* Subject selector */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '13px', fontWeight: '600', color: '#475569' }}>Select Subject:</span>
+              <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted, #94A3B8)' }}>Select Subject:</span>
               <select
                 className="ssis-select"
                 style={{ minWidth: '220px', fontWeight: '700' }}
@@ -142,9 +146,9 @@ export const RegistrarRecordsView = () => {
           </div>
 
           {/* Add Student Row */}
-          {registeredStudents.length > 0 && (
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '24px', backgroundColor: '#F8FAFC', padding: '12px 16px', borderRadius: '8px' }}>
-              <span style={{ fontSize: '13px', fontWeight: '600', color: '#475569' }}>Add Student:</span>
+          {registeredStudents.length > 0 ? (
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '24px', backgroundColor: 'var(--bg-subtle, #F8FAFC)', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--card-border, #E2E8F0)' }}>
+              <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted, #475569)' }}>Add Student:</span>
               <select
                 className="ssis-select"
                 style={{ flex: 1 }}
@@ -168,12 +172,16 @@ export const RegistrarRecordsView = () => {
                 <span>Add to Sheet</span>
               </button>
             </div>
+          ) : (
+            <div style={{ padding: '16px', backgroundColor: 'var(--bg-subtle, #F8FAFC)', borderRadius: '8px', border: '1px solid var(--card-border, #E2E8F0)', textAlign: 'center', color: 'var(--text-muted, #64748B)', fontSize: '13px', marginBottom: '24px' }}>
+              No registered students yet. Once students register or are added by Admin, they will appear here.
+            </div>
           )}
 
           {/* Students Grade Encoding List */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
             {filteredGrades.length === 0 ? (
-              <div style={{ padding: '36px 20px', textAlign: 'center', color: '#64748B' }}>
+              <div style={{ padding: '36px 20px', textAlign: 'center', color: 'var(--text-muted, #64748B)' }}>
                 <p style={{ margin: 0 }}>
                   No students in this grade sheet yet. Use the dropdown above to add registered students.
                 </p>
@@ -192,15 +200,15 @@ export const RegistrarRecordsView = () => {
                       justifyContent: 'space-between',
                       padding: '14px 20px',
                       borderRadius: '8px',
-                      backgroundColor: '#FAF5F5',
-                      border: '1px solid #F1E2E4',
+                      backgroundColor: 'var(--bg-subtle, #FAF5F5)',
+                      border: '1px solid var(--card-border, #F1E2E4)',
                     }}
                   >
-                    <div style={{ fontSize: '14.5px', color: '#1E293B' }}>
-                      <span style={{ color: '#64748B', marginRight: '10px', fontSize: '13px', fontFamily: 'monospace' }}>
+                    <div style={{ fontSize: '14.5px', color: 'var(--text-main, #1E293B)' }}>
+                      <span style={{ color: 'var(--text-muted, #64748B)', marginRight: '10px', fontSize: '13px', fontFamily: 'monospace' }}>
                         {item.studentId}
                       </span>
-                      <strong style={{ color: '#0F172A' }}>{item.studentName}</strong>
+                      <strong style={{ color: 'var(--text-main, #0F172A)' }}>{item.studentName}</strong>
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -209,7 +217,7 @@ export const RegistrarRecordsView = () => {
                       </span>
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ color: '#94A3B8', fontSize: '16px' }}>[</span>
+                        <span style={{ color: 'var(--text-muted, #94A3B8)', fontSize: '16px' }}>[</span>
                         <input
                           type="number"
                           step="0.25"
@@ -217,19 +225,17 @@ export const RegistrarRecordsView = () => {
                           max="5.00"
                           value={item.grade}
                           onChange={(e) => handleGradeChange(item.id, e.target.value)}
+                          className="ssis-input"
                           style={{
-                            width: '64px',
+                            width: '68px',
                             textAlign: 'center',
                             fontWeight: '800',
                             fontSize: '15px',
-                            border: '1.5px solid #CBD5E1',
-                            borderRadius: '6px',
                             padding: '6px 4px',
-                            background: '#FFFFFF',
-                            color: isPassed ? '#166534' : '#DC2626',
+                            color: isPassed ? '#16A34A' : '#DC2626',
                           }}
                         />
-                        <span style={{ color: '#94A3B8', fontSize: '16px' }}>]</span>
+                        <span style={{ color: 'var(--text-muted, #94A3B8)', fontSize: '16px' }}>]</span>
                       </div>
                     </div>
                   </div>

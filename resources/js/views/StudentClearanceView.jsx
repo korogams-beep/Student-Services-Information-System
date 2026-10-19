@@ -65,14 +65,14 @@ export const StudentClearanceView = () => {
               {myClearanceList.map(c => (
                 <tr key={c.id}>
                   <td>
-                    <div style={{ fontWeight: '600', color: '#0F172A' }}>{c.department}</div>
+                    <div style={{ fontWeight: '600', color: 'var(--text-main, #0F172A)' }}>{c.department}</div>
                     {c.remarks && (
-                      <div style={{ fontSize: '11.5px', color: '#64748B', marginTop: '2px' }}>
+                      <div style={{ fontSize: '11.5px', color: 'var(--text-muted, #64748B)', marginTop: '2px' }}>
                         {c.remarks}
                       </div>
                     )}
                   </td>
-                  <td style={{ color: '#475569', fontSize: '13px' }}>{c.lastUpdated || 'Pending Review'}</td>
+                  <td style={{ color: 'var(--text-muted, #475569)', fontSize: '13px' }}>{c.lastUpdated || 'Pending Review'}</td>
                   <td>
                     {c.status === 'Cleared' ? (
                       <span className="badge badge-success">Cleared</span>
@@ -120,7 +120,7 @@ export const StudentClearanceView = () => {
 
           {!isAllCleared && pendingDepartments.length > 0 && (
             <div className="ssis-card" style={{ padding: '20px', marginBottom: '20px' }}>
-              <label style={{ fontSize: '12.5px', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '8px' }}>
+              <label style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-main, #F8FAFC)', display: 'block', marginBottom: '8px' }}>
                 Select Department to Clear:
               </label>
               <select
@@ -147,10 +147,10 @@ export const StudentClearanceView = () => {
           )}
 
           {isAllCleared && (
-            <div className="ssis-card" style={{ padding: '24px', textAlign: 'center', border: '1px solid #BBF7D0', backgroundColor: '#F0FDF4' }}>
-              <CheckCircle2 size={32} color="#16A34A" style={{ margin: '0 auto 8px' }} />
-              <div style={{ fontWeight: '700', color: '#166534', fontSize: '15px' }}>Clearance Complete!</div>
-              <div style={{ fontSize: '12.5px', color: '#475569', marginTop: '4px' }}>
+            <div className="ssis-card" style={{ padding: '24px', textAlign: 'center', border: '1px solid rgba(74, 222, 128, 0.4)', backgroundColor: 'rgba(34, 197, 94, 0.1)' }}>
+              <CheckCircle2 size={32} color="#4ADE80" style={{ margin: '0 auto 8px' }} />
+              <div style={{ fontWeight: '700', color: '#4ADE80', fontSize: '15px' }}>Clearance Complete!</div>
+              <div style={{ fontSize: '12.5px', color: 'var(--text-muted, #94A3B8)', marginTop: '4px' }}>
                 All academic departments and administrative offices have signed off on your clearance.
               </div>
             </div>

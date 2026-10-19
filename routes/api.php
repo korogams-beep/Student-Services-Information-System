@@ -10,26 +10,36 @@ Route::post('/auth/login', [SSISController::class, 'login']);
 // Core System State
 Route::get('/bootstrap', [SSISController::class, 'getSystemState']);
 
-// Student Enrollment & Clearance
-Route::post('/enrollment/submit', [SSISController::class, 'submitEnrollment']);
-Route::post('/clearance/request', [SSISController::class, 'submitClearanceRequest']);
-Route::post('/documents/request', [SSISController::class, 'requestDocument']);
+// Student Self-Service Operations
+Route::middleware('role:Student,Admin,Registrar')->group(function () {
+    Route::post('/enrollment/submit', [SSISController::class, 'submitEnrollment']);
+    Route::post('/clearance/request', [SSISController::class, 'submitClearanceRequest']);
+    Route::post('/documents/request', [SSISController::class, 'requestDocument']);
+});
 
-// Registrar Operations
-Route::post('/registrar/enrollments/{id}/decide', [SSISController::class, 'decideEnrollment']);
-Route::post('/registrar/grades/save', [SSISController::class, 'saveGrades']);
-Route::post('/registrar/documents/{id}/release', [SSISController::class, 'releaseDocument']);
+// Registrar Operations (Protected)
+Route::middleware('role:Registrar,Admin')->group(function () {
+    Route::post('/registrar/enrollments/{id}/decide', [SSISController::class, 'decideEnrollment']);
+    Route::post('/registrar/grades/save', [SSISController::class, 'saveGrades']);
+    Route::post('/registrar/documents/{id}/release', [SSISController::class, 'releaseDocument']);
+});
 
-// Cashier Operations
-Route::get('/cashier/data', [SSISController::class, 'getCashierData']);
-Route::post('/cashier/payment', [SSISController::class, 'recordPayment']);
-Route::post('/cashier/payments', [SSISController::class, 'recordPayment']);
+// Cashier Operations (Protected)
+Route::middleware('role:Cashier,Admin')->group(function () {
+    Route::get('/cashier/data', [SSISController::class, 'getCashierData']);
+    Route::post('/cashier/payment', [SSISController::class, 'recordPayment']);
+    Route::post('/cashier/payments', [SSISController::class, 'recordPayment']);
+});
 
-// Department Staff Operations
-Route::get('/clearance/data', [SSISController::class, 'getClearanceData']);
-Route::post('/clearance/{id}/decide', [SSISController::class, 'decideClearance']);
+// Department Staff Operations (Protected)
+Route::middleware('role:DepartmentStaff,Department Staff,Admin')->group(function () {
+    Route::get('/clearance/data', [SSISController::class, 'getClearanceData']);
+    Route::post('/clearance/{id}/decide', [SSISController::class, 'decideClearance']);
+});
 
-// Admin Operations
-Route::post('/admin/users/{id}/toggle-status', [SSISController::class, 'toggleUserStatus']);
-Route::post('/admin/users/{id}/change-role', [SSISController::class, 'changeUserRole']);
-Route::post('/admin/users', [SSISController::class, 'addUser']);
+// Admin Operations (Protected)
+Route::middleware('role:Admin')->group(function () {
+    Route::post('/admin/users/{id}/toggle-status', [SSISController::class, 'toggleUserStatus']);
+    Route::post('/admin/users/{id}/change-role', [SSISController::class, 'changeUserRole']);
+    Route::post('/admin/users', [SSISController::class, 'addUser']);
+});
