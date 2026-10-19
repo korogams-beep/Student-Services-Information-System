@@ -8,6 +8,7 @@ import { AddUserModal } from './components/AddUserModal';
 
 // Views
 import { LoginView } from './views/LoginView';
+import { AdminLoginView } from './views/AdminLoginView';
 import { StudentDashboardView } from './views/StudentDashboardView';
 import { StudentEnrollmentView } from './views/StudentEnrollmentView';
 import { StudentPaymentsView } from './views/StudentPaymentsView';
@@ -43,6 +44,8 @@ const MainLayout = () => {
     switch (currentView) {
       case 'login':
         return <LoginView />;
+      case 'admin_login':
+        return <AdminLoginView />;
       case 'dashboard':
         return <StudentDashboardView />;
       case 'enrollment':
@@ -103,10 +106,10 @@ const MainLayout = () => {
     }
   };
 
-  if (currentView === 'login' || !currentUser) {
+  if (currentView === 'login' || currentView === 'admin_login' || !currentUser) {
     return (
       <>
-        <LoginView />
+        {currentView === 'admin_login' ? <AdminLoginView /> : <LoginView />}
         {toastMessage && (
           <div className="ssis-toast">
             <CheckCircle2 size={18} color="#22C55E" />

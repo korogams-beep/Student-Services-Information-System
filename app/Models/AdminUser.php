@@ -18,6 +18,10 @@ class AdminUser extends Model
         'account_status',
     ];
 
+    protected $hidden = [
+        'password_hash',
+    ];
+
     public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class);

@@ -4,6 +4,7 @@ import { X, UserPlus, Shield, Hash } from 'lucide-react';
 
 export const AddUserModal = () => {
   const { 
+    currentUser,
     isAddUserModalOpen, 
     setIsAddUserModalOpen, 
     setAdminUsersList, 
@@ -141,7 +142,10 @@ export const AddUserModal = () => {
     // Server-side sync
     fetch('/api/admin/users', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-User-Role': currentUser?.role || 'Admin',
+      },
       body: JSON.stringify({
         name: newUser.name,
         role: newUser.role,

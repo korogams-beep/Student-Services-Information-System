@@ -20,6 +20,10 @@ class Student extends Model
         'account_status',
     ];
 
+    protected $hidden = [
+        'password_hash',
+    ];
+
     public function program(): BelongsTo
     {
         return $this->belongsTo(Program::class);

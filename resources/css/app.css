@@ -3,7 +3,7 @@
    High Fidelity Design System matching Canva Wireframe Specification
    ========================================================================== */
 
-:root {
+:root, [data-theme="light"] {
   --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   
   /* Primary Wireframe Palette */
@@ -34,9 +34,15 @@
   --card-bg: #FFFFFF;
   --card-border: #E2E8F0;
   --table-header-bg: #FAF5F5;
+  --table-row-hover: #F8FAFC;
+  --table-border: #F1F5F9;
+  --input-bg: #FFFFFF;
+  --input-border: #CBD5E1;
+  --search-box-bg: #F1F5F9;
   --text-main: #0F172A;
   --text-muted: #64748B;
   --text-light: #94A3B8;
+  --bg-subtle: #F8FAFC;
   
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -46,6 +52,45 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="dark"], .dark {
+  --sidebar-bg: #0F172A;
+  --sidebar-hover: rgba(255, 255, 255, 0.08);
+  --sidebar-border: #1E293B;
+  --sidebar-text: #94A3B8;
+  --sidebar-text-active: #F1B82D;
+  --sidebar-pill-active: rgba(241, 184, 45, 0.15);
+
+  --canvas-bg: #0B0F19;
+  --card-bg: #151D2C;
+  --card-border: #233044;
+  --table-header-bg: #182234;
+  --table-row-hover: #1E2B40;
+  --table-border: #233044;
+  --input-bg: #1E293B;
+  --input-border: #475569;
+  --search-box-bg: #1E293B;
+  --text-main: #F8FAFC;
+  --text-muted: #94A3B8;
+  --text-light: #CBD5E1;
+  --bg-subtle: #1E293B;
+
+  --highlight-pink-bg: rgba(244, 63, 94, 0.12);
+  --highlight-pink-text: #FDA4AF;
+  --highlight-pink-border: rgba(244, 63, 94, 0.3);
+
+  --lavender-bg: rgba(139, 92, 246, 0.15);
+  --lavender-text: #DDD6FE;
+  --lavender-hover: rgba(139, 92, 246, 0.25);
+
+  --soft-red-bg: rgba(239, 68, 68, 0.15);
+  --soft-red-text: #FCA5A5;
+  --soft-red-hover: rgba(239, 68, 68, 0.25);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
 }
 
 *, *::before, *::after {
@@ -164,7 +209,7 @@ button, input, select, textarea {
 /* Top Navbar */
 .ssis-top-navbar {
   height: 72px;
-  background-color: #FFFFFF;
+  background-color: var(--card-bg);
   border-bottom: 1px solid var(--card-border);
   display: flex;
   align-items: center;
@@ -173,6 +218,7 @@ button, input, select, textarea {
   position: sticky;
   top: 0;
   z-index: 10;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .ssis-header-title {
@@ -191,7 +237,8 @@ button, input, select, textarea {
 .ssis-search-box {
   display: flex;
   align-items: center;
-  background-color: #F1F5F9;
+  background-color: var(--search-box-bg);
+  border: 1px solid var(--card-border);
   border-radius: var(--radius-pill);
   padding: 8px 18px;
   width: 240px;
@@ -242,20 +289,20 @@ button, input, select, textarea {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #F8FAFC;
-  border: 1px solid #CBD5E1;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
   padding: 6px 12px;
   border-radius: var(--radius-pill);
   font-size: 12px;
   font-weight: 600;
-  color: #334155;
+  color: var(--text-main);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .ssis-role-switcher-btn:hover {
-  background: #EEF2F6;
-  border-color: #94A3B8;
+  background: var(--input-bg);
+  border-color: var(--brand-yellow);
 }
 
 /* Canvas Area */
@@ -315,11 +362,12 @@ button, input, select, textarea {
 
 /* Cards */
 .ssis-card {
-  background-color: #FFFFFF;
+  background-color: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
   padding: 26px;
   box-shadow: var(--shadow-sm);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .ssis-card-title {
@@ -331,7 +379,7 @@ button, input, select, textarea {
 
 /* Tables */
 .ssis-table-container {
-  background: #FFFFFF;
+  background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
   overflow: hidden;
@@ -349,15 +397,15 @@ button, input, select, textarea {
   padding: 14px 20px;
   font-size: 13px;
   font-weight: 700;
-  color: #475569;
+  color: var(--text-muted);
   border-bottom: 1px solid var(--card-border);
 }
 
 .ssis-table tbody td {
   padding: 16px 20px;
   font-size: 14px;
-  color: #1E293B;
-  border-bottom: 1px solid #F1F5F9;
+  color: var(--text-main);
+  border-bottom: 1px solid var(--table-border);
 }
 
 .ssis-table tbody tr:last-child td {
@@ -365,7 +413,7 @@ button, input, select, textarea {
 }
 
 .ssis-table tbody tr:hover td {
-  background-color: #FAFAFA;
+  background-color: var(--table-row-hover);
 }
 
 /* Buttons */
@@ -453,7 +501,7 @@ button, input, select, textarea {
   display: block;
   font-size: 13.5px;
   font-weight: 600;
-  color: #334155;
+  color: var(--text-main);
   margin-bottom: 8px;
 }
 
@@ -461,11 +509,11 @@ button, input, select, textarea {
   width: 100%;
   padding: 11px 16px;
   border-radius: var(--radius-md);
-  border: 1px solid #CBD5E1;
+  border: 1px solid var(--input-border);
   font-size: 14px;
   color: var(--text-main);
-  background-color: #FFFFFF;
-  transition: border-color 0.15s ease;
+  background-color: var(--input-bg);
+  transition: border-color 0.15s ease, background-color 0.2s ease;
   outline: none;
 }
 
@@ -478,16 +526,18 @@ button, input, select, textarea {
 .ssis-modal-backdrop {
   position: fixed;
   inset: 0;
-  background-color: rgba(15, 23, 42, 0.55);
+  background-color: rgba(15, 23, 42, 0.65);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(6px);
 }
 
 .ssis-modal-content {
-  background: #FFFFFF;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  color: var(--text-main);
   border-radius: var(--radius-lg);
   width: 90%;
   max-width: 600px;
@@ -664,6 +714,142 @@ button, input, select, textarea {
   color: #9F1239;
   font-weight: 700;
   border-bottom: 2px solid #F1B82D;
+}
+
+/* ==========================================================================
+   Dark Mode Contrast & Theme Enhancements
+   ========================================================================== */
+[data-theme="dark"] .ssis-card,
+.dark .ssis-card {
+  background-color: var(--card-bg);
+  border-color: var(--card-border);
+  color: var(--text-main);
+}
+
+[data-theme="dark"] .ssis-btn-secondary,
+.dark .ssis-btn-secondary {
+  background-color: #1E293B !important;
+  color: #F8FAFC !important;
+  border-color: #475569 !important;
+}
+
+[data-theme="dark"] .ssis-btn-secondary:hover,
+.dark .ssis-btn-secondary:hover {
+  background-color: #334155 !important;
+  color: #FFFFFF !important;
+  border-color: #64748B !important;
+}
+
+[data-theme="dark"] .ssis-tabs-bar,
+.dark .ssis-tabs-bar {
+  border-bottom-color: #334155;
+}
+
+[data-theme="dark"] .ssis-tab-btn,
+.dark .ssis-tab-btn {
+  color: #94A3B8;
+}
+
+[data-theme="dark"] .ssis-tab-btn:hover,
+.dark .ssis-tab-btn:hover {
+  color: #F8FAFC;
+  background-color: #1E293B;
+}
+
+[data-theme="dark"] .ssis-tab-btn.active,
+.dark .ssis-tab-btn.active {
+  background-color: rgba(241, 184, 45, 0.15);
+  color: #F1B82D;
+  border-bottom: 2px solid #F1B82D;
+}
+
+[data-theme="dark"] select option,
+.dark select option {
+  background-color: #1E293B !important;
+  color: #F8FAFC !important;
+}
+
+[data-theme="dark"] .ssis-search-results-overlay,
+.dark .ssis-search-results-overlay {
+  background-color: #1E293B;
+  border-color: #334155;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="dark"] .ssis-search-item:hover,
+.dark .ssis-search-item:hover {
+  background-color: #334155;
+  color: #F8FAFC;
+}
+
+[data-theme="dark"] .ssis-search-icon-badge,
+.dark .ssis-search-icon-badge {
+  background-color: #334155;
+  color: #CBD5E1;
+}
+
+/* Global Dark Mode Contrast Safeguards */
+[data-theme="dark"] [style*="color: #0F172A"],
+[data-theme="dark"] [style*="color: #0f172a"],
+[data-theme="dark"] [style*="color: #1E293B"],
+[data-theme="dark"] [style*="color: #1e293b"],
+[data-theme="dark"] [style*="color: #18181B"],
+[data-theme="dark"] [style*="color: #111"],
+[data-theme="dark"] [style*="color: #333"],
+[data-theme="dark"] [style*="color: #334155"],
+.dark [style*="color: #0F172A"],
+.dark [style*="color: #0f172a"],
+.dark [style*="color: #1E293B"],
+.dark [style*="color: #1e293b"],
+.dark [style*="color: #18181B"],
+.dark [style*="color: #111"],
+.dark [style*="color: #333"],
+.dark [style*="color: #334155"] {
+  color: #F8FAFC !important;
+}
+
+[data-theme="dark"] [style*="color: #475569"],
+[data-theme="dark"] [style*="color: #64748B"],
+.dark [style*="color: #475569"],
+.dark [style*="color: #64748B"] {
+  color: #CBD5E1 !important;
+}
+
+[data-theme="dark"] [style*="background-color: #F8FAFC"],
+[data-theme="dark"] [style*="backgroundColor: #F8FAFC"],
+[data-theme="dark"] [style*="background-color: #f8fafc"],
+[data-theme="dark"] [style*="background-color: #FAF5F5"],
+[data-theme="dark"] [style*="background-color: #F1F5F9"],
+[data-theme="dark"] [style*="background-color: #FFFFFF"],
+[data-theme="dark"] [style*="backgroundColor: #FFFFFF"],
+[data-theme="dark"] [style*="background-color: #ffffff"],
+[data-theme="dark"] [style*="background: #FFFFFF"],
+[data-theme="dark"] [style*="background: #ffffff"],
+.dark [style*="background-color: #F8FAFC"],
+.dark [style*="backgroundColor: #F8FAFC"],
+.dark [style*="background-color: #f8fafc"],
+.dark [style*="background-color: #FAF5F5"],
+.dark [style*="background-color: #F1F5F9"],
+.dark [style*="background-color: #FFFFFF"],
+.dark [style*="backgroundColor: #FFFFFF"],
+.dark [style*="background-color: #ffffff"],
+.dark [style*="background: #FFFFFF"],
+.dark [style*="background: #ffffff"] {
+  background-color: #1E293B !important;
+  color: #F8FAFC !important;
+}
+
+[data-theme="dark"] [style*="border: 1px solid #F1E2E4"],
+[data-theme="dark"] [style*="border: 1px solid #CBD5E1"],
+[data-theme="dark"] [style*="border: 1.5px solid #CBD5E1"],
+[data-theme="dark"] [style*="border-bottom: 1px solid #F1F5F9"],
+[data-theme="dark"] [style*="borderBottom: 1px solid #F1F5F9"],
+.dark [style*="border: 1px solid #F1E2E4"],
+.dark [style*="border: 1px solid #CBD5E1"],
+.dark [style*="border: 1.5px solid #CBD5E1"],
+.dark [style*="border-bottom: 1px solid #F1F5F9"],
+.dark [style*="borderBottom: 1px solid #F1F5F9"] {
+  border-color: #334155 !important;
 }
 
 /* ==========================================================================

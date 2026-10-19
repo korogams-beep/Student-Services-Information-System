@@ -23,52 +23,64 @@ use Illuminate\Support\Facades\Hash;
 class SSISController extends Controller
 {
     /**
+     * Bootstrap alias endpoint for initial system state
+     */
+    public function bootstrap(Request $request): JsonResponse
+    {
+        return $this->getSystemState($request);
+    }
+
+    /**
      * Get the full initial system state
      */
     public function getSystemState(Request $request): JsonResponse
     {
         $studentIdOrNumber = $request->input('student_id') ?? $request->input('student_id_number');
 
-        $studentQuery = Student::with([
-            'program',
-            'enrollments.section.course',
-            'enrollments.grade',
-            'documentRequests',
-            'assessments.items',
-            'assessments.payments',
-            'clearances.department',
-        ]);
-
+        $student = null;
         if ($studentIdOrNumber) {
             $student = (is_numeric($studentIdOrNumber) && strlen((string) $studentIdOrNumber) < 8)
-                ? $studentQuery->where('id', $studentIdOrNumber)->first()
-                : $studentQuery->where('student_id_number', $studentIdOrNumber)->first();
+                ? Student::find($studentIdOrNumber)
+                : Student::where('student_id_number', $studentIdOrNumber)->first();
         } else {
-            $student = $studentQuery->where('student_id_number', '2024-01847')->first()
-                ?: $studentQuery->first();
+            $student = Student::first();
+        }
+
+        if ($student) {
+            $student->load([
+                'program',
+                'enrollments.section.course',
+                'enrollments.grade',
+                'documentRequests',
+                'assessments.items',
+                'assessments.payments',
+                'clearances.department',
+            ]);
         }
 
         $sections = Section::with('course')->get();
 
         $registrarQueue = Enrollment::with(['student.program', 'section.course'])
             ->whereIn('status', ['Pending', 'For Review'])
+            ->limit(50)
             ->get();
 
-        $cs101Section = Section::whereHas('course', function ($q) {
-            $q->where('course_code', 'CS 101');
-        })->first();
-
-        $cs101Enrollments = Enrollment::with(['student', 'grade'])
-            ->where('section_id', $cs101Section?->id)
-            ->get();
+        $firstSection = $sections->first();
+        $cs101Enrollments = $firstSection
+            ? Enrollment::with(['student', 'grade'])
+                ->where('section_id', $firstSection->id)
+                ->get()
+            : collect();
 
         $registrarDocuments = DocumentRequest::with('student')
             ->whereIn('status', ['Pending', 'Approved'])
             ->latest()
+            ->limit(50)
             ->get();
 
         $departmentClearances = Clearance::with(['student', 'department'])
             ->where('status', 'Pending')
+            ->limit(50)
             ->get();
 
         $adminUsers = AdminUser::with('department')->get();
@@ -235,6 +247,13 @@ class SSISController extends Controller
         $password = (string) $request->input('password', '');
         $requestedRole = $request->input('role');
 
+        if ($loginInput === '' || trim($password) === '') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please provide both your identification and password.',
+            ], 422);
+        }
+
         // Check students table
         $student = Student::with([
             'program',
@@ -251,7 +270,7 @@ class SSISController extends Controller
             })
             ->first();
 
-        // Fallback: match by full name if not found by unique IDs
+        // Fallback: match by full name if not found by unique IDs (exact match only)
         if (! $student) {
             $student = Student::with([
                 'program',
@@ -267,12 +286,29 @@ class SSISController extends Controller
                 });
         }
 
+        $loginPortal = $request->input('login_portal', 'general');
+
         if ($student) {
+            // Portal Restriction: Non-Admin accounts are strictly blocked from the Admin portal
+            if ($loginPortal === 'admin') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Access Denied: This portal is restricted to System Administrators only.',
+                ], 403);
+            }
+
             if ($student->account_status === 'Disabled' || $student->account_status === 'Deactivated') {
                 return response()->json([
                     'success' => false,
                     'message' => 'Your student account has been deactivated. Please contact the University Registrar or Administrator.',
                 ], 403);
+            }
+
+            if (! Hash::check($password, $student->password_hash)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid credentials. Please verify your password.',
+                ], 401);
             }
 
             $initials = strtoupper(substr($student->first_name, 0, 1).substr($student->last_name, 0, 1));
@@ -297,17 +333,17 @@ class SSISController extends Controller
             ]);
         }
 
-        // Check AdminUser table - support emails (l.navarro@cuyotech.edu.ph), usernames (l.navarro), names, and role IDs (REG-..., CSH-...)
+        // Check AdminUser table - exact match on email, username, or recognized role-matched institutional staff ID
         $usernameCandidate = $loginInput;
         if (str_contains($loginInput, '@')) {
             $usernameCandidate = explode('@', $loginInput)[0];
         }
 
-        $roleFromId = match (strtoupper(substr($loginInput, 0, 3))) {
-            'REG' => 'Registrar',
-            'CSH' => 'Cashier',
-            'STF' => 'DepartmentStaff',
-            'ADM' => 'Admin',
+        $roleFromId = match (strtoupper($loginInput)) {
+            'REG-2026-0001' => 'Registrar',
+            'CSH-2026-0001' => 'Cashier',
+            'STF-2026-0001' => 'DepartmentStaff',
+            'ADM-2026-0001' => 'Admin',
             default => null,
         };
 
@@ -315,7 +351,7 @@ class SSISController extends Controller
             ->where(function ($q) use ($loginInput, $usernameCandidate, $roleFromId) {
                 $q->where('username', $loginInput)
                     ->orWhere('username', $usernameCandidate)
-                    ->orWhere('name', 'LIKE', "%{$loginInput}%");
+                    ->orWhere('name', $loginInput);
                 if ($roleFromId) {
                     $q->orWhere('role', $roleFromId);
                 }
@@ -323,12 +359,37 @@ class SSISController extends Controller
             ->first();
 
         if ($admin) {
+            // Portal Restriction: Admin must use dedicated Admin portal; Staff must use General portal
+            if ($admin->role === 'Admin') {
+                if ($loginPortal !== 'admin') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Administrators must sign in through the dedicated Admin Portal.',
+                    ], 403);
+                }
+            } else {
+                if ($loginPortal === 'admin') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Access Denied: This portal is restricted to System Administrators only.',
+                    ], 403);
+                }
+            }
+
             if ($admin->account_status === 'Disabled' || $admin->account_status === 'Deactivated') {
                 return response()->json([
                     'success' => false,
                     'message' => 'Your staff account has been deactivated. Please contact the System Administrator.',
                 ], 403);
             }
+
+            if (! Hash::check($password, $admin->password_hash)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid credentials. Please verify your password.',
+                ], 401);
+            }
+
             $parts = explode(' ', $admin->name);
             $initials = strtoupper(substr($parts[0], 0, 1).(isset($parts[1]) ? substr($parts[1], 0, 1) : 'A'));
 
@@ -369,8 +430,27 @@ class SSISController extends Controller
      */
     public function submitEnrollment(Request $request): JsonResponse
     {
-        $studentId = $request->input('student_id', 1);
+        $request->validate([
+            'student_id' => 'required|integer|exists:students,id',
+            'section_ids' => 'required|array|min:1',
+            'section_ids.*' => 'integer|exists:sections,id',
+        ]);
+
+        $studentId = (int) $request->input('student_id');
         $sectionIds = $request->input('section_ids', []);
+
+        // Department clearance hold restriction
+        $clearanceHold = Clearance::where('student_id', $studentId)
+            ->where('status', 'Deficient')
+            ->with('department')
+            ->first();
+
+        if ($clearanceHold) {
+            return response()->json([
+                'success' => false,
+                'message' => "Enrollment blocked: Department clearance hold active with {$clearanceHold->department?->department_name} ({$clearanceHold->remarks}). Clearance must be resolved prior to enrollment.",
+            ], 422);
+        }
 
         foreach ($sectionIds as $secId) {
             Enrollment::updateOrCreate(
@@ -427,6 +507,11 @@ class SSISController extends Controller
      */
     public function saveGrades(Request $request): JsonResponse
     {
+        $request->validate([
+            'grades' => 'required|array',
+            'subject_code' => 'nullable|string|max:20',
+        ]);
+
         $gradesData = $request->input('grades', []);
         $subjectCode = $request->input('subject_code', 'CCS109');
         $adminId = AdminUser::where('role', 'Registrar')->first()?->id;
@@ -438,8 +523,23 @@ class SSISController extends Controller
         $updatedRows = [];
 
         foreach ($gradesData as $item) {
-            $gradeValue = (float) ($item['grade_value'] ?? $item['grade'] ?? 0);
-            $remarks = ($gradeValue > 0 && $gradeValue <= 3.0) ? 'Passed' : 'Failed';
+            $rawGrade = $item['grade_value'] ?? $item['grade'] ?? 0;
+            if (! is_numeric($rawGrade)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid grade input format. Grades must be numeric values.',
+                ], 422);
+            }
+            $gradeValue = (float) $rawGrade;
+
+            if ($gradeValue < 0.00 || $gradeValue > 5.00) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Grade value '{$gradeValue}' is out of range. Valid academic grades range from 1.00 to 5.00 (or 0.00 for unassigned).",
+                ], 422);
+            }
+
+            $remarks = ($gradeValue > 0 && $gradeValue <= 3.0) ? 'Passed' : ($gradeValue == 0 ? 'Pending' : 'Failed');
             $enrollmentId = $item['enrollment_id'] ?? null;
 
             // If enrollmentId is not an active enrollment, match by student_id or student_id_number
@@ -454,9 +554,9 @@ class SSISController extends Controller
                     $targetName = trim((string) $item['studentName']);
                     $driver = DB::connection()->getDriverName();
                     if ($driver === 'sqlite') {
-                        $studentQuery->whereRaw("(first_name || ' ' || last_name) LIKE ?", ["%{$targetName}%"]);
+                        $studentQuery->whereRaw("(first_name || ' ' || last_name) = ?", [$targetName]);
                     } else {
-                        $studentQuery->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$targetName}%"]);
+                        $studentQuery->whereRaw("CONCAT(first_name, ' ', last_name) = ?", [$targetName]);
                     }
                 }
                 $foundStudent = $studentQuery->first();
@@ -509,18 +609,32 @@ class SSISController extends Controller
     public function requestDocument(Request $request): JsonResponse
     {
         $request->validate([
-            'document_type' => 'required|string',
-            'purpose' => 'required|string',
-            'number_of_copies' => 'required|integer|min:1',
+            'student_id' => 'required|integer|exists:students,id',
+            'document_type' => 'required|string|max:100',
+            'purpose' => 'required|string|max:255',
+            'number_of_copies' => 'required|integer|min:1|max:10',
         ]);
 
-        $studentId = $request->input('student_id', 1);
+        $studentId = (int) $request->input('student_id');
+
+        // Clearance hold restriction check
+        $deficientClearance = Clearance::where('student_id', $studentId)
+            ->where('status', 'Deficient')
+            ->with('department')
+            ->first();
+
+        if ($deficientClearance) {
+            return response()->json([
+                'success' => false,
+                'message' => "Document request blocked: Active clearance hold with {$deficientClearance->department?->department_name} ({$deficientClearance->remarks}).",
+            ], 422);
+        }
 
         $doc = DocumentRequest::create([
             'student_id' => $studentId,
-            'document_type' => $request->document_type,
-            'purpose' => $request->purpose,
-            'number_of_copies' => $request->number_of_copies,
+            'document_type' => strip_tags(trim($request->document_type)),
+            'purpose' => strip_tags(trim($request->purpose)),
+            'number_of_copies' => (int) $request->number_of_copies,
             'request_date' => now()->toDateString(),
             'status' => 'Pending',
         ]);
@@ -551,6 +665,20 @@ class SSISController extends Controller
         $status = $request->input('status', 'Ready for Release');
         $adminId = AdminUser::where('role', 'Registrar')->first()?->id;
 
+        // Financial hold: check unpaid tuition assessment prior to final release
+        if (in_array($status, ['Ready for Release', 'Released'])) {
+            $assessment = Assessment::with('payments')->where('student_id', $doc->student_id)->first();
+            $totalPaid = $assessment ? (float) $assessment->payments->sum('amount_paid') : 0.0;
+            $balance = $assessment ? max(0, (float) $assessment->total_amount - $totalPaid) : 0.0;
+
+            if ($balance > 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Document release blocked: Student has an outstanding balance of PHP '.number_format($balance, 2).'. Payment is required before releasing official documents.',
+                ], 422);
+            }
+        }
+
         $doc->status = $status;
         $doc->processed_by_admin_id = $adminId;
         $doc->save();
@@ -575,61 +703,94 @@ class SSISController extends Controller
      */
     public function recordPayment(Request $request): JsonResponse
     {
-        $studentId = $request->input('student_id', 1);
-        $amount = (float) $request->input('amount', 10000.00);
-        $paymentMethod = $request->input('payment_method', 'Cash');
+        $request->validate([
+            'student_id' => 'required|integer|exists:students,id',
+            'amount' => 'required|numeric|min:1|max:1000000',
+            'payment_method' => 'nullable|string|max:50',
+        ]);
 
-        $assessment = Assessment::where('student_id', $studentId)->first();
-        if (! $assessment) {
-            $assessment = Assessment::create([
-                'student_id' => $studentId,
-                'school_year' => '2025-2026',
-                'semester' => 'Second Semester',
-                'total_amount' => 43550.00,
-                'status' => 'Unpaid',
-                'date_assessed' => now()->toDateString(),
-            ]);
+        $studentId = (int) $request->input('student_id');
+        $amount = (float) $request->input('amount');
+        $paymentMethod = $request->input('payment_method', 'Cash') ?: 'Cash';
+
+        // Concurrency / rapid duplicate submission prevention (idempotency check)
+        $duplicatePayment = Payment::where('student_id', $studentId)
+            ->where('amount_paid', $amount)
+            ->where('payment_method', $paymentMethod)
+            ->where('created_at', '>=', now()->subSeconds(3))
+            ->first();
+
+        if ($duplicatePayment) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Duplicate transaction detected: A payment for this student and amount was already recorded seconds ago.',
+                'payment' => $duplicatePayment,
+                'orNumber' => $duplicatePayment->or_number,
+            ], 409);
         }
 
-        $adminId = AdminUser::where('role', 'Cashier')->first()?->id;
-        $orNumber = 'OR-2026-'.str_pad((string) rand(1000, 999999), 6, '0', STR_PAD_LEFT);
+        return DB::transaction(function () use ($studentId, $amount, $paymentMethod) {
+            $assessment = Assessment::where('student_id', $studentId)->first();
+            if (! $assessment) {
+                $assessment = Assessment::create([
+                    'student_id' => $studentId,
+                    'school_year' => '2025-2026',
+                    'semester' => 'Second Semester',
+                    'total_amount' => 43550.00,
+                    'status' => 'Unpaid',
+                    'date_assessed' => now()->toDateString(),
+                ]);
+            }
 
-        $payment = Payment::create([
-            'student_id' => $studentId,
-            'assessment_id' => $assessment->id,
-            'amount_paid' => $amount,
-            'payment_date' => now()->toDateString(),
-            'payment_method' => $paymentMethod,
-            'or_number' => $orNumber,
-            'processed_by_admin_id' => $adminId,
-        ]);
+            $adminId = AdminUser::where('role', 'Cashier')->first()?->id;
+            $orNumber = 'OR-2026-'.str_pad((string) rand(1000, 999999), 6, '0', STR_PAD_LEFT);
 
-        $student = Student::find($studentId);
-
-        AuditLog::record(
-            "Payment recorded (L. Navarro • {$orNumber})",
-            'payments',
-            $payment->id,
-            $adminId,
-            $studentId
-        );
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Payment recorded successfully!',
-            'payment' => $payment->load('student', 'processedByAdmin'),
-            'orNumber' => $orNumber,
-            'receipt' => [
+            $payment = Payment::create([
+                'student_id' => $studentId,
+                'assessment_id' => $assessment->id,
+                'amount_paid' => $amount,
+                'payment_date' => now()->toDateString(),
+                'payment_method' => $paymentMethod,
                 'or_number' => $orNumber,
-                'date' => now()->format('F d, Y • h:i A'),
-                'description' => 'Tuition payment',
-                'amount' => $amount,
-                'cashier' => 'L. Navarro (Counter 3)',
-                'student' => $student?->full_name,
-                'student_id' => $student?->student_id_number,
-                'method' => $paymentMethod,
-            ],
-        ]);
+                'processed_by_admin_id' => $adminId,
+            ]);
+
+            // Recalculate and update assessment status
+            $totalPaid = (float) $assessment->payments()->sum('amount_paid');
+            if ($totalPaid >= (float) $assessment->total_amount && (float) $assessment->total_amount > 0) {
+                $assessment->status = 'Paid';
+            } elseif ($totalPaid > 0) {
+                $assessment->status = 'Partial';
+            }
+            $assessment->save();
+
+            $student = Student::find($studentId);
+
+            AuditLog::record(
+                "Payment recorded (L. Navarro • {$orNumber})",
+                'payments',
+                $payment->id,
+                $adminId,
+                $studentId
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Payment recorded successfully!',
+                'payment' => $payment->load('student', 'processedByAdmin'),
+                'orNumber' => $orNumber,
+                'receipt' => [
+                    'or_number' => $orNumber,
+                    'date' => now()->format('F d, Y • h:i A'),
+                    'description' => 'Tuition payment',
+                    'amount' => $amount,
+                    'cashier' => 'L. Navarro (Counter 3)',
+                    'student' => $student?->full_name,
+                    'student_id' => $student?->student_id_number,
+                    'method' => $paymentMethod,
+                ],
+            ]);
+        });
     }
 
     /**
@@ -771,14 +932,36 @@ class SSISController extends Controller
      */
     public function toggleUserStatus(Request $request, int $id): JsonResponse
     {
-        $user = AdminUser::find($id);
+        $role = $request->input('role');
+        $targetStatus = $request->input('status');
+        $resolvedStatus = $targetStatus ? (($targetStatus === 'Deactivated' || $targetStatus === 'Disabled') ? 'Deactivated' : 'Active') : null;
         $adminId = AdminUser::where('role', 'Admin')->first()?->id;
 
-        $targetStatus = $request->input('status');
-        $resolvedStatus = $targetStatus ? (($targetStatus === 'Deactivated' || $targetStatus === 'Disabled') ? 'Disabled' : 'Active') : null;
+        // If explicitly targeting a Student
+        if ($role === 'Student' || $request->input('user_type') === 'student' || $request->input('is_student')) {
+            $student = Student::find($id);
+            if ($student) {
+                $student->account_status = $resolvedStatus ?: (($student->account_status === 'Active') ? 'Deactivated' : 'Active');
+                $student->save();
 
+                AuditLog::record(
+                    "Account {$student->account_status} (V. Ramos • {$student->full_name})",
+                    'students',
+                    $student->id,
+                    $adminId
+                );
+
+                return response()->json([
+                    'success' => true,
+                    'student' => $student,
+                ]);
+            }
+        }
+
+        // Check AdminUser if role is not Student
+        $user = ($role === 'Student') ? null : AdminUser::find($id);
         if ($user) {
-            $user->account_status = $resolvedStatus ?: ($user->account_status === 'Active' ? 'Disabled' : 'Active');
+            $user->account_status = $resolvedStatus ?: (($user->account_status === 'Active') ? 'Deactivated' : 'Active');
             $user->save();
 
             AuditLog::record(
@@ -794,9 +977,10 @@ class SSISController extends Controller
             ]);
         }
 
+        // Fallback: check Student if AdminUser wasn't matched
         $student = Student::find($id);
         if ($student) {
-            $student->account_status = $resolvedStatus ?: ($student->account_status === 'Active' ? 'Disabled' : 'Active');
+            $student->account_status = $resolvedStatus ?: (($student->account_status === 'Active') ? 'Deactivated' : 'Active');
             $student->save();
 
             AuditLog::record(
@@ -821,8 +1005,9 @@ class SSISController extends Controller
     public function addUser(Request $request): JsonResponse
     {
         $request->validate([
-            'name' => 'required|string',
-            'role' => 'required|string',
+            'name' => 'required|string|min:2|max:100',
+            'role' => 'required|string|in:Student,Registrar,Cashier,DepartmentStaff,Department Staff,Admin',
+            'email' => 'nullable|email|unique:students,email|unique:admin_users,username',
         ]);
 
         $role = $request->input('role');
@@ -935,7 +1120,7 @@ class SSISController extends Controller
     public function changeUserRole(Request $request, int $id): JsonResponse
     {
         $request->validate([
-            'role' => 'required|string',
+            'role' => 'required|string|in:Student,Registrar,Cashier,DepartmentStaff,Department Staff,Admin',
         ]);
 
         $newRole = $request->input('role');
