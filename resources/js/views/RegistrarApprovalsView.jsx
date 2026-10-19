@@ -60,11 +60,11 @@ export const RegistrarApprovalsView = () => {
         {/* Left Queue Table */}
         <div className="ssis-table-container">
           {registrarQueue.length === 0 ? (
-            <div style={{ padding: '48px 24px', textAlign: 'center', color: '#64748B' }}>
-              <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#1E293B', marginBottom: '8px' }}>
+            <div style={{ padding: '48px 24px', textAlign: 'center', color: 'var(--text-muted, #94A3B8)' }}>
+              <h4 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-main, #F8FAFC)', marginBottom: '8px' }}>
                 No Enrollment Requests in Queue
               </h4>
-              <p style={{ fontSize: '13.5px', maxWidth: '400px', margin: '0 auto' }}>
+              <p style={{ fontSize: '13.5px', maxWidth: '400px', margin: '0 auto', color: 'var(--text-muted, #94A3B8)' }}>
                 When students select subjects and submit an enrollment request from their portal, their application will appear here for verification and approval.
               </p>
             </div>
@@ -87,18 +87,18 @@ export const RegistrarApprovalsView = () => {
                       onClick={() => setSelectedQueueStudentId(item.id)}
                       style={{
                         cursor: 'pointer',
-                        backgroundColor: isSelected ? '#FAF5F5' : 'transparent',
+                        backgroundColor: isSelected ? 'rgba(56, 189, 248, 0.12)' : 'transparent',
                       }}
                     >
                       <td>
-                        <strong style={{ color: '#0F172A' }}>{item.studentName}</strong>
-                        <div style={{ fontSize: '11.5px', color: '#64748B', fontFamily: 'monospace' }}>
+                        <strong style={{ color: 'var(--text-main, #F8FAFC)' }}>{item.studentName}</strong>
+                        <div style={{ fontSize: '11.5px', color: 'var(--text-muted, #94A3B8)', fontFamily: 'monospace' }}>
                           {item.studentIdNumber || item.studentId} • {item.program || 'Student'}
                         </div>
                       </td>
-                      <td style={{ color: '#475569' }}>
-                        <div style={{ fontWeight: '600' }}>{subjectsList}</div>
-                        <div style={{ fontSize: '11px', color: '#94A3B8' }}>{item.totalUnits || 0} Units total</div>
+                      <td style={{ color: 'var(--text-muted, #94A3B8)' }}>
+                        <div style={{ fontWeight: '600', color: 'var(--text-main, #F8FAFC)' }}>{subjectsList}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted, #94A3B8)' }}>{item.totalUnits || 0} Units total</div>
                       </td>
                       <td>
                         {item.status === 'Approved' ? (
@@ -121,7 +121,7 @@ export const RegistrarApprovalsView = () => {
 
         {/* Right Validation Card */}
         <div className="ssis-card" style={{ padding: '32px 28px' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#0F172A', marginBottom: '22px' }}>
+          <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-main, #F8FAFC)', marginBottom: '22px' }}>
             Validate student records
           </h3>
 

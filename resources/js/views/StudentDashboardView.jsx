@@ -84,13 +84,13 @@ export const StudentDashboardView = () => {
         <div className="ssis-card">
           <h3 className="ssis-card-title">University Announcements</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-            <div style={{ fontSize: '14.5px', color: '#1E293B', paddingBottom: '14px', borderBottom: '1px solid #F1F5F9' }}>
+            <div style={{ fontSize: '14.5px', color: 'var(--text-main, #F8FAFC)', paddingBottom: '14px', borderBottom: '1px solid var(--card-border, #334155)' }}>
               CuyoTech University Enrollment confirmation period is currently open.
             </div>
-            <div style={{ fontSize: '14.5px', color: '#1E293B', paddingBottom: '14px', borderBottom: '1px solid #F1F5F9' }}>
+            <div style={{ fontSize: '14.5px', color: 'var(--text-main, #F8FAFC)', paddingBottom: '14px', borderBottom: '1px solid var(--card-border, #334155)' }}>
               Campus laboratory orientation & workstation validation starts next week.
             </div>
-            <div style={{ fontSize: '14.5px', color: '#1E293B' }}>
+            <div style={{ fontSize: '14.5px', color: 'var(--text-main, #F8FAFC)' }}>
               CuyoTech University Academic Scholarship renewal forms due March 5.
             </div>
           </div>
@@ -100,17 +100,17 @@ export const StudentDashboardView = () => {
         <div className="ssis-card">
           <h3 className="ssis-card-title">Academic Calendar Deadlines</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-            <div style={{ fontSize: '14.5px', color: '#1E293B', paddingBottom: '14px', borderBottom: '1px solid #F1F5F9' }}>
-              <strong style={{ color: '#0F172A', marginRight: '6px' }}>FEB 18 •</strong> Regular Enrollment confirmation
+            <div style={{ fontSize: '14.5px', color: 'var(--text-main, #1E293B)', paddingBottom: '14px', borderBottom: '1px solid var(--card-border, #F1F5F9)' }}>
+              <strong style={{ color: 'var(--brand-yellow, #F1B82D)', marginRight: '6px' }}>FEB 18 •</strong> Regular Enrollment confirmation
             </div>
-            <div style={{ fontSize: '14.5px', color: '#1E293B', paddingBottom: '14px', borderBottom: '1px solid #F1F5F9' }}>
-              <strong style={{ color: '#0F172A', marginRight: '6px' }}>MAR 05 •</strong> Scholarship validation & renewal
+            <div style={{ fontSize: '14.5px', color: 'var(--text-main, #1E293B)', paddingBottom: '14px', borderBottom: '1px solid var(--card-border, #F1F5F9)' }}>
+              <strong style={{ color: 'var(--brand-yellow, #F1B82D)', marginRight: '6px' }}>MAR 05 •</strong> Scholarship validation & renewal
             </div>
-            <div style={{ fontSize: '14.5px', color: '#1E293B', paddingBottom: '14px', borderBottom: '1px solid #F1F5F9' }}>
-              <strong style={{ color: '#0F172A', marginRight: '6px' }}>MAR 16 •</strong> Midterm payment & assessment review
+            <div style={{ fontSize: '14.5px', color: 'var(--text-main, #1E293B)', paddingBottom: '14px', borderBottom: '1px solid var(--card-border, #F1F5F9)' }}>
+              <strong style={{ color: 'var(--brand-yellow, #F1B82D)', marginRight: '6px' }}>MAR 16 •</strong> Midterm payment & assessment review
             </div>
-            <div style={{ fontSize: '14.5px', color: '#1E293B' }}>
-              <strong style={{ color: '#0F172A', marginRight: '6px' }}>APR 10 •</strong> Term clearance application deadline
+            <div style={{ fontSize: '14.5px', color: 'var(--text-main, #1E293B)' }}>
+              <strong style={{ color: 'var(--brand-yellow, #F1B82D)', marginRight: '6px' }}>APR 10 •</strong> Term clearance application deadline
             </div>
           </div>
         </div>

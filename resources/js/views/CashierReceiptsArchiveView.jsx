@@ -49,40 +49,40 @@ export const CashierReceiptsArchiveView = () => {
         {filteredReceipts.map(receipt => (
           <div key={receipt.id || receipt.reference} className="ssis-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid #F1F5F9', paddingBottom: '10px' }}>
-                <span style={{ fontSize: '11px', fontWeight: '800', color: '#92400E', backgroundColor: '#FEF3C7', padding: '3px 8px', borderRadius: '4px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid var(--card-border, #334155)', paddingBottom: '10px' }}>
+                <span style={{ fontSize: '11px', fontWeight: '800', color: '#D97706', backgroundColor: 'rgba(217, 119, 6, 0.15)', padding: '3px 8px', borderRadius: '4px' }}>
                   OFFICIAL RECEIPT
                 </span>
-                <span style={{ fontSize: '12px', color: '#64748B' }}>
+                <span style={{ fontSize: '12px', color: 'var(--text-muted, #94A3B8)' }}>
                   {receipt.date}
                 </span>
               </div>
 
-              <div style={{ fontSize: '18px', fontWeight: '800', color: '#0F172A', fontFamily: 'monospace', letterSpacing: '0.5px' }}>
+              <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-main, #F8FAFC)', fontFamily: 'monospace', letterSpacing: '0.5px' }}>
                 {receipt.reference}
               </div>
 
               <div style={{ marginTop: '12px', fontSize: '13.5px' }}>
-                <span style={{ color: '#64748B', display: 'block', fontSize: '11.5px', textTransform: 'uppercase', fontWeight: '600' }}>Student Payer</span>
-                <strong style={{ color: '#0F172A' }}>{receipt.studentName || 'Student'}</strong>
-                <span style={{ color: '#64748B', fontSize: '12px', display: 'block' }}>
+                <span style={{ color: 'var(--text-muted, #94A3B8)', display: 'block', fontSize: '11.5px', textTransform: 'uppercase', fontWeight: '600' }}>Student Payer</span>
+                <strong style={{ color: 'var(--text-main, #F8FAFC)' }}>{receipt.studentName || 'Student'}</strong>
+                <span style={{ color: 'var(--text-muted, #94A3B8)', fontSize: '12px', display: 'block' }}>
                   ID: {receipt.studentId || '2026-0001'}
                 </span>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', backgroundColor: '#FAF5F5', padding: '10px 14px', borderRadius: '8px' }}>
-                <span style={{ fontSize: '12.5px', color: '#64748B' }}>Amount Paid:</span>
-                <strong style={{ fontSize: '15px', color: '#0F172A' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', backgroundColor: 'var(--surface-color, rgba(255,255,255,0.04))', padding: '10px 14px', borderRadius: '8px' }}>
+                <span style={{ fontSize: '12.5px', color: 'var(--text-muted, #94A3B8)' }}>Amount Paid:</span>
+                <strong style={{ fontSize: '15px', color: 'var(--text-main, #F8FAFC)' }}>
                   PHP {Number(receipt.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </strong>
               </div>
 
-              <div style={{ fontSize: '12px', color: '#64748B', marginTop: '8px' }}>
-                Method: <strong>{receipt.method || 'Cash'}</strong> • Cashier: <strong>{receipt.cashier || 'L. Navarro'}</strong>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted, #94A3B8)', marginTop: '8px' }}>
+                Method: <strong style={{ color: 'var(--text-main, #F8FAFC)' }}>{receipt.method || 'Cash'}</strong> • Cashier: <strong style={{ color: 'var(--text-main, #F8FAFC)' }}>{receipt.cashier || 'L. Navarro'}</strong>
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '8px', marginTop: '20px', borderTop: '1px solid #F1F5F9', paddingTop: '14px' }}>
+            <div style={{ display: 'flex', gap: '8px', marginTop: '20px', borderTop: '1px solid var(--card-border, #334155)', paddingTop: '14px' }}>
               <button
                 onClick={() => handleOpenReceipt(receipt)}
                 className="ssis-btn-secondary"

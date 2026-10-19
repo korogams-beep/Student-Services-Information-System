@@ -233,8 +233,8 @@ export const TopNavbar = () => {
           {isSearchOpen && searchQuery.trim() && searchResults && (
             <div className="ssis-search-results-overlay">
               {searchResults.totalResults === 0 ? (
-                <div style={{ padding: '24px 16px', textAlign: 'center', color: '#64748B', fontSize: '13.5px' }}>
-                  No matches found for <strong style={{ color: '#0F172A' }}>"{searchQuery}"</strong>
+                <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-muted, #94A3B8)', fontSize: '13.5px' }}>
+                  No matches found for <strong style={{ color: 'var(--text-main, #F8FAFC)' }}>"{searchQuery}"</strong>
                 </div>
               ) : (
                 <>
@@ -338,7 +338,7 @@ export const TopNavbar = () => {
                           className="ssis-search-item"
                           onClick={() => handleSelectResult(p, 'page')}
                         >
-                          <div className="ssis-search-icon-badge" style={{ backgroundColor: '#F1F5F9', color: '#475569' }}>
+                          <div className="ssis-search-icon-badge" style={{ backgroundColor: 'var(--card-border, #334155)', color: 'var(--text-main, #F8FAFC)' }}>
                             <Navigation size={15} />
                           </div>
                           <div style={{ flex: 1 }}>

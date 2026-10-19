@@ -57,12 +57,12 @@ export const StudentGradesView = () => {
         {/* Grades Table */}
         <div className="ssis-table-container">
           {displayedGrades.length === 0 ? (
-            <div style={{ padding: '48px 24px', textAlign: 'center', color: '#64748B' }}>
+            <div style={{ padding: '48px 24px', textAlign: 'center', color: 'var(--text-muted, #94A3B8)' }}>
               <GraduationCap size={44} color="#94A3B8" style={{ margin: '0 auto 12px' }} />
-              <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#1E293B', marginBottom: '6px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-main, #F8FAFC)', marginBottom: '6px' }}>
                 No Grades Encoded Yet
               </h3>
-              <p style={{ fontSize: '13.5px', maxWidth: '440px', margin: '0 auto' }}>
+              <p style={{ fontSize: '13.5px', maxWidth: '440px', margin: '0 auto', color: 'var(--text-muted, #94A3B8)' }}>
                 Your academic evaluations start at default 0. Once your instructors and the Registrar submit and verify your final grades, your official transcript will display here.
               </p>
             </div>
@@ -89,8 +89,8 @@ export const StudentGradesView = () => {
                           <span style={{ fontWeight: '600' }}>{g.subject || `${g.code} • Course`}</span>
                         </div>
                       </td>
-                      <td style={{ textAlign: 'center', color: '#475569' }}>{g.units || 3}.0</td>
-                      <td style={{ textAlign: 'center', fontWeight: '800', color: isPassed ? '#0F172A' : '#DC2626', fontSize: '15px' }}>
+                      <td style={{ textAlign: 'center', color: 'var(--text-muted, #475569)' }}>{g.units || 3}.0</td>
+                      <td style={{ textAlign: 'center', fontWeight: '800', color: isPassed ? 'var(--text-main, #0F172A)' : '#EF4444', fontSize: '15px' }}>
                         {numericGrade ? numericGrade.toFixed(2) : '—'}
                       </td>
                       <td style={{ textAlign: 'right' }}>
@@ -138,35 +138,35 @@ export const StudentGradesView = () => {
               <div style={{ fontSize: '13.5px', fontWeight: '800', color: standing.badgeColor, marginBottom: '4px' }}>
                 {standing.status}
               </div>
-              <p style={{ fontSize: '12px', color: '#475569', lineHeight: 1.4, margin: 0 }}>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted, #475569)', lineHeight: 1.4, margin: 0 }}>
                 {standing.description}
               </p>
             </div>
           </div>
 
           <div className="ssis-card" style={{ padding: '20px' }}>
-            <h4 style={{ fontSize: '12px', fontWeight: '700', color: '#0F172A', textTransform: 'uppercase', marginBottom: '10px', letterSpacing: '0.5px' }}>
+            <h4 style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-main, #0F172A)', textTransform: 'uppercase', marginBottom: '10px', letterSpacing: '0.5px' }}>
               CuyoTech Grading & Honors Standard
             </h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px', color: '#64748B' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px', color: 'var(--text-muted, #64748B)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>1.00 – 1.45</span>
-                <strong style={{ color: '#166534' }}>President's List (1st Honors)</strong>
+                <strong style={{ color: '#22C55E' }}>President's List (1st Honors)</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>1.46 – 1.75</span>
-                <strong style={{ color: '#1E40AF' }}>Dean's List (2nd Honors)</strong>
+                <strong style={{ color: '#38BDF8' }}>Dean's List (2nd Honors)</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>1.76 – 3.00</span>
-                <strong style={{ color: '#475569' }}>Passed (Regular Standing)</strong>
+                <strong style={{ color: 'var(--text-muted, #94A3B8)' }}>Passed (Regular Standing)</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>5.00</span>
-                <strong style={{ color: '#DC2626' }}>Failed (Ineligible for Honors)</strong>
+                <strong style={{ color: '#EF4444' }}>Failed (Ineligible for Honors)</strong>
               </div>
             </div>
-            <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid #F1F5F9', fontSize: '11px', color: '#64748B', lineHeight: 1.4 }}>
+            <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid var(--card-border, #F1F5F9)', fontSize: '11px', color: 'var(--text-muted, #64748B)', lineHeight: 1.4 }}>
               * Rule: Any failing grade (5.00) or GWA &gt; 1.75 strictly disqualifies candidate from Dean's List honors.
             </div>
           </div>

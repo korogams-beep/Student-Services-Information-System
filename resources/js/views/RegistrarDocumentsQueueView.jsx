@@ -65,12 +65,12 @@ export const RegistrarDocumentsQueueView = () => {
       {/* Table */}
       <div className="ssis-table-container">
         {filteredRequests.length === 0 ? (
-          <div style={{ padding: '48px 20px', textAlign: 'center', color: '#64748B' }}>
+          <div style={{ padding: '48px 20px', textAlign: 'center', color: 'var(--text-muted, #94A3B8)' }}>
             <FileText size={40} color="#94A3B8" style={{ margin: '0 auto 12px' }} />
-            <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#1E293B', marginBottom: '6px' }}>
+            <h4 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-main, #F8FAFC)', marginBottom: '6px' }}>
               No Document Requests in Queue
             </h4>
-            <p style={{ fontSize: '13.5px', maxWidth: '420px', margin: '0 auto' }}>
+            <p style={{ fontSize: '13.5px', maxWidth: '420px', margin: '0 auto', color: 'var(--text-muted, #94A3B8)' }}>
               When students apply for credentials via their student portal, their requests will appear here for Registrar processing.
             </p>
           </div>
@@ -95,17 +95,17 @@ export const RegistrarDocumentsQueueView = () => {
                 return (
                   <tr key={req.id}>
                     <td>
-                      <div style={{ fontWeight: '600', color: '#0F172A' }}>{sName}</div>
-                      <div style={{ fontSize: '12px', color: '#64748B', fontFamily: 'monospace' }}>{sId}</div>
+                      <div style={{ fontWeight: '600', color: 'var(--text-main, #F8FAFC)' }}>{sName}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted, #94A3B8)', fontFamily: 'monospace' }}>{sId}</div>
                     </td>
-                    <td style={{ fontWeight: '600', color: '#0F172A' }}>
+                    <td style={{ fontWeight: '600', color: 'var(--text-main, #F8FAFC)' }}>
                       {docTitle}
                     </td>
-                    <td style={{ color: '#475569', fontSize: '13px' }}>
+                    <td style={{ color: 'var(--text-muted, #94A3B8)', fontSize: '13px' }}>
                       <div>{req.purpose || 'Official verification'}</div>
-                      <div style={{ fontSize: '11.5px', color: '#64748B' }}>{req.copies || 1} copy</div>
+                      <div style={{ fontSize: '11.5px', color: 'var(--text-muted, #94A3B8)' }}>{req.copies || 1} copy</div>
                     </td>
-                    <td style={{ color: '#475569', fontSize: '13px' }}>
+                    <td style={{ color: 'var(--text-muted, #94A3B8)', fontSize: '13px' }}>
                       {req.submitted || req.date || 'Feb 16, 2026'}
                     </td>
                     <td style={{ textAlign: 'center' }}>
@@ -116,7 +116,7 @@ export const RegistrarDocumentsQueueView = () => {
                         {req.status}
                       </span>
                       {req.approvedBy && (
-                        <div style={{ fontSize: '11px', color: '#64748B', marginTop: '4px' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted, #94A3B8)', marginTop: '4px' }}>
                           by {req.approvedBy}
                         </div>
                       )}

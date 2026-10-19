@@ -47,12 +47,12 @@ export const RegistrarStudentRecordsView = () => {
         {/* Quick KPI stats */}
         <div style={{ display: 'flex', gap: '12px' }}>
           <div className="ssis-card" style={{ padding: '12px 20px', minWidth: '140px', textAlign: 'center' }}>
-            <span style={{ fontSize: '11px', color: '#64748B', fontWeight: '700', textTransform: 'uppercase' }}>Students</span>
-            <div style={{ fontSize: '24px', fontWeight: '900', color: '#0F172A' }}>{students.length}</div>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted, #64748B)', fontWeight: '700', textTransform: 'uppercase' }}>Students</span>
+            <div style={{ fontSize: '24px', fontWeight: '900', color: 'var(--text-main, #0F172A)' }}>{students.length}</div>
           </div>
           <div className="ssis-card" style={{ padding: '12px 20px', minWidth: '140px', textAlign: 'center' }}>
-            <span style={{ fontSize: '11px', color: '#64748B', fontWeight: '700', textTransform: 'uppercase' }}>Programs</span>
-            <div style={{ fontSize: '24px', fontWeight: '900', color: '#5B21B6' }}>2 Active</div>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted, #64748B)', fontWeight: '700', textTransform: 'uppercase' }}>Programs</span>
+            <div style={{ fontSize: '24px', fontWeight: '900', color: '#DDD6FE' }}>2 Active</div>
           </div>
         </div>
       </div>
@@ -91,9 +91,9 @@ export const RegistrarStudentRecordsView = () => {
       {/* Student Roster Table */}
       <div className="ssis-table-container">
         {filteredStudents.length === 0 ? (
-          <div style={{ padding: '48px 20px', textAlign: 'center', color: '#64748B' }}>
+          <div style={{ padding: '48px 20px', textAlign: 'center', color: 'var(--text-muted, #64748B)' }}>
             <Users size={40} color="#94A3B8" style={{ margin: '0 auto 12px' }} />
-            <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#1E293B', marginBottom: '6px' }}>
+            <h4 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-main, #1E293B)', marginBottom: '6px' }}>
               No Students Found
             </h4>
             <p style={{ fontSize: '13.5px', maxWidth: '420px', margin: '0 auto' }}>
@@ -123,17 +123,17 @@ export const RegistrarStudentRecordsView = () => {
 
                 return (
                   <tr key={student.id || student.email}>
-                    <td style={{ fontWeight: '700', color: '#0F172A', fontFamily: 'monospace' }}>
+                    <td style={{ fontWeight: '700', color: 'var(--text-main, #0F172A)', fontFamily: 'monospace' }}>
                       {sId}
                     </td>
                     <td>
-                      <div style={{ fontWeight: '600', color: '#0F172A' }}>{student.name}</div>
-                      <div style={{ fontSize: '12px', color: '#64748B' }}>{student.email}</div>
+                      <div style={{ fontWeight: '600', color: 'var(--text-main, #0F172A)' }}>{student.name}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted, #64748B)' }}>{student.email}</div>
                     </td>
-                    <td style={{ color: '#334155', fontWeight: '500' }}>
+                    <td style={{ color: 'var(--text-main, #334155)', fontWeight: '500' }}>
                       {student.program || 'BS Computer Science'}
                     </td>
-                    <td style={{ color: '#475569' }}>
+                    <td style={{ color: 'var(--text-muted, #475569)' }}>
                       {student.yearLevel || '1st Year'}
                     </td>
                     <td style={{ textAlign: 'center' }}>

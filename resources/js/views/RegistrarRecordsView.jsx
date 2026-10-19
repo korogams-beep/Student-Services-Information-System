@@ -123,13 +123,13 @@ export const RegistrarRecordsView = () => {
               </div>
               <div>
                 <h3 className="ssis-card-title" style={{ margin: 0 }}>Course Grade Sheet</h3>
-                <p style={{ fontSize: '13px', color: '#64748B', margin: 0 }}>Term: 2nd Semester AY 2025–2026</p>
+                <p style={{ fontSize: '13px', color: 'var(--text-muted, #94A3B8)', margin: 0 }}>Term: 2nd Semester AY 2025–2026</p>
               </div>
             </div>
 
             {/* Subject selector */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '13px', fontWeight: '600', color: '#475569' }}>Select Subject:</span>
+              <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted, #94A3B8)' }}>Select Subject:</span>
               <select
                 className="ssis-select"
                 style={{ minWidth: '220px', fontWeight: '700' }}

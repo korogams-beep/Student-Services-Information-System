@@ -396,7 +396,7 @@ export const DepartmentClearanceView = () => {
       {activeTab === 'department_rules' && (
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <p style={{ fontSize: '14px', color: '#64748B' }}>
+            <p style={{ fontSize: '14px', color: 'var(--text-muted, #64748B)' }}>
               Configure mandatory clearance guidelines for students enrolled in computing laboratories.
             </p>
             <button
@@ -410,8 +410,8 @@ export const DepartmentClearanceView = () => {
           </div>
 
           {isAddRuleOpen && (
-            <div className="ssis-card" style={{ marginBottom: '24px', backgroundColor: '#FAF5F5', border: '1px solid #F1B82D' }}>
-              <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '12px' }}>New Clearance Policy Requirement</h3>
+            <div className="ssis-card" style={{ marginBottom: '24px', backgroundColor: 'var(--bg-subtle, #FAF5F5)', border: '1px solid var(--brand-yellow, #F1B82D)' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-main, #0F172A)', marginBottom: '12px' }}>New Clearance Policy Requirement</h3>
               <form onSubmit={handleAddRuleSubmit}>
                 <div className="ssis-form-group">
                   <label className="ssis-label">Rule Title</label>
@@ -456,19 +456,19 @@ export const DepartmentClearanceView = () => {
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   padding: '20px 24px',
-                  borderLeft: rule.active ? '4px solid #16A34A' : '4px solid #CBD5E1',
+                  borderLeft: rule.active ? '4px solid #22C55E' : '4px solid var(--card-border, #CBD5E1)',
                 }}
               >
                 <div style={{ flex: 1, paddingRight: '24px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <h4 style={{ fontSize: '16px', fontWeight: '700', color: rule.active ? '#0F172A' : '#64748B' }}>
+                    <h4 style={{ fontSize: '16px', fontWeight: '700', color: rule.active ? 'var(--text-main, #F8FAFC)' : 'var(--text-muted, #94A3B8)' }}>
                       {rule.title}
                     </h4>
                     <span className={`badge ${rule.active ? 'badge-success' : 'badge-pending'}`} style={{ fontSize: '11px' }}>
                       {rule.active ? 'Active Policy' : 'Inactive'}
                     </span>
                   </div>
-                  <p style={{ fontSize: '13.5px', color: '#64748B', marginTop: '6px' }}>
+                  <p style={{ fontSize: '13.5px', color: 'var(--text-muted, #94A3B8)', marginTop: '6px' }}>
                     {rule.description}
                   </p>
                 </div>

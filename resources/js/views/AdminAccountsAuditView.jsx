@@ -756,7 +756,7 @@ export const AdminAccountsAuditView = () => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <Filter size={15} color="#64748B" />
-              <span style={{ fontSize: '13px', fontWeight: '600', color: '#475569' }}>Filter Module:</span>
+              <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted, #94A3B8)' }}>Filter Module:</span>
               <select
                 className="ssis-select"
                 style={{ width: '180px', padding: '6px 10px', fontSize: '13px' }}
@@ -772,7 +772,7 @@ export const AdminAccountsAuditView = () => {
               </select>
             </div>
 
-            <div style={{ fontSize: '13px', color: '#64748B' }}>
+            <div style={{ fontSize: '13px', color: 'var(--text-muted, #94A3B8)' }}>
               Showing {filteredLogs.length} audit trail entries
             </div>
           </div>
@@ -790,18 +790,18 @@ export const AdminAccountsAuditView = () => {
               <tbody>
                 {filteredLogs.map(log => (
                   <tr key={log.id}>
-                    <td style={{ color: '#475569', fontSize: '13px', fontFamily: 'monospace' }}>
+                    <td style={{ color: 'var(--text-muted, #475569)', fontSize: '13px', fontFamily: 'monospace' }}>
                       {log.time}
                     </td>
-                    <td style={{ fontWeight: '600', color: '#0F172A' }}>
+                    <td style={{ fontWeight: '600', color: 'var(--text-main, #0F172A)' }}>
                       {log.action}
                     </td>
                     <td>
-                      <span className="badge" style={{ backgroundColor: '#F1F5F9', color: '#334155' }}>
+                      <span className="badge" style={{ backgroundColor: 'var(--bg-subtle, #F1F5F9)', color: 'var(--text-main, #334155)', border: '1px solid var(--card-border, #CBD5E1)' }}>
                         {log.user || 'System'}
                       </span>
                     </td>
-                    <td style={{ color: '#475569', fontSize: '13.5px' }}>
+                    <td style={{ color: 'var(--text-muted, #475569)', fontSize: '13.5px' }}>
                       {log.detail}
                     </td>
                   </tr>
@@ -828,35 +828,35 @@ export const AdminAccountsAuditView = () => {
               </thead>
               <tbody>
                 <tr>
-                  <td><strong style={{ color: '#9F1239' }}>Student</strong></td>
+                  <td><strong style={{ color: '#FDA4AF' }}>Student</strong></td>
                   <td>Dashboard, Enrollment, Grades, Payments, Documents, Clearance</td>
                   <td>Read Personal Academic & Financial Transcript</td>
                   <td>Enroll Subjects, Request Documents, Pay Tuition</td>
                   <td style={{ textAlign: 'right', fontWeight: '700' }}>{getRoleActiveCount('Student')} Active</td>
                 </tr>
                 <tr>
-                  <td><strong style={{ color: '#5B21B6' }}>Registrar</strong></td>
+                  <td><strong style={{ color: '#DDD6FE' }}>Registrar</strong></td>
                   <td>Enrollment Approvals, Academic Records, COR Archive, Reports</td>
                   <td>Full Academic Records & Section Transcripts</td>
                   <td>Approve Enrollments, Encode Grades, Release Documents</td>
                   <td style={{ textAlign: 'right', fontWeight: '700' }}>{getRoleActiveCount('Registrar')} Active</td>
                 </tr>
                 <tr>
-                  <td><strong style={{ color: '#92400E' }}>Cashier</strong></td>
+                  <td><strong style={{ color: '#FCD34D' }}>Cashier</strong></td>
                   <td>Process Payment, Recent Payments, Assessments, Receipts, Reports</td>
                   <td>Financial Assessments & Payment History</td>
                   <td>Process Tuition Payments, Issue Official Receipts, Reconcile</td>
                   <td style={{ textAlign: 'right', fontWeight: '700' }}>{getRoleActiveCount('Cashier')} Active</td>
                 </tr>
                 <tr>
-                  <td><strong style={{ color: '#1E40AF' }}>Department Staff</strong></td>
+                  <td><strong style={{ color: '#93C5FD' }}>Department Staff</strong></td>
                   <td>Clearance Requests, Completed Archive, Rules, Compliance Reports</td>
                   <td>Department Student Liability & Equipment Records</td>
                   <td>Approve/Decline Clearance, Post Deficiency Remarks</td>
                   <td style={{ textAlign: 'right', fontWeight: '700' }}>{getRoleActiveCount('Department Staff')} Active</td>
                 </tr>
                 <tr>
-                  <td><strong style={{ color: '#166534' }}>Admin</strong></td>
+                  <td><strong style={{ color: '#4ADE80' }}>Admin</strong></td>
                   <td>User Accounts, Audit Trail Logs, Roles Matrix, Security, Settings</td>
                   <td>Full System Database & Audit Trail</td>
                   <td>User Provisioning, Permission Override, System Configuration</td>
@@ -873,50 +873,50 @@ export const AdminAccountsAuditView = () => {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
           <div className="ssis-card">
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-              <Lock size={20} color="#166534" />
+              <Lock size={20} color="#22C55E" />
               <h3 className="ssis-card-title" style={{ marginBottom: 0 }}>Password & Cryptography</h3>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '13.5px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#64748B' }}>Password Hashing Algorithm:</span>
-                <strong style={{ color: '#0F172A' }}>Bcrypt (Rounds: 12)</strong>
+                <span style={{ color: 'var(--text-muted, #64748B)' }}>Password Hashing Algorithm:</span>
+                <strong style={{ color: 'var(--text-main, #0F172A)' }}>Bcrypt (Rounds: 12)</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#64748B' }}>Database Engine:</span>
-                <strong style={{ color: '#0F172A' }}>MySQL 8.0 (InnoDB)</strong>
+                <span style={{ color: 'var(--text-muted, #64748B)' }}>Database Engine:</span>
+                <strong style={{ color: 'var(--text-main, #0F172A)' }}>MySQL 8.0 (InnoDB)</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#64748B' }}>Session Store:</span>
-                <strong style={{ color: '#0F172A' }}>File / Encrypted Cookie</strong>
+                <span style={{ color: 'var(--text-muted, #64748B)' }}>Session Store:</span>
+                <strong style={{ color: 'var(--text-main, #0F172A)' }}>File / Encrypted Cookie</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#64748B' }}>CSRF Protection:</span>
-                <strong style={{ color: '#166534' }}>Enabled (Synchronizer Token)</strong>
+                <span style={{ color: 'var(--text-muted, #64748B)' }}>CSRF Protection:</span>
+                <strong style={{ color: '#22C55E' }}>Enabled (Synchronizer Token)</strong>
               </div>
             </div>
           </div>
 
           <div className="ssis-card">
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-              <Server size={20} color="#1E40AF" />
+              <Server size={20} color="#3B82F6" />
               <h3 className="ssis-card-title" style={{ marginBottom: 0 }}>Access & Sessions</h3>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '13.5px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#64748B' }}>Session Lifetime:</span>
-                <strong style={{ color: '#0F172A' }}>120 Minutes</strong>
+                <span style={{ color: 'var(--text-muted, #64748B)' }}>Session Lifetime:</span>
+                <strong style={{ color: 'var(--text-main, #0F172A)' }}>120 Minutes</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#64748B' }}>Account Lockout Threshold:</span>
-                <strong style={{ color: '#0F172A' }}>5 Failed Attempts</strong>
+                <span style={{ color: 'var(--text-muted, #64748B)' }}>Account Lockout Threshold:</span>
+                <strong style={{ color: 'var(--text-main, #0F172A)' }}>5 Failed Attempts</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#64748B' }}>Role Verification:</span>
-                <strong style={{ color: '#166534' }}>Active RBAC Guard</strong>
+                <span style={{ color: 'var(--text-muted, #64748B)' }}>Role Verification:</span>
+                <strong style={{ color: '#22C55E' }}>Active RBAC Guard</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#64748B' }}>Audit Trail Logging:</span>
-                <strong style={{ color: '#166534' }}>Comprehensive (Real-time)</strong>
+                <span style={{ color: 'var(--text-muted, #64748B)' }}>Audit Trail Logging:</span>
+                <strong style={{ color: '#22C55E' }}>Comprehensive (Real-time)</strong>
               </div>
             </div>
           </div>
@@ -963,10 +963,10 @@ export const AdminAccountsAuditView = () => {
               />
             </div>
 
-            <div className="ssis-form-group" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', backgroundColor: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
+            <div className="ssis-form-group" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', backgroundColor: 'var(--surface-color, rgba(255,255,255,0.03))', borderRadius: '8px', border: '1px solid var(--card-border, #334155)' }}>
               <div>
-                <strong style={{ fontSize: '14px', color: '#0F172A', display: 'block' }}>Student Enrollment Module Status</strong>
-                <span style={{ fontSize: '12.5px', color: '#64748B' }}>
+                <strong style={{ fontSize: '14px', color: 'var(--text-main, #F8FAFC)', display: 'block' }}>Student Enrollment Module Status</strong>
+                <span style={{ fontSize: '12.5px', color: 'var(--text-muted, #94A3B8)' }}>
                   {isEnrollmentOpen ? 'Currently open for subject enlistment' : 'Enrollment closed'}
                 </span>
               </div>
@@ -980,10 +980,10 @@ export const AdminAccountsAuditView = () => {
               </button>
             </div>
 
-            <div className="ssis-form-group" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', backgroundColor: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
+            <div className="ssis-form-group" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', backgroundColor: 'var(--surface-color, rgba(255,255,255,0.03))', borderRadius: '8px', border: '1px solid var(--card-border, #334155)' }}>
               <div>
-                <strong style={{ fontSize: '14px', color: '#0F172A', display: 'block' }}>Interface Theme Preference</strong>
-                <span style={{ fontSize: '12.5px', color: '#64748B' }}>
+                <strong style={{ fontSize: '14px', color: 'var(--text-main, #F8FAFC)', display: 'block' }}>Interface Theme Preference</strong>
+                <span style={{ fontSize: '12.5px', color: 'var(--text-muted, #94A3B8)' }}>
                   Switch between high-contrast Light Mode and dark-slate Dark Mode
                 </span>
               </div>

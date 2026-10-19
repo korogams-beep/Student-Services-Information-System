@@ -89,12 +89,12 @@ export const StudentEnrollmentView = () => {
                         style={{ width: '16px', height: '16px', accentColor: '#1E293B', cursor: 'pointer' }}
                       />
                     </td>
-                    <td style={{ fontWeight: '600', color: '#0F172A', fontFamily: 'monospace' }}>
+                    <td style={{ fontWeight: '600', color: 'var(--text-main, #0F172A)', fontFamily: 'monospace' }}>
                       {course.code}
                     </td>
                     <td style={{ fontWeight: '500' }}>{course.title}</td>
                     <td>{course.units}.0</td>
-                    <td style={{ color: '#475569', fontSize: '13px' }}>{course.schedule}</td>
+                    <td style={{ color: 'var(--text-muted, #475569)', fontSize: '13px' }}>{course.schedule}</td>
                     <td>
                       <span className="badge badge-success">{course.slots} slots</span>
                     </td>
@@ -109,22 +109,22 @@ export const StudentEnrollmentView = () => {
         <div className="ssis-card" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div>
             <h3 className="ssis-card-title">Schedule Summary</h3>
-            <p style={{ fontSize: '13px', color: '#64748B', marginBottom: '16px' }}>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted, #64748B)', marginBottom: '16px' }}>
               Academic load limit: 24.0 units max.
             </p>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #F1F5F9' }}>
-              <span style={{ color: '#475569' }}>Selected subjects:</span>
-              <strong style={{ color: '#0F172A' }}>{selectedCount}</strong>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid var(--card-border, #F1F5F9)' }}>
+              <span style={{ color: 'var(--text-muted, #475569)' }}>Selected subjects:</span>
+              <strong style={{ color: 'var(--text-main, #0F172A)' }}>{selectedCount}</strong>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #F1F5F9' }}>
-              <span style={{ color: '#475569' }}>Total units:</span>
-              <strong style={{ color: '#0F172A' }}>{totalUnits}.0</strong>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid var(--card-border, #F1F5F9)' }}>
+              <span style={{ color: 'var(--text-muted, #475569)' }}>Total units:</span>
+              <strong style={{ color: 'var(--text-main, #0F172A)' }}>{totalUnits}.0</strong>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #F1F5F9' }}>
-              <span style={{ color: '#475569' }}>Status:</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid var(--card-border, #F1F5F9)' }}>
+              <span style={{ color: 'var(--text-muted, #475569)' }}>Status:</span>
               <span className={`badge ${enrollmentStatus === 'Approved' ? 'badge-success' : 'badge-pending'}`}>
                 {enrollmentStatus}
               </span>

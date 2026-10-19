@@ -78,7 +78,7 @@ export const CertificateOfRegistrationView = () => {
         {/* If Registrar or Staff, allow choosing student to preview COR */}
         {!isStudentUser && registeredStudents.length > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '13px', fontWeight: '600', color: '#64748B' }}>Student:</span>
+            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted, #94A3B8)' }}>Student:</span>
             <select
               className="ssis-select"
               style={{ width: '240px', padding: '8px 12px', fontSize: '13px' }}
@@ -117,10 +117,10 @@ export const CertificateOfRegistrationView = () => {
       {!student ? (
         <div className="ssis-card" style={{ maxWidth: '820px', margin: '40px auto', padding: '60px 40px', textAlign: 'center' }}>
           <FileText size={48} color="#94A3B8" style={{ margin: '0 auto 16px' }} />
-          <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#1E293B', marginBottom: '8px' }}>
+          <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-main, #F8FAFC)', marginBottom: '8px' }}>
             No Student Registration Records Found
           </h3>
-          <p style={{ color: '#64748B', maxWidth: '460px', margin: '0 auto', fontSize: '14px' }}>
+          <p style={{ color: 'var(--text-muted, #94A3B8)', maxWidth: '460px', margin: '0 auto', fontSize: '14px' }}>
             There are currently no registered students in the system. Once a student registers an account or submits an enrollment schedule, their Certificate of Registration (COR) will generate here.
           </p>
         </div>

@@ -62,31 +62,31 @@ export const CashierAssessmentsView = () => {
       {/* Summary KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '28px' }}>
         <div className="ssis-card" style={{ padding: '20px 24px' }}>
-          <div style={{ fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase' }}>Total Assessed</div>
-          <div style={{ fontSize: '26px', fontWeight: '800', color: '#0F172A', marginTop: '6px' }}>
+          <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted, #94A3B8)', textTransform: 'uppercase' }}>Total Assessed</div>
+          <div style={{ fontSize: '26px', fontWeight: '800', color: 'var(--text-main, #F8FAFC)', marginTop: '6px' }}>
             PHP {totalAssessedSum.toLocaleString('en-US', { minimumFractionDigits: 2 })}
           </div>
-          <div style={{ fontSize: '12px', color: '#64748B', marginTop: '4px' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted, #94A3B8)', marginTop: '4px' }}>
             Tuition, Labs, and Misc
           </div>
         </div>
 
         <div className="ssis-card" style={{ padding: '20px 24px' }}>
-          <div style={{ fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase' }}>Total Collected</div>
-          <div style={{ fontSize: '26px', fontWeight: '800', color: '#166534', marginTop: '6px' }}>
+          <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted, #94A3B8)', textTransform: 'uppercase' }}>Total Collected</div>
+          <div style={{ fontSize: '26px', fontWeight: '800', color: '#4ADE80', marginTop: '6px' }}>
             PHP {totalPaidSum.toLocaleString('en-US', { minimumFractionDigits: 2 })}
           </div>
-          <div style={{ fontSize: '12px', color: '#166534', marginTop: '4px', fontWeight: '600' }}>
+          <div style={{ fontSize: '12px', color: '#4ADE80', marginTop: '4px', fontWeight: '600' }}>
             {((totalPaidSum / (totalAssessedSum || 1)) * 100).toFixed(1)}% Realized
           </div>
         </div>
 
         <div className="ssis-card" style={{ padding: '20px 24px' }}>
-          <div style={{ fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase' }}>Outstanding Receivables</div>
-          <div style={{ fontSize: '26px', fontWeight: '800', color: '#9F1239', marginTop: '6px' }}>
+          <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted, #94A3B8)', textTransform: 'uppercase' }}>Outstanding Receivables</div>
+          <div style={{ fontSize: '26px', fontWeight: '800', color: '#F87171', marginTop: '6px' }}>
             PHP {totalBalanceDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
           </div>
-          <div style={{ fontSize: '12px', color: '#9F1239', marginTop: '4px', fontWeight: '600' }}>
+          <div style={{ fontSize: '12px', color: '#F87171', marginTop: '4px', fontWeight: '600' }}>
             Awaiting cashier settlement
           </div>
         </div>
@@ -110,19 +110,19 @@ export const CashierAssessmentsView = () => {
             {filteredAssessments.map(a => (
               <tr key={a.id || a.studentId}>
                 <td>
-                  <strong style={{ color: '#0F172A' }}>{a.name}</strong>
-                  <span style={{ color: '#64748B', fontSize: '12px', display: 'block' }}>
+                  <strong style={{ color: 'var(--text-main, #F8FAFC)' }}>{a.name}</strong>
+                  <span style={{ color: 'var(--text-muted, #94A3B8)', fontSize: '12px', display: 'block' }}>
                     {a.studentId}
                   </span>
                 </td>
-                <td style={{ color: '#475569' }}>{a.program}</td>
-                <td style={{ textAlign: 'right', fontWeight: '600', color: '#0F172A' }}>
+                <td style={{ color: 'var(--text-muted, #94A3B8)' }}>{a.program}</td>
+                <td style={{ textAlign: 'right', fontWeight: '600', color: 'var(--text-main, #F8FAFC)' }}>
                   PHP {a.totalAssessed.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </td>
-                <td style={{ textAlign: 'right', color: '#166534', fontWeight: '600' }}>
+                <td style={{ textAlign: 'right', color: '#4ADE80', fontWeight: '600' }}>
                   PHP {a.totalPaid.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </td>
-                <td style={{ textAlign: 'right', fontWeight: '800', color: a.balance > 0 ? '#9F1239' : '#166534' }}>
+                <td style={{ textAlign: 'right', fontWeight: '800', color: a.balance > 0 ? '#F87171' : '#4ADE80' }}>
                   PHP {a.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </td>
                 <td style={{ textAlign: 'center' }}>
