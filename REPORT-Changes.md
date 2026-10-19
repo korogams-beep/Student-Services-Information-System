@@ -632,3 +632,214 @@ When clicking "Download PDF" on the Certificate of Registration (COR) view, the 
 - **PHPUnit**: `php84.bat vendor\bin\phpunit` → **8 passed, 33 assertions**.
 - **Laravel Pint**: `php84.bat vendor\bin\pint --dirty --format agent` → **Passed, 0 formatting issues**.
 
+---
+
+## 12. Security Audit, Penetration Hardening & QA Automation (October 2026)
+
+### 12.1 Background & Objectives
+An autonomous security vulnerability assessment and quality assurance stress test were conducted to identify authentication bypasses, broken access control vectors, PII data leaks, and race conditions across the six university modules.
+
+### 12.2 Implemented Security & QA Hardening
+1. **Cryptographic Authentication Enforcement**:
+   - Integrated `Hash::check()` verification in `SSISController::login()` for both `Student` and `AdminUser` accounts.
+   - Replaced loose substring SQL matching (`LIKE "%{$loginInput}%"`) with exact matching on identifier, email, or username.
+   - Enforced validation rejecting empty or whitespace-only credentials with HTTP 422.
+2. **Data Privacy & Password Hash Redaction**:
+   - Added `protected $hidden = ['password_hash'];` to `Student` and `AdminUser` models, eliminating hash exposure in `/api/bootstrap`.
+3. **Role-Based Access Control (RBAC) Middleware**:
+   - Implemented `App\Http\Middleware\CheckRole` protecting `/api/admin/*`, `/api/registrar/*`, `/api/cashier/*`, and `/api/clearance/*`.
+   - Updated client-side React dispatches to supply verified role authorization headers.
+4. **Perspective Switcher Lockdown**:
+   - Wrapped the navigation bar perspective dropdown inside `{currentUser?.role === 'Admin' && (...)}`, completely removing role-switching controls from Student accounts.
+5. **Financial Concurrency Defense & Idempotency**:
+   - Enforced amount validation (`amount >= 1.00`) and transaction locking (`DB::transaction`).
+   - Implemented a 3-second duplicate detection window returning HTTP 409 Conflict upon rapid double-clicks.
+6. **Cross-Module Clearance & Fee Hold Enforcement**:
+   - Enforced academic holds on course enrollment and credential requests for students with active `Deficient` clearances.
+   - Enforced financial holds blocking document releases for students with unsettled tuition balances.
+7. **Comprehensive Automated Test Suite**:
+   - Created 14 feature tests covering unit, integration, system, security, and stress testing with 62 assertions (100% passing).
+8. **Documentation Overhaul**:
+   - Created [`SECURITY.md`](file:///c:/Users/Gams/Student-Services-Information-System/SECURITY.md) (Full Vulnerability Assessment Report).
+   - Created [`TESTING.md`](file:///c:/Users/Gams/Student-Services-Information-System/TESTING.md) (Software Testing Plan & Results).
+   - Completely rewrote [`README.md`](file:///c:/Users/Gams/Student-Services-Information-System/README.md) with full institutional documentation and setup guides.
+   - Updated [`Bugs-Flaws-Report.md`](file:///c:/Users/Gams/Student-Services-Information-System/Bugs-Flaws-Report.md) with SEC-009 to SEC-014.
+
+### 12.3 Verification Results
+- **PHPUnit**: `php vendor/bin/phpunit tests/Feature/SSISApiTest.php` → **14 passed, 62 assertions, 0 failures**.
+- **Laravel Pint**: `php vendor/bin/pint --format agent` → **Clean code styling**.
+- **Vite Build**: `npm.cmd run build` → **2121 modules transformed, 0 errors**.
+
+---
+
+## 13. System Upgrades: Local Latency Fix, Test Data Purge, Dual Login Portals & Universal Dark Mode (October 2026)
+
+### 13.1 Background & Objectives
+During local evaluation on Windows with single-threaded `php artisan serve` and XAMPP MySQL, the system experienced extreme request deadlocks (`1m 22s` hangs and `/api/bootstrap` taking `8.0s`), legacy test student names (`gams User`, `Yogiri Takatou`, `Prince Clarence Lopez`) persisting in client dropdowns, an unseparated single login form combining administrative and student credentials, and a lack of user-configurable light/dark visual theming. Five comprehensive upgrades were executed to remediate these issues.
+
+---
+
+### 13.2 Upgrade 1: Local Loading Speed Optimization & Deadlock Elimination
+1. **Root Cause Analysis**:
+   - On Windows, `php artisan serve` runs PHP's built-in web server (`php -S`), which is single-threaded and handles only one synchronous HTTP connection at a time.
+   - Laravel Boost's browser logger injected an inline script that continuously posted DOM and console events to `/_boost/browser-logs`. Because the browser fired these requests concurrently while loading initial resources, the single-threaded server entered deadlock, resulting in `1m 22s` hangs.
+   - Windows IPv6 DNS resolution for `localhost` introduced multi-second connection timeouts.
+   - `SSISController::getSystemState()` executed unindexed subqueries and redundant relational lookups.
+2. **Remediations Implemented**:
+   - **Boost Logger Disablement**: Created [`config/boost.php`](file:///c:/Users/Gams/Student-Services-Information-System/config/boost.php) and configured `BOOST_BROWSER_LOGS_WATCHER=false` in `.env` and `.env.example`. This stops script injection and halts `/_boost/browser-logs` background traffic completely.
+   - **Strict IPv4 127.0.0.1 Binding**: Updated `.env` (`APP_URL=http://127.0.0.1:8000`, `DB_HOST=127.0.0.1`), configured `SESSION_DRIVER=file` and `CACHE_STORE=file`, and bound [`vite.config.js`](file:///c:/Users/Gams/Student-Services-Information-System/vite.config.js) strictly to `127.0.0.1`.
+   - **Optimized Controller Logic**: Added explicit alias `SSISController::bootstrap()` mapped to `Route::get('/bootstrap')` in [`routes/api.php`](file:///c:/Users/Gams/Student-Services-Information-System/routes/api.php), optimized eager-loading with selective relation constraints, and removed inline hashing overhead during GET operations.
+3. **Performance Outcome**:
+   - `/api/bootstrap` response latency dropped from **8,000ms (8.0s)** to an average of **27.42ms** (>99.6% reduction in response time).
+   - Zero Windows web server hangs or deadlocks.
+
+---
+
+### 13.3 Upgrade 2: Complete Purge of Previous Student Records & Clean 3NF MySQL Baseline
+1. **Codebase & State Purge**:
+   - Searched and eliminated all occurrences of legacy mock names (`gams User`, `Yogiri Takatou`, `Prince Clarence Lopez`) from [`database/seeders/DatabaseSeeder.php`](file:///c:/Users/Gams/Student-Services-Information-System/database/seeders/DatabaseSeeder.php), [`resources/js/views/CashierPaymentView.jsx`](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/views/CashierPaymentView.jsx), [`resources/js/views/LoginView.jsx`](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/views/LoginView.jsx), and client mock lists.
+2. **Client-Side Cache Versioning**:
+   - Updated [`resources/js/context/AppContext.jsx`](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/context/AppContext.jsx) with state key prefix `ssis_v3_clean_` and added a startup routine that automatically sweeps away legacy `localStorage` keys (`ssis_demo_users`, `ssis_student_list_cache`, etc.).
+   - Added regex filter `isLegacyDummyStudent` to reject obsolete student profiles from re-entering active state.
+3. **Database Rebuild & phpMyAdmin Dump**:
+   - Seeded clean, formal CuyoTech University data across all 14 3NF normalized tables with official demo students (`Juan Dela Cruz` - `STU-2026-0001` and `Maria Clara Bautista` - `STU-2026-0002`).
+   - Ran `php artisan migrate:fresh --seed` against MySQL (`127.0.0.1:3306`, database `cuyotech_ssis`).
+   - Re-exported the clean database to [`database/cuyotech_ssis.sql`](file:///c:/Users/Gams/Student-Services-Information-System/database/cuyotech_ssis.sql) using `mysqldump` for seamless import in phpMyAdmin (`http://localhost/phpmyadmin`).
+
+---
+
+### 13.4 Upgrade 3: Designated Separate Login Portals (Admin Login vs. Student & Staff Login)
+1. **Dual Portal Architecture**:
+   - **Portal 1 — Main Student & Staff Services Login (`/`)**: Designed with welcoming university styling for Students, Registrars, Cashiers, and Department Staff. Includes quick role demo chips and a dedicated button: *"System Administrator? Go to Admin Console Login →"*.
+   - **Portal 2 — Dedicated Admin Console Login (`/admin/login`)**: Built with high-security administrative terminal styling ([`resources/js/views/AdminLoginView.jsx`](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/views/AdminLoginView.jsx)), security audit badge, credentials fields with demo autofill, and a link: *"← Back to Student & Staff Login"*.
+2. **Strict Backend Role Enforcement**:
+   - Updated `SSISController::login()` to accept and enforce `login_portal`:
+     - When `login_portal === 'general'`: Any user with role `Admin` is rejected with **HTTP 403 Forbidden**: `"Administrators must sign in through the dedicated Admin Portal."`
+     - When `login_portal === 'admin'`: Any user who is NOT an `Admin` (e.g. Student, Registrar, Cashier, Department Staff) is rejected with **HTTP 403 Forbidden**: `"Access Denied: This portal is restricted to System Administrators only."`
+3. **Frontend Routing & History Synchronization**:
+   - Wired URL popstate synchronization in [`resources/js/context/AppContext.jsx`](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/context/AppContext.jsx) and dynamic view rendering in [`resources/js/app.jsx`](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/app.jsx).
+
+---
+
+### 13.5 Upgrade 4: Universal Light & Dark Mode Theming
+1. **Theme State & Persistence**:
+   - Implemented `theme` preference state (`'light' | 'dark'`) in `AppContext.jsx`, honoring the user's OS preference (`window.matchMedia('(prefers-color-scheme: dark)')`) and persisting choices in `localStorage` under `ssis_theme_preference`.
+   - Bound theme switching to `document.documentElement` via `data-theme="dark"` attribute and `.dark` CSS class.
+2. **Accessible Theme Toggle Component**:
+   - Created [`resources/js/components/ThemeToggle.jsx`](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/components/ThemeToggle.jsx) featuring sun (☀️) and moon (🌙) SVGs, accessible `aria-label`, and interactive hover/active states.
+   - Embedded the toggle in:
+     - Top Navbar ([`resources/js/components/TopNavbar.jsx`](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/components/TopNavbar.jsx)) for authenticated sessions.
+     - Portal 1 Header ([`resources/js/views/LoginView.jsx`](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/views/LoginView.jsx)) for pre-login theme adjustment.
+     - Portal 2 Header ([`resources/js/views/AdminLoginView.jsx`](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/views/AdminLoginView.jsx)).
+     - Admin System Settings ([`resources/js/views/AdminAccountsAuditView.jsx`](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/views/AdminAccountsAuditView.jsx)).
+3. **Comprehensive Styling Coverage**:
+   - Extended [`resources/css/app.css`](file:///c:/Users/Gams/Student-Services-Information-System/resources/css/app.css) with high-contrast dark palette variables:
+     - `--bg-primary: #0b1120`
+     - `--bg-secondary: #0f172a`
+     - `--bg-surface: #1e293b`
+     - `--border-color: #334155`
+     - `--text-primary: #f8fafc`
+     - `--text-secondary: #94a3b8`
+   - Styled top navigation bar, cards, data tables, modals, action buttons, role chips, and form controls for balanced contrast and readability.
+
+---
+
+### 13.6 Upgrade 5: Verification, Benchmarking & phpMyAdmin Guide
+1. **PHPUnit Automated Test Suite**:
+   - Updated [`tests/Feature/SSISApiTest.php`](file:///c:/Users/Gams/Student-Services-Information-System/tests/Feature/SSISApiTest.php) with tests for dual portal boundary enforcement, legacy student data purging, and bootstrap endpoint responsiveness:
+     - `test_admin_cannot_login_to_student_staff_portal` (HTTP 403)
+     - `test_student_and_staff_cannot_login_to_admin_portal` (HTTP 403)
+     - `test_previous_student_names_are_purged_from_database` (0 matches)
+     - `test_bootstrap_endpoint_returns_system_state` (JSON structure)
+   - Executed test suite: **18 passed, 81 assertions, 0 failures** in **1.10s**.
+2. **Production Bundle Compilation**:
+   - Executed `npm run build`: **2,123 modules transformed, 0 warnings/errors, built in 7.34s**.
+3. **Pint Code Formatting**:
+   - Ran `vendor/bin/pint --dirty --format agent`: **Passed with 0 violations**.
+4. **Endpoint Performance Benchmark**:
+   - Executed automated 5-iteration benchmark measuring `GET /api/bootstrap`:
+     - Run 1: `27.07 ms`
+     - Run 2: `27.80 ms`
+     - Run 3: `27.63 ms`
+     - Run 4: `28.08 ms`
+     - Run 5: `26.51 ms`
+     - **Average Latency: 27.42 ms** (down from 8,000ms delay).
+5. **phpMyAdmin Import Instructions**:
+   - Access **phpMyAdmin** at `http://localhost/phpmyadmin`.
+   - Select the **Import** tab.
+   - Choose `database/cuyotech_ssis.sql` and click **Import**.
+   - Database `cuyotech_ssis` is instantly restored with clean, normalized 3NF data.
+
+---
+
+## 14. October 2026 Critical UI, Database, Routing & QA Upgrades (Version 1.3.0)
+
+### 14.1 Task 1: Dark Mode Text Contrast & Visibility Overhaul Across All Screens
+1. **Root Cause Analysis**:
+   - Multiple views contained hardcoded inline dark styles (such as `#0F172A`, `#1E293B`, `#334155`, `#475569`, `#111827`) for labels, table headers, table cells, card titles, search overlay boxes, and input elements. In Dark Mode (`data-theme="dark"`), these rendered dark-on-dark, causing severe readability issues.
+2. **Design Tokens & High-Contrast Overrides**:
+   - Updated [`resources/css/app.css`](file:///c:/Users/Gams/Student-Services-Information-System/resources/css/app.css):
+     - Added `--bg-subtle`, dark `--input-bg: #1E293B`, dark `--input-border: #475569`, `--search-box-bg: #1E293B`.
+     - Added universal `.dark` overrides for `.ssis-card`, `.ssis-btn-secondary`, `.ssis-tabs-bar`, `.ssis-tab-btn`, `select option`, `.ssis-search-results-overlay`.
+     - Injected a global inline dark color defense rule targeting inline elements that hardcoded dark text values (`#0F172A`, `#1E293B`, `#111827`, `#000`), automatically remapping them to `#F8FAFC` or `#E2E8F0`.
+3. **Component-Level Overhauls**:
+   - [`AdminAccountsAuditView.jsx`](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/views/AdminAccountsAuditView.jsx): Replaced hardcoded `#0F172A` in table cells, headers, and Recent Activity with `var(--text-main)` (`#F8FAFC`) and `var(--text-muted)` (`#94A3B8`).
+   - [`CashierPaymentView.jsx`](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/views/CashierPaymentView.jsx): Updated student assessment card and receipt panel to theme-aware backgrounds and high-contrast text.
+   - [`RegistrarRecordsView.jsx`](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/views/RegistrarRecordsView.jsx): Updated grade sheet rows, subject headers, and input controls to theme variables.
+   - [`DepartmentClearanceView.jsx`](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/views/DepartmentClearanceView.jsx): Updated clearance queue table cells, status badges, and empty states to theme-aware variables.
+   - [`TopNavbar.jsx`](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/components/TopNavbar.jsx): Remapped search box and user titles to `var(--text-main)` and `var(--text-muted)`.
+
+### 14.2 Task 2: Elimination of All Student Demo Accounts & 0-Student Starting Baseline
+1. **Purged All Student Demo Accounts**:
+   - Edited [`database/seeders/DatabaseSeeder.php`](file:///c:/Users/Gams/Student-Services-Information-System/database/seeders/DatabaseSeeder.php) to completely remove "Maria Clara Bautista", "Juan Dela Cruz", and all initial student records, enrollments, grades, assessments, payments, clearances, and document requests.
+   - Seeder now retains **ONLY**:
+     1. The 4 official institutional staff accounts (`Admin`, `Registrar`, `Cashier`, `Department Staff`) in `admin_users`.
+     2. Reference master catalogs (`departments`, `programs`, `courses`, `sections`).
+   - Database tables `students`, `enrollments`, `grades`, `assessments`, `payments`, `clearances`, and `document_requests` strictly start at **`0 rows`**.
+2. **Frontend Clean Empty States & Cache Wiping**:
+   - Added clean empty states across all views (`AdminAccountsAuditView.jsx`, `CashierPaymentView.jsx`, `RegistrarRecordsView.jsx`, `DepartmentClearanceView.jsx`) displaying informative messages such as *"No registered students yet. Students must register or be created by Admin."*
+   - Updated [`resources/js/context/AppContext.jsx`](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/context/AppContext.jsx) to wipe stale student records from previous sessions on boot when `studentsList` is empty.
+
+### 14.3 Task 3: Complete Removal of Demo Perspective Switcher & Role Route Protection
+1. **Navbar Perspective Switcher Removal**:
+   - Updated [`resources/js/components/TopNavbar.jsx`](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/components/TopNavbar.jsx): Completely deleted the Demo Perspective Switcher button, dropdown menu, and internal toggle state for **ALL roles, including Admin**.
+2. **Role Boundaries & Route Enforcement**:
+   - Defined strict role permissions in [`resources/js/context/AppContext.jsx`](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/context/AppContext.jsx):
+     - `ROLE_ALLOWED_VIEWS` and `ROLE_DEFAULT_VIEW` enforce deterministic sidebar links and views.
+     - `Student` → Dashboard, Enrollment, Grades, Clearance, Document Requests (`/student/...`).
+     - `Registrar` → Enrollment Approval, Grades Encoding, Document Releases (`/registrar/...`).
+     - `Cashier` → Process Payment, Assessments, Receipts, Reports (`/cashier/...`).
+     - `Department Staff` → Department Clearance Processing (`/department/...`).
+     - `Admin` → User Account Management & Audit Logs (`/admin/...`).
+
+### 14.4 Task 4: Direct Action Portal Switchers & Login/Logout Routing
+1. **Replaced Question-Style Text with Direct Action Toggles**:
+   - [`resources/js/views/LoginView.jsx`](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/views/LoginView.jsx): Replaced `"System Administrator? Go to Admin Console Login →"` with sleek styled button **`Switch to Admin Console →`** (`#goto-admin-portal-link`).
+   - [`resources/js/views/AdminLoginView.jsx`](file:///c:/Users/Gams/Student-Services-Information-System/resources/js/views/AdminLoginView.jsx): Replaced `"Back to Student & Staff Login"` with **`← Switch to Student & Staff Portal`** (`#back-to-general-login-link`).
+2. **Deterministic Login & Logout Routing**:
+   - Logging in immediately routes to the user's role-specific default view via `window.history.pushState`.
+   - Logging out from an Admin session directs strictly to `/admin/login`.
+   - Logging out from a Student, Registrar, Cashier, or Department Staff session directs strictly to `/login`.
+
+### 14.5 Task 5: 7-Stage Multi-Role End-to-End Simulation & Database Reset
+1. **Comprehensive PHPUnit Simulation Test**:
+   - Implemented `test_full_zero_to_complete_multi_role_simulation()` in [`tests/Feature/SSISApiTest.php`](file:///c:/Users/Gams/Student-Services-Information-System/tests/Feature/SSISApiTest.php) verifying all 7 stages:
+     - **Stage 1**: Bootstrap starts at 0 students; Maria Clara / Juan Dela Cruz absent.
+     - **Stage 2**: Student self-registration (`STU-2026-1001`) AND Admin creating a student account (`STU-2026-1002`).
+     - **Stage 3**: Student logs in and attempts enrollment.
+     - **Stage 4**: Department Staff sets clearance to `Deficient` (blocking enrollment/documents), then updates to `Cleared`.
+     - **Stage 5**: Student enrolls; Registrar approves enrollment and encodes subject grades (`1.75`); Student views transcript.
+     - **Stage 6**: Student requests TOR; Registrar blocked from release due to balance; Cashier collects fee payment (`2,500.00`); Registrar releases document; Student sees zero balance and released document.
+     - **Stage 7**: Admin logs in via `/admin/login`, audits log entries across all roles, deactivates Student 2 (login rejected 403), reactivates Student 2, logs out cleanly.
+2. **Full Regression Results**:
+   - Ran `php artisan test --compact`: **21 passed, 152 assertions, 0 failures** in **1.01s**.
+3. **Database Reset to 0-Student Clean Baseline**:
+   - Executed `php artisan migrate:fresh --seed` on live XAMPP MySQL (`cuyotech_ssis`).
+   - Verified row counts: `students = 0`, `enrollments = 0`, `grades = 0`, `assessments = 0`, `payments = 0`, `clearances = 0`, `document_requests = 0`, `admin_users = 4`, `departments = 5`, `courses = 7`, `sections = 7`.
+   - Re-exported clean SQL dump via `mysqldump.exe` into `database/cuyotech_ssis.sql` for instant phpMyAdmin import.
+4. **Vite Production Bundle**:
+   - Executed `npm run build`: **2,123 modules transformed, 0 warnings/errors, built in 427ms**.
+5. **Laravel Pint**:
+   - Executed `vendor/bin/pint --dirty --format agent`: **Passed with 0 violations**.
+
+

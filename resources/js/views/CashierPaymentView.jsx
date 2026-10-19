@@ -132,7 +132,10 @@ export const CashierPaymentView = () => {
     // Persist to backend API if available
     fetch('/api/cashier/payment', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-User-Role': currentUser?.role || 'Cashier',
+      },
       body: JSON.stringify({
         student_id: matchedStudent.id || 1,
         amount: amountApplied,
@@ -183,28 +186,32 @@ export const CashierPaymentView = () => {
                 placeholder="Search student by name or ID number..."
               />
 
-              {students.length > 0 && (
+              {students.length > 0 ? (
                 <div style={{ display: 'flex', gap: '6px', marginTop: '10px', flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: '11px', color: '#64748B', display: 'flex', alignItems: 'center' }}>Quick Select:</span>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted, #64748B)', display: 'flex', alignItems: 'center' }}>Quick Select:</span>
                   {students.map(s => (
                     <button
                       key={s.id || s.email}
                       type="button"
                       onClick={() => handleSelectQuickStudent(s)}
                       style={{
-                        background: studentSearch === s.name ? '#FEF3C7' : '#F1F5F9',
-                        border: `1px solid ${studentSearch === s.name ? '#F59E0B' : '#CBD5E1'}`,
+                        background: studentSearch === s.name ? '#FEF3C7' : 'var(--bg-subtle, #F1F5F9)',
+                        border: `1px solid ${studentSearch === s.name ? '#F59E0B' : 'var(--input-border, #CBD5E1)'}`,
                         borderRadius: '6px',
                         padding: '4px 10px',
                         fontSize: '11.5px',
                         fontWeight: '600',
-                        color: studentSearch === s.name ? '#92400E' : '#475569',
+                        color: studentSearch === s.name ? '#92400E' : 'var(--text-main, #475569)',
                         cursor: 'pointer',
                       }}
                     >
                       {s.name}
                     </button>
                   ))}
+                </div>
+              ) : (
+                <div style={{ marginTop: '10px', fontSize: '12px', color: 'var(--text-muted, #94A3B8)' }}>
+                  No registered students yet. Students must register or be created by Admin.
                 </div>
               )}
             </div>
@@ -280,21 +287,21 @@ export const CashierPaymentView = () => {
         {/* Right Student Account & Receipt Column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {/* Target Student Assessment Card */}
-          <div className="ssis-card" style={{ padding: '24px', backgroundColor: '#F8FAFC' }}>
-            <div style={{ fontSize: '11px', color: '#64748B', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px' }}>
+          <div className="ssis-card" style={{ padding: '24px', backgroundColor: 'var(--bg-subtle, #F8FAFC)' }}>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted, #64748B)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px' }}>
               Student Account Balance
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
               <div>
-                <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#0F172A', margin: 0 }}>
+                <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-main, #0F172A)', margin: 0 }}>
                   {matchedStudent?.name || 'No Student Selected'}
                 </h3>
-                <span style={{ fontSize: '12px', color: '#64748B', fontFamily: 'monospace' }}>
+                <span style={{ fontSize: '12px', color: 'var(--text-muted, #64748B)', fontFamily: 'monospace' }}>
                   {matchedStudent ? `${matchedStudent.student_id_number || 'N/A'} • ${matchedStudent.program || 'Student'}` : 'Search student above'}
                 </span>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <span style={{ fontSize: '11px', color: '#64748B', display: 'block' }}>Balance Due</span>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted, #64748B)', display: 'block' }}>Balance Due</span>
                 <span style={{ fontSize: '20px', fontWeight: '900', color: '#9F1239' }}>
                   PHP {Number(matchedStudentAssessment?.balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </span>
@@ -304,7 +311,7 @@ export const CashierPaymentView = () => {
 
           {/* Recently Issued Receipt in this session */}
           {currentOR ? (
-            <div className="ssis-card" style={{ padding: '24px', border: '1.5px solid #FEF3C7', backgroundColor: '#FFFDF5' }}>
+            <div className="ssis-card" style={{ padding: '24px', border: '1.5px solid #F59E0B' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                 <span style={{ fontSize: '12px', fontWeight: '800', color: '#92400E', backgroundColor: '#FEF3C7', padding: '3px 8px', borderRadius: '4px' }}>
                   RECEIPT ISSUED
@@ -319,37 +326,37 @@ export const CashierPaymentView = () => {
                 </button>
               </div>
 
-              <div style={{ fontSize: '18px', fontWeight: '900', color: '#0F172A', fontFamily: 'monospace' }}>
+              <div style={{ fontSize: '18px', fontWeight: '900', color: 'var(--text-main, #0F172A)', fontFamily: 'monospace' }}>
                 {currentOR.orNumber}
               </div>
-              <div style={{ fontSize: '12px', color: '#64748B', marginTop: '2px' }}>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted, #64748B)', marginTop: '2px' }}>
                 {currentOR.dateTime}
               </div>
 
-              <div style={{ marginTop: '16px', borderTop: '1px dashed #CBD5E1', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px' }}>
+              <div style={{ marginTop: '16px', borderTop: '1px dashed var(--input-border, #CBD5E1)', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#475569' }}>Cash Tendered:</span>
-                  <span style={{ fontWeight: '600' }}>PHP {Number(currentOR.tenderedAmount || currentOR.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                  <span style={{ color: 'var(--text-muted, #475569)' }}>Cash Tendered:</span>
+                  <span style={{ fontWeight: '600', color: 'var(--text-main, #0F172A)' }}>PHP {Number(currentOR.tenderedAmount || currentOR.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#475569' }}>Applied to Tuition:</span>
-                  <span style={{ fontWeight: '700', color: '#166534' }}>PHP {Number(currentOR.amountApplied || currentOR.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                  <span style={{ color: 'var(--text-muted, #475569)' }}>Applied to Tuition:</span>
+                  <span style={{ fontWeight: '700', color: '#16A34A' }}>PHP {Number(currentOR.amountApplied || currentOR.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                 </div>
                 {Number(currentOR.changeDue || 0) > 0 && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', backgroundColor: '#ECFDF5', padding: '6px 8px', borderRadius: '6px' }}>
-                    <span style={{ fontWeight: '800', color: '#065F46' }}>Change ("Sukli"):</span>
-                    <strong style={{ fontSize: '15px', color: '#047857' }}>PHP {Number(currentOR.changeDue).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', backgroundColor: 'rgba(34, 197, 94, 0.15)', padding: '6px 8px', borderRadius: '6px' }}>
+                    <span style={{ fontWeight: '800', color: '#16A34A' }}>Change ("Sukli"):</span>
+                    <strong style={{ fontSize: '15px', color: '#22C55E' }}>PHP {Number(currentOR.changeDue).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>
                   </div>
                 )}
-                <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #E2E8F0', paddingTop: '6px', fontSize: '12px', color: '#64748B' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--card-border, #E2E8F0)', paddingTop: '6px', fontSize: '12px', color: 'var(--text-muted, #64748B)' }}>
                   <span>Remaining Balance:</span>
-                  <span style={{ fontWeight: '700' }}>PHP {Number(currentOR.remainingBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                  <span style={{ fontWeight: '700', color: 'var(--text-main, #0F172A)' }}>PHP {Number(currentOR.remainingBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="ssis-card" style={{ padding: '32px 20px', textAlign: 'center', color: '#64748B' }}>
-              <Receipt size={36} color="#94A3B8" style={{ margin: '0 auto 10px' }} />
+            <div className="ssis-card" style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--text-muted, #64748B)' }}>
+              <Receipt size={36} color="var(--text-muted, #94A3B8)" style={{ margin: '0 auto 10px' }} />
               <p style={{ fontSize: '13px', margin: 0 }}>
                 Enter payment details on the left to process transaction and generate official receipt.
               </p>

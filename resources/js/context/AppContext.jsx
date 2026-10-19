@@ -130,23 +130,112 @@ export const formatYearLevel = (val) => {
 };
 
 export const isLegacyDummyStudent = (u) => {
-  if (u.role !== 'Student') return false;
-  const name = (u.name || '').trim().toLowerCase();
+  if (!u) return true;
+  const role = (u.role || '').toLowerCase().trim();
+  if (role !== 'student') return false;
+
+  const name = (u.name || `${u.first_name || ''} ${u.last_name || ''}`).trim().toLowerCase();
   const email = (u.email || '').trim().toLowerCase();
+  const username = (u.username || '').trim().toLowerCase();
 
   const dummyNames = [
     'maria santos', 'miguel reyes', 'angela cruz', 'paolo mendoza',
-    'jessa torres', 'carlo diaz', 'joyce tan', 'ana lim', 'ashley smith'
+    'jessa torres', 'carlo diaz', 'joyce tan', 'ana lim', 'ashley smith',
+    'gams', 'gams user', 'yogiri', 'takatou', 'yogiri takatou',
+    'prince', 'clarence', 'lopez', 'prince clarence lopez', 'prince clarence',
+    'bautista', 'maria clara', 'maria clara bautista', 'clara bautista',
+    'juan dela cruz', 'dela cruz'
   ];
-  if (dummyNames.some(d => name.includes(d))) return true;
+  if (dummyNames.some(d => name.includes(d) || email.includes(d) || username.includes(d))) return true;
 
   const dummyEmailKeywords = [
-    'santos', 'reyes', 'cruz', 'mendoza', 'torres', 'diaz', 'tan', 'lim', 'ashley'
+    'santos', 'reyes', 'cruz', 'mendoza', 'torres', 'diaz', 'tan', 'lim', 'ashley',
+    'gams', 'yogiri', 'takatou', 'prince', 'clarence', 'lopez',
+    'bautista', 'maria.bautista', 'm.bautista', 'juan.delacruz'
   ];
   if (dummyEmailKeywords.some(d => email.includes(d))) return true;
 
   return false;
 };
+
+// Purge legacy test caches and bump storage keys to guarantee clean 0-student starting state
+const SSIS_STORAGE_KEY_PREFIX = 'ssis_v4_clean_';
+const purgeOutdatedStudentCache = () => {
+  try {
+    const currentVer = localStorage.getItem('ssis_cache_version');
+    if (currentVer !== 'v4_clean') {
+      const themePref = localStorage.getItem('ssis_theme_preference');
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('ssis_') && k !== 'ssis_theme_preference') {
+          keysToRemove.push(k);
+        }
+      }
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+      if (themePref) {
+        localStorage.setItem('ssis_theme_preference', themePref);
+      }
+      localStorage.setItem('ssis_cache_version', 'v4_clean');
+    }
+
+    // Sweep any leftover cached items containing obsolete test names
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (key.startsWith('ssis_') || key.includes('user'))) {
+        const val = (localStorage.getItem(key) || '').toLowerCase();
+        if (
+          val.includes('gams') || 
+          val.includes('yogiri') || 
+          val.includes('takatou') || 
+          val.includes('clarence lopez') ||
+          val.includes('bautista') ||
+          val.includes('maria clara') ||
+          val.includes('juan dela cruz')
+        ) {
+          localStorage.removeItem(key);
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Storage purge error:', e);
+  }
+};
+purgeOutdatedStudentCache();
+
+export const ROLE_ALLOWED_VIEWS = {
+  Student: ['dashboard', 'enrollment', 'grades', 'documents', 'payments', 'clearance', 'cor_preview'],
+  Registrar: ['approvals', 'academic_records', 'student_records', 'documents_queue', 'cor_archive', 'registrar_reports'],
+  Cashier: ['process_payment', 'recent_payments', 'assessments', 'receipts', 'reports'],
+  'Department Staff': ['clearance_requests', 'completed_clearance', 'department_rules', 'dept_reports'],
+  Admin: ['user_accounts', 'audit_logs_view', 'roles_view', 'security_view', 'system_settings_view'],
+};
+
+export const ROLE_DEFAULT_VIEW = {
+  Student: 'dashboard',
+  Registrar: 'approvals',
+  Cashier: 'process_payment',
+  'Department Staff': 'clearance_requests',
+  Admin: 'user_accounts',
+};
+
+export const getRoleDefaultNavigation = (role) => {
+  const normRole = role === 'DepartmentStaff' ? 'Department Staff' : (role || 'Student');
+  switch (normRole) {
+    case 'Admin':
+      return { view: 'user_accounts', path: '/admin' };
+    case 'Registrar':
+      return { view: 'approvals', path: '/registrar/approvals' };
+    case 'Cashier':
+      return { view: 'process_payment', path: '/cashier/payments' };
+    case 'Department Staff':
+      return { view: 'clearance_requests', path: '/department/clearance' };
+    case 'Student':
+    default:
+      return { view: 'dashboard', path: '/student/dashboard' };
+  }
+};
+
 
 export const deduplicateUsers = (list) => {
   if (!Array.isArray(list)) return [...INSTITUTIONAL_STAFF];
@@ -256,14 +345,51 @@ export const deduplicateUsers = (list) => {
 export const AppProvider = ({ children }) => {
   const initialUsers = INSTITUTIONAL_STAFF;
 
+  // Theme preference state (persisted in localStorage, respects system preference)
+  const [theme, setTheme] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ssis_theme_preference');
+      if (saved === 'dark' || saved === 'light') return saved;
+      if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark';
+      }
+      return 'light';
+    } catch {
+      return 'light';
+    }
+  });
+
+  const toggleTheme = () => {
+    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('ssis_theme_preference', theme);
+      if (typeof document !== 'undefined') {
+        document.documentElement.setAttribute('data-theme', theme);
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+          document.body.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+          document.body.classList.remove('dark');
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, [theme]);
+
   // Auth & Navigation state with localStorage session persistence
   const [demoUsers, setDemoUsers] = useState(() => {
     try {
-      const saved = localStorage.getItem('ssis_demo_users');
+      const saved = localStorage.getItem('ssis_v4_demo_users');
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          return deduplicateUsers(parsed);
+          const cleanList = parsed.filter(u => !isLegacyDummyStudent(u));
+          return deduplicateUsers(cleanList);
         }
       }
       return initialUsers;
@@ -274,25 +400,99 @@ export const AppProvider = ({ children }) => {
 
   const [currentUser, setCurrentUser] = useState(() => {
     try {
-      const saved = localStorage.getItem('ssis_current_user');
-      return saved ? JSON.parse(saved) : initialUsers[0];
+      const saved = localStorage.getItem('ssis_v4_current_user');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && !isLegacyDummyStudent(parsed)) {
+          return parsed;
+        }
+      }
+      return null;
     } catch {
-      return initialUsers[0];
+      return null;
     }
   });
 
   const [currentView, setCurrentView] = useState(() => {
     try {
-      const saved = localStorage.getItem('ssis_current_view');
-      return saved || 'login';
+      if (typeof window !== 'undefined' && window.location.pathname === '/admin/login') {
+        return 'admin_login';
+      }
+      const savedUser = localStorage.getItem('ssis_v4_current_user');
+      const savedView = localStorage.getItem('ssis_v4_current_view');
+      if (savedUser) {
+        const parsedUser = JSON.parse(savedUser);
+        const role = parsedUser.role === 'DepartmentStaff' ? 'Department Staff' : parsedUser.role;
+        const allowed = ROLE_ALLOWED_VIEWS[role] || [];
+        if (savedView && allowed.includes(savedView)) {
+          return savedView;
+        }
+        return ROLE_DEFAULT_VIEW[role] || 'dashboard';
+      }
+      return 'login';
     } catch {
       return 'login';
     }
   });
 
+  // Strict Role Route Guard: Every user strictly operates within their own role
+  useEffect(() => {
+    if (currentUser) {
+      const role = currentUser.role === 'DepartmentStaff' ? 'Department Staff' : currentUser.role;
+      const allowed = ROLE_ALLOWED_VIEWS[role] || [];
+      if (currentView === 'login' || currentView === 'admin_login' || !allowed.includes(currentView)) {
+        const defaultView = ROLE_DEFAULT_VIEW[role] || 'dashboard';
+        setCurrentView(defaultView);
+      }
+    } else {
+      if (currentView !== 'login' && currentView !== 'admin_login') {
+        setCurrentView(typeof window !== 'undefined' && window.location.pathname === '/admin/login' ? 'admin_login' : 'login');
+      }
+    }
+  }, [currentUser, currentView]);
+
+  // Synchronize browser history / URL with view state
+  useEffect(() => {
+    const handlePopState = () => {
+      if (typeof window !== 'undefined') {
+        const path = window.location.pathname;
+        if (path === '/admin/login') {
+          if (currentUser?.role === 'Admin') {
+            setCurrentView('user_accounts');
+          } else {
+            setCurrentView('admin_login');
+          }
+        } else if (path === '/' || path === '/login') {
+          if (!currentUser) {
+            setCurrentView('login');
+          } else {
+            const { view } = getRoleDefaultNavigation(currentUser.role);
+            setCurrentView(view);
+          }
+        } else if (path.startsWith('/admin')) {
+          if (currentUser?.role === 'Admin') {
+            setCurrentView('user_accounts');
+          } else {
+            setCurrentView('admin_login');
+          }
+        } else if (path.startsWith('/student') && currentUser?.role === 'Student') {
+          setCurrentView('dashboard');
+        } else if (path.startsWith('/registrar') && currentUser?.role === 'Registrar') {
+          setCurrentView('approvals');
+        } else if (path.startsWith('/cashier') && currentUser?.role === 'Cashier') {
+          setCurrentView('process_payment');
+        } else if (path.startsWith('/department') && (currentUser?.role === 'Department Staff' || currentUser?.role === 'DepartmentStaff')) {
+          setCurrentView('clearance_requests');
+        }
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [currentUser]);
+
   useEffect(() => {
     try {
-      localStorage.setItem('ssis_demo_users', JSON.stringify(demoUsers));
+      localStorage.setItem('ssis_v4_demo_users', JSON.stringify(demoUsers));
     } catch (e) {
       console.error(e);
     }
@@ -301,13 +501,13 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     if (currentUser) {
       try {
-        localStorage.setItem('ssis_current_user', JSON.stringify(currentUser));
+        localStorage.setItem('ssis_v4_current_user', JSON.stringify(currentUser));
       } catch (e) {
         console.error(e);
       }
     } else {
       try {
-        localStorage.removeItem('ssis_current_user');
+        localStorage.removeItem('ssis_v4_current_user');
       } catch (e) {
         console.error(e);
       }
@@ -317,7 +517,7 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     if (currentView) {
       try {
-        localStorage.setItem('ssis_current_view', currentView);
+        localStorage.setItem('ssis_v4_current_view', currentView);
       } catch (e) {
         console.error(e);
       }
@@ -666,7 +866,11 @@ export const AppProvider = ({ children }) => {
 
     fetch('/api/enrollment/submit', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-User-Role': currentUser?.role || 'Student',
+        'X-User-Id': String(currentUser?.id || 1),
+      },
       body: JSON.stringify({
         student_id: currentUser?.id || 1,
         section_ids: selected.map(c => c.id),
@@ -733,7 +937,10 @@ export const AppProvider = ({ children }) => {
 
     fetch(`/api/registrar/enrollments/${queueItemId}/decide`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-User-Role': currentUser?.role || 'Registrar',
+      },
       body: JSON.stringify({ status: 'Approved' }),
     }).catch(err => console.log('Client-side synced', err));
   };
@@ -753,7 +960,10 @@ export const AppProvider = ({ children }) => {
 
     fetch(`/api/registrar/enrollments/${queueItemId}/decide`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-User-Role': currentUser?.role || 'Registrar',
+      },
       body: JSON.stringify({ status: 'Rejected' }),
     }).catch(err => console.log('Client-side synced', err));
   };
@@ -783,7 +993,11 @@ export const AppProvider = ({ children }) => {
 
     fetch('/api/documents/request', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-User-Role': currentUser?.role || 'Student',
+        'X-User-Id': String(currentUser?.id || 1),
+      },
       body: JSON.stringify({
         student_id: currentUser?.id || 1,
         document_type: docType,
@@ -840,7 +1054,10 @@ export const AppProvider = ({ children }) => {
 
     fetch(`/api/registrar/documents/${id}/release`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-User-Role': currentUser?.role || 'Registrar',
+      },
       body: JSON.stringify({ status: newStatus, approved_by: approverName }),
     }).catch(err => console.log('Client-side synced', err));
   };
@@ -903,7 +1120,11 @@ export const AppProvider = ({ children }) => {
 
     fetch('/api/clearance/request', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-User-Role': currentUser?.role || 'Student',
+        'X-User-Id': String(currentUser?.id || 1),
+      },
       body: JSON.stringify({ student_id: currentUser?.id || 1, department: targetDepartment }),
     }).catch(err => console.log('Client-side synced', err));
 
@@ -982,61 +1203,34 @@ export const AppProvider = ({ children }) => {
   // Cleared Departments Count
   const clearedCount = clearanceList.filter(c => c.status === 'Cleared').length;
 
-  // Change user role and redirect to default view
-  const switchRole = (role, specificUser = null) => {
-    const targetUser = specificUser || demoUsers.find(u => u.role.toLowerCase() === role.toLowerCase());
-    if (targetUser) {
-      if (
-        targetUser.status === 'Deactivated' || 
-        targetUser.status === 'Disabled' || 
-        targetUser.account === 'Deactivated' || 
-        targetUser.account === 'Disabled'
-      ) {
-        showToast(`Cannot switch perspective: Account for ${targetUser.name} is deactivated.`);
-        return;
-      }
-
-      setCurrentUser(targetUser);
-
-      if (targetUser.role === 'Student') {
-        const studentGrades = studentGradesMap[targetUser.student_id_number] || [];
-        setGradeReports(studentGrades);
-        setCurrentView('dashboard');
-      } else if (targetUser.role === 'Registrar') setCurrentView('approvals');
-      else if (targetUser.role === 'Cashier') setCurrentView('process_payment');
-      else if (targetUser.role === 'Department Staff') setCurrentView('clearance_requests');
-      else if (targetUser.role === 'Admin') setCurrentView('user_accounts');
-
-      showToast(`Switched view to ${targetUser.name} (${targetUser.role})`);
-    }
-  };
-
-  // Logout
+  // Logout: Admin routes to /admin/login; Student & Staff route to /login
   const handleLogout = () => {
+    const wasAdmin = currentUser?.role === 'Admin';
     setCurrentUser(null);
     try {
-      localStorage.removeItem('ssis_current_user');
-      localStorage.setItem('ssis_current_view', 'login');
+      localStorage.removeItem('ssis_v4_current_user');
+      localStorage.setItem('ssis_v4_current_view', wasAdmin ? 'admin_login' : 'login');
     } catch (e) {
       console.error(e);
     }
-    setCurrentView('login');
+    const targetView = wasAdmin ? 'admin_login' : 'login';
+    const targetPath = wasAdmin ? '/admin/login' : '/login';
+    setCurrentView(targetView);
+    if (typeof window !== 'undefined' && window.history && window.history.pushState) {
+      window.history.pushState({}, '', targetPath);
+    }
     setScheduleCourses(prev => prev.map(c => ({ ...c, selected: false })));
     setSearchQuery('');
     showToast('Logged out of CuyoTech University SSIS.');
   };
 
-  const handleLogin = (selectedRole) => {
-    switchRole(selectedRole);
-  };
-
-  // Login with real credentials / Sign In
-  const loginWithCredentials = async (emailOrId, password) => {
+  // Login with credentials / Sign In (Supports portal enforcement)
+  const loginWithCredentials = async (emailOrId, password, portal = 'general') => {
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email_or_id: emailOrId, password }),
+        body: JSON.stringify({ email_or_id: emailOrId, password, login_portal: portal }),
       });
 
       if (res.ok) {
@@ -1075,72 +1269,87 @@ export const AppProvider = ({ children }) => {
             } else {
               setAssessedFees([]);
             }
+          }
 
-            setCurrentView('dashboard');
-          } else if (matchedUser.role === 'Registrar') setCurrentView('approvals');
-          else if (matchedUser.role === 'Cashier') setCurrentView('process_payment');
-          else if (matchedUser.role === 'Department Staff' || matchedUser.role === 'DepartmentStaff') setCurrentView('clearance_requests');
-          else if (matchedUser.role === 'Admin') setCurrentView('user_accounts');
+          const { view: defaultView, path: defaultPath } = getRoleDefaultNavigation(matchedUser.role);
+          setCurrentView(defaultView);
+          if (typeof window !== 'undefined' && window.history && window.history.pushState) {
+            window.history.pushState({}, '', defaultPath);
+          }
 
           showToast(`Welcome back, ${matchedUser.name}!`);
           return { success: true, user: matchedUser };
         }
-      } else {
-        const errData = await res.json().catch(() => null);
-        if (res.status === 403 && errData?.message) {
-          showToast(errData.message);
-          return { success: false, message: errData.message };
+        } else {
+          const errData = await res.json().catch(() => null);
+          if (errData?.message) {
+            showToast(errData.message);
+            return { success: false, message: errData.message };
+          }
+          return { success: false, message: 'Authentication failed. Please verify credentials.' };
         }
-        console.warn('Backend login non-200, attempting client fallback:', errData);
-      }
-    } catch (err) {
-      console.log('Login API network error, trying local demo users:', err);
-    }
-
-    // Client-side fallback check across demoUsers & INSTITUTIONAL_STAFF
-    const searchTarget = emailOrId.toLowerCase().trim();
-    const allCandidates = deduplicateUsers(demoUsers);
-    const found = allCandidates.find(u => {
-      const email = (u.email || '').toLowerCase().trim();
-      const accountId = (u.account_id || '').toLowerCase().trim();
-      const studentId = (u.student_id_number || '').toLowerCase().trim();
-      const username = (u.username || '').toLowerCase().trim();
-      const name = (u.name || '').toLowerCase().trim();
-      const prefix = email.split('@')[0];
-
-      return email === searchTarget ||
-        accountId === searchTarget ||
-        studentId === searchTarget ||
-        username === searchTarget ||
-        name === searchTarget ||
-        (searchTarget.includes('@') && prefix === searchTarget.split('@')[0]);
-    });
-
-    if (found) {
-      if (
-        found.status === 'Disabled' || 
-        found.status === 'Deactivated' || 
-        found.account === 'Disabled' || 
-        found.account === 'Deactivated'
-      ) {
-        showToast('This account has been deactivated. Please contact the administrator.');
-        return { success: false, message: 'This account has been deactivated. Please contact the administrator.' };
+      } catch (err) {
+        console.log('Login API network error, checking local demo users:', err);
       }
 
-      setCurrentUser(found);
-      if (found.role === 'Student') {
-        const sId = found.account_id || found.student_id_number;
-        const studentGrades = studentGradesMap[sId] || [];
-        setGradeReports(studentGrades);
-        setCurrentView('dashboard');
-      } else if (found.role === 'Registrar') setCurrentView('approvals');
-      else if (found.role === 'Cashier') setCurrentView('process_payment');
-      else if (found.role === 'Department Staff' || found.role === 'DepartmentStaff') setCurrentView('clearance_requests');
-      else if (found.role === 'Admin') setCurrentView('user_accounts');
+      // Client-side fallback check across demoUsers & INSTITUTIONAL_STAFF
+      const searchTarget = emailOrId.toLowerCase().trim();
+      const allCandidates = deduplicateUsers(demoUsers);
+      const found = allCandidates.find(u => {
+        const email = (u.email || '').toLowerCase().trim();
+        const accountId = (u.account_id || '').toLowerCase().trim();
+        const studentId = (u.student_id_number || '').toLowerCase().trim();
+        const username = (u.username || '').toLowerCase().trim();
+        const name = (u.name || '').toLowerCase().trim();
+        const prefix = email.split('@')[0];
 
-      showToast(`Welcome back, ${found.name}!`);
-      return { success: true, user: found };
-    }
+        return email === searchTarget ||
+          accountId === searchTarget ||
+          studentId === searchTarget ||
+          username === searchTarget ||
+          name === searchTarget ||
+          (searchTarget.includes('@') && prefix === searchTarget.split('@')[0]);
+      });
+
+      if (found) {
+        // Enforce client fallback portal restrictions
+        if (portal === 'general' && found.role === 'Admin') {
+          const msg = 'Administrators must sign in through the dedicated Admin Portal.';
+          showToast(msg);
+          return { success: false, message: msg };
+        }
+        if (portal === 'admin' && found.role !== 'Admin') {
+          const msg = 'Access Denied: This portal is restricted to System Administrators only.';
+          showToast(msg);
+          return { success: false, message: msg };
+        }
+
+        if (
+          found.status === 'Disabled' || 
+          found.status === 'Deactivated' || 
+          found.account === 'Disabled' || 
+          found.account === 'Deactivated'
+        ) {
+          showToast('This account has been deactivated. Please contact the administrator.');
+          return { success: false, message: 'This account has been deactivated. Please contact the administrator.' };
+        }
+
+        setCurrentUser(found);
+        if (found.role === 'Student') {
+          const sId = found.account_id || found.student_id_number;
+          const studentGrades = studentGradesMap[sId] || [];
+          setGradeReports(studentGrades);
+        }
+
+        const { view: defaultView, path: defaultPath } = getRoleDefaultNavigation(found.role);
+        setCurrentView(defaultView);
+        if (typeof window !== 'undefined' && window.history && window.history.pushState) {
+          window.history.pushState({}, '', defaultPath);
+        }
+
+        showToast(`Welcome back, ${found.name}!`);
+        return { success: true, user: found };
+      }
 
     showToast(`No matching account found for "${emailOrId}". Please register or check credentials.`);
     return { success: false, message: `No matching account found for "${emailOrId}".` };
@@ -1217,11 +1426,11 @@ export const AppProvider = ({ children }) => {
 
         // Set active user and navigate
         setCurrentUser(newUser);
-        if (newUser.role === 'Student') setCurrentView('dashboard');
-        else if (newUser.role === 'Registrar') setCurrentView('approvals');
-        else if (newUser.role === 'Cashier') setCurrentView('process_payment');
-        else if (newUser.role === 'Department Staff') setCurrentView('clearance_requests');
-        else if (newUser.role === 'Admin') setCurrentView('user_accounts');
+        const { view: defaultView, path: defaultPath } = getRoleDefaultNavigation(newUser.role);
+        setCurrentView(defaultView);
+        if (typeof window !== 'undefined' && window.history && window.history.pushState) {
+          window.history.pushState({}, '', defaultPath);
+        }
 
         showToast(`Account created! Welcome, ${newUser.name}. Your official ID is ${newUser.student_id_number || newUser.account_id}.`);
         recordAuditLog('New account registered', `${newUser.name} (${newUser.role})`);
@@ -1290,11 +1499,11 @@ export const AppProvider = ({ children }) => {
     }
 
     setCurrentUser(newUser);
-    if (newUser.role === 'Student') setCurrentView('dashboard');
-    else if (newUser.role === 'Registrar') setCurrentView('approvals');
-    else if (newUser.role === 'Cashier') setCurrentView('process_payment');
-    else if (newUser.role === 'Department Staff') setCurrentView('clearance_requests');
-    else if (newUser.role === 'Admin') setCurrentView('user_accounts');
+    const { view: defaultView, path: defaultPath } = getRoleDefaultNavigation(newUser.role);
+    setCurrentView(defaultView);
+    if (typeof window !== 'undefined' && window.history && window.history.pushState) {
+      window.history.pushState({}, '', defaultPath);
+    }
 
     showToast(`Account created! Welcome, ${newUser.name}. Your official ID is ${newUser.student_id_number || newUser.account_id}.`);
     recordAuditLog('New account registered', `${newUser.name} (${newUser.role})`);
@@ -1307,13 +1516,25 @@ export const AppProvider = ({ children }) => {
       .then(res => res.json())
       .then(data => {
         if (data.auditLogs && data.auditLogs.length > 0) {
-          setAuditLogsList(data.auditLogs.map(l => ({
-            id: l.id,
-            time: l.time,
-            action: l.action,
-            detail: `${l.user} • ${l.detail}`,
-            user: l.user,
-          })));
+          const cleanLogs = data.auditLogs
+            .filter(l => {
+              const text = `${l.action} ${l.detail} ${l.user}`.toLowerCase();
+              return !text.includes('bautista') &&
+                     !text.includes('maria clara') &&
+                     !text.includes('juan dela cruz') &&
+                     !text.includes('yogiri') &&
+                     !text.includes('clarence lopez');
+            })
+            .map(l => ({
+              id: l.id,
+              time: l.time,
+              action: l.action,
+              detail: `${l.user} • ${l.detail}`,
+              user: l.user,
+            }));
+          if (cleanLogs.length > 0) {
+            setAuditLogsList(cleanLogs);
+          }
         }
         if (data.studentsList && data.studentsList.length > 0) {
           const dbStudents = data.studentsList
@@ -1332,7 +1553,10 @@ export const AppProvider = ({ children }) => {
               account: s.account_status || 'Active',
             }));
 
-          setDemoUsers(prev => deduplicateUsers([...prev, ...dbStudents]));
+          setDemoUsers(prev => deduplicateUsers([...INSTITUTIONAL_STAFF, ...dbStudents]));
+        } else {
+          // Exactly 0 students in DB: strictly institutional staff only
+          setDemoUsers([...INSTITUTIONAL_STAFF]);
         }
       })
       .catch(err => console.log('Running in client state with real-time reactivity:', err));
@@ -1355,9 +1579,7 @@ export const AppProvider = ({ children }) => {
         setActiveReceipt,
         isAddUserModalOpen,
         setIsAddUserModalOpen,
-        switchRole,
         handleLogout,
-        handleLogin,
         loginWithCredentials,
         signUpUser,
         recordAuditLog,
@@ -1428,6 +1650,11 @@ export const AppProvider = ({ children }) => {
         setAdminUsersList,
         auditLogsList,
         setAuditLogsList,
+
+        // Theme Management
+        theme,
+        setTheme,
+        toggleTheme,
 
         // Role & Account ID Helpers
         getRolePrefix,

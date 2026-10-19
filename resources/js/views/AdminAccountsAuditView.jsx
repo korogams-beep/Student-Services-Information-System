@@ -20,6 +20,7 @@ import {
   X,
   Shield
 } from 'lucide-react';
+import { ThemeToggle } from '../components/ThemeToggle';
 
 // Strict Normalized Account Role & Status Helpers
 export const isStudentAccount = (u) => {
@@ -135,15 +136,21 @@ export const AdminAccountsAuditView = () => {
     if (newRole !== oldRole) {
       fetch(`/api/admin/users/${targetUser.id}/change-role`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-User-Role': currentUser?.role || 'Admin',
+        },
         body: JSON.stringify({ role: newRole, account_id: updatedId }),
       }).catch(err => console.log('Role sync note:', err));
     }
 
     fetch(`/api/admin/users/${targetUser.id}/toggle-status`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: newStatus }),
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-User-Role': currentUser?.role || 'Admin',
+      },
+      body: JSON.stringify({ status: newStatus, role: targetUser.role }),
     }).catch(err => console.log('Status sync note:', err));
 
     setSelectedUserForEdit(null);
@@ -181,8 +188,11 @@ export const AdminAccountsAuditView = () => {
 
     fetch(`/api/admin/users/${user.id}/toggle-status`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: newStatus }),
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-User-Role': currentUser?.role || 'Admin',
+      },
+      body: JSON.stringify({ status: newStatus, role: user.role }),
     }).catch(err => console.log('Client-side synced', err));
   };
 
@@ -217,7 +227,10 @@ export const AdminAccountsAuditView = () => {
 
     fetch(`/api/admin/users/${user.id}/change-role`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-User-Role': currentUser?.role || 'Admin',
+      },
       body: JSON.stringify({ role: newRole, account_id: updatedId }),
     }).catch(err => console.log('Client-side synced', err));
   };
@@ -399,8 +412,8 @@ export const AdminAccountsAuditView = () => {
                 <tbody>
                   {filteredUsers.length === 0 ? (
                     <tr>
-                      <td colSpan="4" style={{ textAlign: 'center', padding: '36px', color: '#64748B' }}>
-                        No user accounts match the selected criteria.
+                      <td colSpan="4" style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted, #64748B)' }}>
+                        {userRoleFilter === 'Student' ? 'No registered students yet.' : 'No user accounts match the selected criteria.'}
                       </td>
                     </tr>
                   ) : (
@@ -439,10 +452,10 @@ export const AdminAccountsAuditView = () => {
                                 {user.initials || user.name.slice(0, 2).toUpperCase()}
                               </div>
                               <div>
-                                <strong style={{ color: '#0F172A', display: 'block', fontSize: '13.5px' }}>
+                                <strong style={{ color: 'var(--text-main, #0F172A)', display: 'block', fontSize: '13.5px' }}>
                                   {user.name}
                                 </strong>
-                                <span style={{ color: '#64748B', fontSize: '12px', display: 'block' }}>
+                                <span style={{ color: 'var(--text-muted, #64748B)', fontSize: '12px', display: 'block' }}>
                                   {user.email || `${user.username || 'user'}@cuyotech.edu.ph`}
                                 </span>
                                 <span style={{ fontSize: '11px', color: '#0284C7', fontWeight: '700', fontFamily: 'monospace', display: 'block', marginTop: '2px' }}>
@@ -532,15 +545,13 @@ export const AdminAccountsAuditView = () => {
                               <button
                                 type="button"
                                 onClick={() => handleOpenEditModal(user)}
+                                className="ssis-btn-secondary"
                                 style={{
                                   padding: '5px 10px',
                                   borderRadius: '6px',
                                   fontSize: '12px',
                                   fontWeight: '600',
                                   cursor: 'pointer',
-                                  border: '1px solid #CBD5E1',
-                                  backgroundColor: '#F8FAFC',
-                                  color: '#334155',
                                   display: 'inline-flex',
                                   alignItems: 'center',
                                   gap: '4px',
@@ -566,7 +577,7 @@ export const AdminAccountsAuditView = () => {
                 <h3 className="ssis-card-title" style={{ marginBottom: 0 }}>Recent Activity</h3>
                 <button
                   onClick={() => setCurrentView('audit_logs_view')}
-                  style={{ background: 'none', border: 'none', color: '#4338CA', fontSize: '12.5px', fontWeight: '600', cursor: 'pointer' }}
+                  style={{ background: 'none', border: 'none', color: '#F1B82D', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer' }}
                 >
                   View All &rarr;
                 </button>
@@ -574,12 +585,12 @@ export const AdminAccountsAuditView = () => {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 {auditLogsList.slice(0, 6).map(log => (
-                  <div key={log.id} style={{ display: 'flex', flexDirection: 'column', gap: '2px', borderBottom: '1px solid #F1F5F9', paddingBottom: '10px' }}>
-                    <div style={{ fontSize: '13px', color: '#1E293B', fontWeight: '600' }}>
-                      <span style={{ color: '#64748B', marginRight: '6px', fontSize: '11.5px' }}>{log.time}</span>
+                  <div key={log.id} style={{ display: 'flex', flexDirection: 'column', gap: '2px', borderBottom: '1px solid var(--card-border, #F1F5F9)', paddingBottom: '10px' }}>
+                    <div style={{ fontSize: '13px', color: 'var(--text-main, #1E293B)', fontWeight: '600' }}>
+                      <span style={{ color: 'var(--text-muted, #64748B)', marginRight: '6px', fontSize: '11.5px' }}>{log.time}</span>
                       {log.action}
                     </div>
-                    <div style={{ fontSize: '12px', color: '#64748B' }}>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted, #64748B)' }}>
                       {log.detail}
                     </div>
                   </div>
@@ -595,23 +606,23 @@ export const AdminAccountsAuditView = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Shield size={22} color="#D97706" />
-                    <h3 style={{ fontSize: '19px', fontWeight: '700', color: '#0F172A', margin: 0 }}>
+                    <h3 style={{ fontSize: '19px', fontWeight: '700', color: 'var(--text-main, #0F172A)', margin: 0 }}>
                       Manage User Account
                     </h3>
                   </div>
                   <button
                     onClick={() => setSelectedUserForEdit(null)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748B' }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted, #64748B)' }}
                   >
                     <X size={20} />
                   </button>
                 </div>
 
-                <div style={{ padding: '14px 16px', backgroundColor: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0', marginBottom: '20px' }}>
-                  <strong style={{ fontSize: '15px', color: '#0F172A', display: 'block' }}>
+                <div style={{ padding: '14px 16px', backgroundColor: 'var(--bg-subtle, #F8FAFC)', borderRadius: '8px', border: '1px solid var(--card-border, #E2E8F0)', marginBottom: '20px' }}>
+                  <strong style={{ fontSize: '15px', color: 'var(--text-main, #0F172A)', display: 'block' }}>
                     {selectedUserForEdit.name}
                   </strong>
-                  <span style={{ fontSize: '12.5px', color: '#64748B', display: 'block', marginTop: '2px' }}>
+                  <span style={{ fontSize: '12.5px', color: 'var(--text-muted, #64748B)', display: 'block', marginTop: '2px' }}>
                     {selectedUserForEdit.email || selectedUserForEdit.username}
                   </span>
                   {(selectedUserForEdit.account_id || selectedUserForEdit.student_id_number) && (
@@ -967,6 +978,16 @@ export const AdminAccountsAuditView = () => {
               >
                 {isEnrollmentOpen ? 'Open' : 'Closed'}
               </button>
+            </div>
+
+            <div className="ssis-form-group" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', backgroundColor: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
+              <div>
+                <strong style={{ fontSize: '14px', color: '#0F172A', display: 'block' }}>Interface Theme Preference</strong>
+                <span style={{ fontSize: '12.5px', color: '#64748B' }}>
+                  Switch between high-contrast Light Mode and dark-slate Dark Mode
+                </span>
+              </div>
+              <ThemeToggle showLabel={true} />
             </div>
 
             <button

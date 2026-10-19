@@ -16,6 +16,7 @@ import { printIsolatedElement, downloadPdfFromElement } from '../utils/pdfExport
 
 export const DepartmentClearanceView = () => {
   const { 
+    currentUser,
     currentView,
     setCurrentView,
     departmentStaffClearanceQueue, 
@@ -94,7 +95,10 @@ export const DepartmentClearanceView = () => {
 
     fetch(`/api/clearance/${item.id}/decide`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-User-Role': currentUser?.role || 'DepartmentStaff',
+      },
       body: JSON.stringify({ status: 'Cleared', remarks: 'Approved by Dept Staff' }),
     }).catch(err => console.log('Client-side synced', err));
   };
@@ -144,7 +148,10 @@ export const DepartmentClearanceView = () => {
 
     fetch(`/api/clearance/${item.id}/decide`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-User-Role': currentUser?.role || 'DepartmentStaff',
+      },
       body: JSON.stringify({ status: 'Deficient', remarks: reason }),
     }).catch(err => console.log('Client-side synced', err));
   };
@@ -274,10 +281,10 @@ export const DepartmentClearanceView = () => {
               {filteredPending.map(item => (
                 <tr key={item.id}>
                   <td>
-                    <strong style={{ color: '#0F172A' }}>{item.studentName}</strong> • {item.studentId}
+                    <strong style={{ color: 'var(--text-main, #0F172A)' }}>{item.studentName}</strong> • {item.studentId}
                   </td>
-                  <td style={{ color: '#475569' }}>{item.department}</td>
-                  <td style={{ color: '#334155' }}>{item.remarks}</td>
+                  <td style={{ color: 'var(--text-muted, #475569)' }}>{item.department}</td>
+                  <td style={{ color: 'var(--text-main, #334155)' }}>{item.remarks}</td>
                   <td style={{ textAlign: 'right' }}>
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                       <button
@@ -316,9 +323,9 @@ export const DepartmentClearanceView = () => {
               ))}
               {filteredPending.length === 0 && (
                 <tr>
-                  <td colSpan="4" style={{ textAlign: 'center', padding: '40px', color: '#64748B' }}>
+                  <td colSpan="4" style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted, #64748B)' }}>
                     <CheckCircle2 size={36} color="#16A34A" style={{ margin: '0 auto 8px' }} />
-                    <div style={{ fontWeight: '600', color: '#0F172A' }}>All clearance requests have been reviewed!</div>
+                    <div style={{ fontWeight: '600', color: 'var(--text-main, #0F172A)' }}>All clearance requests have been reviewed!</div>
                     <div style={{ fontSize: '13px' }}>Check the Completed tab to review archived clearances.</div>
                   </td>
                 </tr>
@@ -333,20 +340,20 @@ export const DepartmentClearanceView = () => {
         <div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
             <div className="ssis-card" style={{ padding: '18px' }}>
-              <div style={{ fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase' }}>Total Processed</div>
-              <div style={{ fontSize: '24px', fontWeight: '800', color: '#0F172A', marginTop: '4px' }}>
+              <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted, #64748B)', textTransform: 'uppercase' }}>Total Processed</div>
+              <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-main, #0F172A)', marginTop: '4px' }}>
                 {completedClearanceList.length} Students
               </div>
             </div>
             <div className="ssis-card" style={{ padding: '18px' }}>
-              <div style={{ fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase' }}>Cleared</div>
-              <div style={{ fontSize: '24px', fontWeight: '800', color: '#166534', marginTop: '4px' }}>
+              <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted, #64748B)', textTransform: 'uppercase' }}>Cleared</div>
+              <div style={{ fontSize: '24px', fontWeight: '800', color: '#16A34A', marginTop: '4px' }}>
                 {clearedCount} Approved
               </div>
             </div>
             <div className="ssis-card" style={{ padding: '18px' }}>
-              <div style={{ fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase' }}>Deficient</div>
-              <div style={{ fontSize: '24px', fontWeight: '800', color: '#991B1B', marginTop: '4px' }}>
+              <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted, #64748B)', textTransform: 'uppercase' }}>Deficient</div>
+              <div style={{ fontSize: '24px', fontWeight: '800', color: '#EF4444', marginTop: '4px' }}>
                 {deficientCount} Pending Settlement
               </div>
             </div>
@@ -367,11 +374,11 @@ export const DepartmentClearanceView = () => {
                 {filteredCompleted.map(item => (
                   <tr key={item.id}>
                     <td>
-                      <strong style={{ color: '#0F172A' }}>{item.studentName}</strong> • {item.studentId}
+                      <strong style={{ color: 'var(--text-main, #0F172A)' }}>{item.studentName}</strong> • {item.studentId}
                     </td>
-                    <td style={{ color: '#475569' }}>{item.department}</td>
-                    <td style={{ color: '#334155' }}>{item.remarks}</td>
-                    <td style={{ color: '#64748B', fontSize: '13px' }}>{item.date}</td>
+                    <td style={{ color: 'var(--text-muted, #475569)' }}>{item.department}</td>
+                    <td style={{ color: 'var(--text-main, #334155)' }}>{item.remarks}</td>
+                    <td style={{ color: 'var(--text-muted, #64748B)', fontSize: '13px' }}>{item.date}</td>
                     <td style={{ textAlign: 'right' }}>
                       <span className={`badge ${item.status === 'Cleared' ? 'badge-success' : 'badge-danger'}`}>
                         {item.status}
