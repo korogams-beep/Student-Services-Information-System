@@ -158,7 +158,8 @@ During comprehensive security and QA audits, critical vulnerabilities and functi
 - **Windows High-Performance Optimization**: Eliminated Windows single-threaded `php artisan serve` deadlocks by disabling Laravel Boost browser logger watcher (`BOOST_BROWSER_LOGS_WATCHER=false`), setting explicit `127.0.0.1` bindings, and optimizing `/api/bootstrap` Eloquent queries from 8.0s down to **~27ms** (>99% latency reduction).
 - **Test Data Purge & Clean 3NF Baseline**: Complete removal of legacy mock accounts from MySQL seeders and client cache (`ssis_v3_clean_`), exporting clean database to `database/cuyotech_ssis.sql` for phpMyAdmin.
 
-For in-depth architectural specifications, security analysis, and test matrices, refer to the designated **`Documents/`** directory:
+For in-depth architectural specifications, security analysis, live demonstration guides, and test matrices, refer to the designated **`Documents/`** directory:
+- [SystemDemo_Guide.md](file:///c:/Users/Gams/Student-Services-Information-System/Documents/SystemDemo_Guide.md): Complete Step-by-Step Simulation & Demonstration Guide (Student ↔ Registrar ↔ Cashier ↔ Dept Staff ↔ Admin).
 - [DATABASE-3NF.md](file:///c:/Users/Gams/Student-Services-Information-System/Documents/DATABASE-3NF.md): Relational Database Architecture, Data Dictionary, 3NF Mathematical Proofs, and Mermaid ERD.
 - [SECURITY.md](file:///c:/Users/Gams/Student-Services-Information-System/Documents/SECURITY.md): Full Security Vulnerability & Ethical Penetration Audit Report.
 - [TESTING.md](file:///c:/Users/Gams/Student-Services-Information-System/Documents/TESTING.md): Comprehensive Software Testing Plan & Verification Results.
