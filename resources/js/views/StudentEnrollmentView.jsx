@@ -9,13 +9,15 @@ export const StudentEnrollmentView = () => {
     studentEnrollmentSelections,
     setStudentEnrollmentSelections,
     registrarQueue,
-    enrollmentStatus, 
     submitEnrollmentRequest,
     showToast
   } = useApp();
 
   const activeStudentId = currentUser?.student_id_number || currentUser?.studentId || currentUser?.account_id || 'STU-2026-0001';
   const myEnrollment = registrarQueue.find(q => q.studentIdNumber === activeStudentId || q.studentId === currentUser?.id);
+
+  // Derive enrollment status from the actual queue item
+  const enrollmentStatus = myEnrollment?.status || 'Not Enrolled';
 
   // Resolve active student's selected courses
   const currentSelections = studentEnrollmentSelections[activeStudentId] ?? 
@@ -125,7 +127,7 @@ export const StudentEnrollmentView = () => {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid var(--card-border, #F1F5F9)' }}>
               <span style={{ color: 'var(--text-muted, #475569)' }}>Status:</span>
-              <span className={`badge ${enrollmentStatus === 'Approved' ? 'badge-success' : 'badge-pending'}`}>
+              <span className={`badge ${enrollmentStatus === 'Enrolled' || enrollmentStatus === 'Approved' ? 'badge-success' : enrollmentStatus === 'Rejected' ? 'badge-danger' : 'badge-pending'}`}>
                 {enrollmentStatus}
               </span>
             </div>

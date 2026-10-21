@@ -11,8 +11,8 @@
   --sidebar-hover: rgba(255, 255, 255, 0.07);
   --sidebar-border: #263342;
   --sidebar-text: #94A3B8;
-  --sidebar-text-active: #881337;
-  --sidebar-pill-active: #FDE8E9;
+  --sidebar-text-active: #9F1239;
+  --sidebar-pill-active: #FECDD3;
   
   --brand-yellow: #F1B82D;
   --brand-yellow-hover: #E2A619;
@@ -1063,12 +1063,175 @@ button, input, select, textarea {
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 auto !important;
-    padding: 20px 30px !important;
+    padding: 14px 20px !important;
     box-shadow: none !important;
     border: 1px solid #CBD5E1 !important;
     background: #FFFFFF !important;
     color: #000000 !important;
     page-break-inside: avoid;
   }
-}
 
+  /* ==========================================================================
+     Certificate of Registration (COR) Single-Page Print Optimization
+     ========================================================================== */
+  @page {
+    size: A4;
+    margin: 8mm;
+  }
+
+  .cor-document,
+  #ssis-cor-document {
+    max-width: 100% !important;
+    padding: 14px 20px !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    font-size: 10px !important;
+    page-break-inside: avoid !important;
+  }
+
+  .cor-document h2,
+  #ssis-cor-document h2 {
+    font-size: 16px !important;
+  }
+
+  .cor-document p,
+  #ssis-cor-document p {
+    font-size: 9px !important;
+    margin: 2px 0 !important;
+  }
+
+  .cor-document table,
+  #ssis-cor-document table {
+    font-size: 10px !important;
+  }
+
+  .cor-document thead th,
+  #ssis-cor-document thead th {
+    padding: 5px 6px !important;
+    font-size: 9.5px !important;
+  }
+
+  .cor-document tbody td,
+  #ssis-cor-document tbody td {
+    padding: 6px 6px !important;
+    font-size: 10px !important;
+  }
+
+  .cor-document img,
+  #ssis-cor-document img {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  /* Reduce spacing in header sections */
+  .cor-document > div:first-child,
+  #ssis-cor-document > div:first-child {
+    margin-bottom: 12px !important;
+    padding-bottom: 10px !important;
+  }
+
+  /* Compact the student info grid */
+  .cor-document > div:first-child > div:last-child,
+  #ssis-cor-document > div:first-child > div:last-child {
+    padding: 8px 12px !important;
+    gap: 8px !important;
+    margin-top: 10px !important;
+  }
+
+  .cor-document > div:first-child > div:last-child span,
+  #ssis-cor-document > div:first-child > div:last-child span {
+    font-size: 8.5px !important;
+  }
+
+  .cor-document > div:first-child > div:last-child strong,
+  #ssis-cor-document > div:first-child > div:last-child strong {
+    font-size: 11px !important;
+  }
+
+  /* Reduce table section spacing */
+  .cor-document > div:nth-child(2),
+  #ssis-cor-document > div:nth-child(2) {
+    margin-bottom: 14px !important;
+  }
+
+  .cor-document > div:nth-child(2) > div:first-child,
+  #ssis-cor-document > div:nth-child(2) > div:first-child {
+    margin-bottom: 8px !important;
+    font-size: 9.5px !important;
+  }
+
+  /* Compact the summary section */
+  .cor-document > div:nth-child(3),
+  #ssis-cor-document > div:nth-child(3) {
+    padding-top: 10px !important;
+    margin-bottom: 16px !important;
+    gap: 12px !important;
+  }
+
+  .cor-document > div:nth-child(3) > div,
+  #ssis-cor-document > div:nth-child(3) > div {
+    font-size: 9px !important;
+  }
+
+  .cor-document > div:nth-child(3) > div > div:first-child,
+  #ssis-cor-document > div:nth-child(3) > div > div:first-child {
+    font-size: 9px !important;
+  }
+
+  .cor-document > div:nth-child(3) > div > div:last-child,
+  #ssis-cor-document > div:nth-child(3) > div > div:last-child {
+    font-size: 13px !important;
+  }
+
+  /* Compact the signatures section to prevent overflow */
+  .cor-document > div:last-child,
+  #ssis-cor-document > div:last-child {
+    padding-top: 14px !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .cor-document > div:last-child > div,
+  #ssis-cor-document > div:last-child > div {
+    width: 160px !important;
+  }
+
+  .cor-document > div:last-child > div:nth-child(2),
+  #ssis-cor-document > div:last-child > div:nth-child(2) {
+    width: 100px !important;
+  }
+
+  .cor-document > div:last-child > div:nth-child(2) > div,
+  #ssis-cor-document > div:last-child > div:nth-child(2) > div {
+    width: 60px !important;
+    height: 60px !important;
+  }
+
+  .cor-document > div:last-child > div > div:first-child,
+  #ssis-cor-document > div:last-child > div > div:first-child {
+    padding-bottom: 18px !important;
+  }
+
+  .cor-document > div:last-child > div > div:nth-child(2),
+  #ssis-cor-document > div:last-child > div > div:nth-child(2) {
+    font-size: 10px !important;
+  }
+
+  .cor-document > div:last-child > div > div:last-child,
+  #ssis-cor-document > div:last-child > div > div:last-child {
+    font-size: 9px !important;
+  }
+
+  /* Ensure seal text is readable */
+  .cor-document > div:last-child > div:nth-child(2) span,
+  #ssis-cor-document > div:last-child > div:nth-child(2) span {
+    font-size: 6px !important;
+  }
+
+  .cor-document > div:last-child > div:nth-child(2) > div:last-child,
+  #ssis-cor-document > div:last-child > div:nth-child(2) > div:last-child {
+    font-size: 8px !important;
+  }
+}
