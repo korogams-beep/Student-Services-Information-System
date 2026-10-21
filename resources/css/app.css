@@ -10,8 +10,8 @@
   --sidebar-bg: #1B2430;
   --sidebar-hover: rgba(255, 255, 255, 0.07);
   --sidebar-border: #263342;
-  --sidebar-text: #94A3B8;
-  --sidebar-text-active: #9F1239;
+  --sidebar-text: #CBD5E1;
+  --sidebar-text-active: #7F1D1D;
   --sidebar-pill-active: #FECDD3;
   
   --brand-yellow: #F1B82D;
@@ -58,7 +58,7 @@
   --sidebar-bg: #0F172A;
   --sidebar-hover: rgba(255, 255, 255, 0.08);
   --sidebar-border: #1E293B;
-  --sidebar-text: #94A3B8;
+  --sidebar-text: #CBD5E1;
   --sidebar-text-active: #F1B82D;
   --sidebar-pill-active: rgba(241, 184, 45, 0.15);
 
@@ -862,114 +862,9 @@ button, input, select, textarea {
   background-color: rgba(139, 92, 246, 0.35) !important;
 }
 
-/* Browser Serialized RGB & Hex Inline Color Overrides */
-[data-theme="dark"] [style*="color: #0F172A"],
-[data-theme="dark"] [style*="color: #0f172a"],
-[data-theme="dark"] [style*="color: #1E293B"],
-[data-theme="dark"] [style*="color: #1e293b"],
-[data-theme="dark"] [style*="color: #18181B"],
-[data-theme="dark"] [style*="color: #111"],
-[data-theme="dark"] [style*="color: #333"],
-[data-theme="dark"] [style*="color: #334155"],
-[data-theme="dark"] [style*="rgb(15, 23, 42)"],
-[data-theme="dark"] [style*="rgb(17, 24, 39)"],
-[data-theme="dark"] [style*="rgb(30, 41, 59)"],
-[data-theme="dark"] [style*="rgb(51, 65, 85)"],
-[data-theme="dark"] [style*="rgb(24, 24, 27)"],
-.dark [style*="color: #0F172A"],
-.dark [style*="color: #0f172a"],
-.dark [style*="color: #1E293B"],
-.dark [style*="color: #1e293b"],
-.dark [style*="color: #18181B"],
-.dark [style*="color: #111"],
-.dark [style*="color: #333"],
-.dark [style*="color: #334155"],
-.dark [style*="rgb(15, 23, 42)"],
-.dark [style*="rgb(17, 24, 39)"],
-.dark [style*="rgb(30, 41, 59)"],
-.dark [style*="rgb(51, 65, 85)"],
-.dark [style*="rgb(24, 24, 27)"] {
-  color: #F8FAFC !important;
-}
-
-[data-theme="dark"] [style*="color: #475569"],
-[data-theme="dark"] [style*="color: #64748B"],
-[data-theme="dark"] [style*="rgb(71, 85, 105)"],
-[data-theme="dark"] [style*="rgb(100, 116, 139)"],
-.dark [style*="color: #475569"],
-.dark [style*="color: #64748B"],
-.dark [style*="rgb(71, 85, 105)"],
-.dark [style*="rgb(100, 116, 139)"] {
-  color: #CBD5E1 !important;
-}
-
-[data-theme="dark"] [style*="color: #166534"],
-[data-theme="dark"] [style*="color: #065F46"],
-[data-theme="dark"] [style*="rgb(22, 101, 52)"],
-[data-theme="dark"] [style*="rgb(6, 95, 70)"],
-.dark [style*="color: #166534"],
-.dark [style*="color: #065F46"],
-.dark [style*="rgb(22, 101, 52)"],
-.dark [style*="rgb(6, 95, 70)"] {
-  color: #4ADE80 !important;
-}
-
-[data-theme="dark"] [style*="color: #92400E"],
-[data-theme="dark"] [style*="rgb(146, 64, 14)"],
-.dark [style*="color: #92400E"],
-.dark [style*="rgb(146, 64, 14)"] {
-  color: #FCD34D !important;
-}
-
-[data-theme="dark"] [style*="color: #991B1B"],
-[data-theme="dark"] [style*="color: #9F1239"],
-[data-theme="dark"] [style*="rgb(153, 27, 27)"],
-[data-theme="dark"] [style*="rgb(159, 18, 57)"],
-.dark [style*="color: #991B1B"],
-.dark [style*="color: #9F1239"],
-.dark [style*="rgb(153, 27, 27)"],
-.dark [style*="rgb(159, 18, 57)"] {
-  color: #FDA4AF !important;
-}
-
-[data-theme="dark"] [style*="color: #1E40AF"],
-[data-theme="dark"] [style*="rgb(30, 64, 175)"],
-.dark [style*="color: #1E40AF"],
-.dark [style*="rgb(30, 64, 175)"] {
-  color: #93C5FD !important;
-}
-
-[data-theme="dark"] [style*="color: #5B21B6"],
-[data-theme="dark"] [style*="rgb(91, 33, 182)"],
-.dark [style*="color: #5B21B6"],
-.dark [style*="rgb(91, 33, 182)"] {
-  color: #DDD6FE !important;
-}
+/* Inline Color Overrides removed - COR and document components use their own inline styles */
 
 /* Background & Border Overrides */
-[data-theme="dark"] [style*="background-color: #F8FAFC"],
-[data-theme="dark"] [style*="backgroundColor: #F8FAFC"],
-[data-theme="dark"] [style*="background-color: #f8fafc"],
-[data-theme="dark"] [style*="background-color: #FAF5F5"],
-[data-theme="dark"] [style*="background-color: #F1F5F9"],
-[data-theme="dark"] [style*="background-color: #FFFFFF"],
-[data-theme="dark"] [style*="backgroundColor: #FFFFFF"],
-[data-theme="dark"] [style*="background-color: #ffffff"],
-[data-theme="dark"] [style*="background: #FFFFFF"],
-[data-theme="dark"] [style*="background: #ffffff"],
-.dark [style*="background-color: #F8FAFC"],
-.dark [style*="backgroundColor: #F8FAFC"],
-.dark [style*="background-color: #f8fafc"],
-.dark [style*="background-color: #FAF5F5"],
-.dark [style*="background-color: #F1F5F9"],
-.dark [style*="background-color: #FFFFFF"],
-.dark [style*="backgroundColor: #FFFFFF"],
-.dark [style*="background-color: #ffffff"],
-.dark [style*="background: #FFFFFF"],
-.dark [style*="background: #ffffff"] {
-  background-color: #1E293B !important;
-  color: #F8FAFC !important;
-}
 
 [data-theme="dark"] [style*="border: 1px solid #F1E2E4"],
 [data-theme="dark"] [style*="border: 1px solid #CBD5E1"],
@@ -1001,7 +896,40 @@ button, input, select, textarea {
 .dark .receipt-paper *,
 [data-theme="dark"] .cor-document *,
 .dark .cor-document * {
-  color: initial !important;
+  color: #0F172A !important;
+}
+
+/* ==========================================================================
+   Registrar Reports - Force White Background in Both Themes
+   ========================================================================== */
+#cuyotech-registrar-report .ssis-card,
+#cuyotech-registrar-report .ssis-table-container {
+  background-color: #FFFFFF !important;
+  border: 1px solid #E5E7EB !important;
+}
+
+#cuyotech-registrar-report .ssis-table thead tr {
+  background-color: #F8FAFC !important;
+}
+
+#cuyotech-registrar-report .ssis-table thead th,
+#cuyotech-registrar-report .ssis-table tbody td,
+#cuyotech-registrar-report h1,
+#cuyotech-registrar-report h2,
+#cuyotech-registrar-report h3,
+#cuyotech-registrar-report p,
+#cuyotech-registrar-report span,
+#cuyotech-registrar-report strong {
+  color: inherit !important;
+}
+
+#cuyotech-registrar-report .ssis-table tbody tr:hover td {
+  background-color: #F8FAFC !important;
+}
+
+/* Badge colors remain vibrant */
+#cuyotech-registrar-report .badge {
+  opacity: 1 !important;
 }
 
 /* ==========================================================================
@@ -1076,19 +1004,22 @@ button, input, select, textarea {
      ========================================================================== */
   @page {
     size: A4;
-    margin: 8mm;
+    margin: 5mm;
   }
 
   .cor-document,
   #ssis-cor-document {
     max-width: 100% !important;
-    padding: 14px 20px !important;
+    width: 100% !important;
+    padding: 8px 12px !important;
     margin: 0 !important;
     border: none !important;
     box-shadow: none !important;
     border-radius: 0 !important;
-    font-size: 10px !important;
+    font-size: 8.5px !important;
     page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    zoom: 0.82;
   }
 
   .cor-document h2,
@@ -1128,46 +1059,46 @@ button, input, select, textarea {
   /* Reduce spacing in header sections */
   .cor-document > div:first-child,
   #ssis-cor-document > div:first-child {
-    margin-bottom: 12px !important;
-    padding-bottom: 10px !important;
+    margin-bottom: 8px !important;
+    padding-bottom: 6px !important;
   }
 
   /* Compact the student info grid */
   .cor-document > div:first-child > div:last-child,
   #ssis-cor-document > div:first-child > div:last-child {
-    padding: 8px 12px !important;
-    gap: 8px !important;
-    margin-top: 10px !important;
+    padding: 6px 10px !important;
+    gap: 6px !important;
+    margin-top: 6px !important;
   }
 
   .cor-document > div:first-child > div:last-child span,
   #ssis-cor-document > div:first-child > div:last-child span {
-    font-size: 8.5px !important;
+    font-size: 7.5px !important;
   }
 
   .cor-document > div:first-child > div:last-child strong,
   #ssis-cor-document > div:first-child > div:last-child strong {
-    font-size: 11px !important;
+    font-size: 10px !important;
   }
 
   /* Reduce table section spacing */
   .cor-document > div:nth-child(2),
   #ssis-cor-document > div:nth-child(2) {
-    margin-bottom: 14px !important;
+    margin-bottom: 10px !important;
   }
 
   .cor-document > div:nth-child(2) > div:first-child,
   #ssis-cor-document > div:nth-child(2) > div:first-child {
-    margin-bottom: 8px !important;
-    font-size: 9.5px !important;
+    margin-bottom: 6px !important;
+    font-size: 9px !important;
   }
 
   /* Compact the summary section */
   .cor-document > div:nth-child(3),
   #ssis-cor-document > div:nth-child(3) {
-    padding-top: 10px !important;
-    margin-bottom: 16px !important;
-    gap: 12px !important;
+    padding-top: 6px !important;
+    margin-bottom: 10px !important;
+    gap: 10px !important;
   }
 
   .cor-document > div:nth-child(3) > div,
@@ -1188,9 +1119,11 @@ button, input, select, textarea {
   /* Compact the signatures section to prevent overflow */
   .cor-document > div:last-child,
   #ssis-cor-document > div:last-child {
-    padding-top: 14px !important;
+    padding-top: 6px !important;
     page-break-inside: avoid !important;
+    page-break-before: avoid !important;
     break-inside: avoid !important;
+    break-before: avoid !important;
   }
 
   .cor-document > div:last-child > div,
@@ -1211,7 +1144,7 @@ button, input, select, textarea {
 
   .cor-document > div:last-child > div > div:first-child,
   #ssis-cor-document > div:last-child > div > div:first-child {
-    padding-bottom: 18px !important;
+    padding-bottom: 14px !important;
   }
 
   .cor-document > div:last-child > div > div:nth-child(2),
@@ -1233,5 +1166,27 @@ button, input, select, textarea {
   .cor-document > div:last-child > div:nth-child(2) > div:last-child,
   #ssis-cor-document > div:last-child > div:nth-child(2) > div:last-child {
     font-size: 8px !important;
+  }
+
+  /* Force all text to black for print visibility */
+  .cor-document *,
+  #ssis-cor-document * {
+    color: #000000 !important;
+  }
+
+  .cor-document strong,
+  #ssis-cor-document strong {
+    color: #000000 !important;
+  }
+
+  .cor-document span,
+  #ssis-cor-document span {
+    color: #1a1a1a !important;
+  }
+
+  .cor-document a,
+  #ssis-cor-document a {
+    color: #000000 !important;
+    text-decoration: none !important;
   }
 }

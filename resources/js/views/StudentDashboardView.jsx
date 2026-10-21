@@ -9,7 +9,8 @@ export const StudentDashboardView = () => {
     studentGradesMap, 
     registrarQueue,
     studentEnrollmentSelections,
-    scheduleCourses
+    scheduleCourses,
+    enrollmentStatus
   } = useApp();
 
   const activeStudentId = currentUser?.student_id_number || currentUser?.studentId || '2026-0001';
@@ -19,7 +20,23 @@ export const StudentDashboardView = () => {
   const myGrades = (studentGradesMap && studentGradesMap[activeStudentId]) || gradeReports || [];
   const gradedUnits = myGrades.reduce((sum, g) => sum + (Number(g.units) || 0), 0);
   const enrolledUnits = myEnrollment ? (myEnrollment.totalUnits || 0) : (selectedUnits > 0 ? selectedUnits : gradedUnits);
-  const isEnrolled = enrolledUnits > 0 || !!myEnrollment;
+
+  const isOfficiallyEnrolled = myEnrollment
+    ? (myEnrollment.status === 'Enrolled' || myEnrollment.status === 'Approved')
+    : (enrollmentStatus === 'Enrolled' || enrollmentStatus === 'Approved' || (gradedUnits > 0 && selectedUnits === 0));
+
+  const isPendingEnrollment = myEnrollment
+    ? (myEnrollment.status === 'Pending' || myEnrollment.status === 'For Review')
+    : (enrollmentStatus === 'Pending' || (selectedUnits > 0 && !isOfficiallyEnrolled));
+
+  let statusText = 'NOT YET ENROLLED • 0 UNITS';
+  if (isOfficiallyEnrolled && enrolledUnits > 0) {
+    statusText = `ENROLLED • ${enrolledUnits} UNITS`;
+  } else if (isPendingEnrollment && enrolledUnits > 0) {
+    statusText = `PENDING • ${enrolledUnits} UNITS`;
+  } else if (myEnrollment?.status === 'Rejected') {
+    statusText = `REJECTED • ${enrolledUnits} UNITS`;
+  }
 
   return (
     <div className="ssis-canvas">
@@ -35,7 +52,7 @@ export const StudentDashboardView = () => {
 
         {/* Dynamic Status Pill */}
         <div className="ssis-highlight-pill" style={{ textTransform: 'uppercase' }}>
-          {enrolledUnits > 0 ? `ENROLLED • ${enrolledUnits} UNITS` : 'NOT YET ENROLLED • 0 UNITS'}
+          {statusText}
         </div>
       </div>
 

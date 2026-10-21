@@ -512,6 +512,15 @@ export const DepartmentClearanceView = () => {
               borderRadius: '12px',
             }}
           >
+            <style>{`
+              #ssis-dept-clearance-report,
+              #ssis-dept-clearance-report * {
+                color: #0F172A !important;
+              }
+              #ssis-dept-clearance-report {
+                background-color: #FFFFFF !important;
+              }
+            `}</style>
             {/* Report Header */}
             <div style={{ textAlign: 'center', borderBottom: '2px solid #0F172A', paddingBottom: '20px', marginBottom: '28px' }}>
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>

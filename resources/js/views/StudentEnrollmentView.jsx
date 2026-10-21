@@ -19,6 +19,10 @@ export const StudentEnrollmentView = () => {
   // Derive enrollment status from the actual queue item
   const enrollmentStatus = myEnrollment?.status || 'Not Enrolled';
 
+  // Detect dark mode
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark' 
+    || document.documentElement.classList.contains('dark');
+
   // Resolve active student's selected courses
   const currentSelections = studentEnrollmentSelections[activeStudentId] ?? 
     (myEnrollment ? (myEnrollment.courses || []).map(c => c.id) : []);
@@ -74,7 +78,9 @@ export const StudentEnrollmentView = () => {
                     key={course.id} 
                     style={{ 
                       cursor: 'pointer',
-                      backgroundColor: isSelected ? '#FAF5F5' : 'transparent',
+                      backgroundColor: isSelected 
+                        ? (isDark ? '#1E3A2F' : '#FAF5F5')
+                        : 'transparent',
                       transition: 'background-color 0.15s ease'
                     }} 
                     onClick={() => toggleCourse(course.id)}

@@ -45,7 +45,7 @@ export const RegistrarApprovalsView = () => {
   const handleGenerateCOR = () => {
     if (!selectedStudent) return;
     showToast(`Opening Certificate of Registration for ${selectedStudent.studentName}...`);
-    setCurrentView('cor_preview');
+    setCurrentView('cor_archive');
   };
 
   return (
@@ -101,8 +101,8 @@ export const RegistrarApprovalsView = () => {
                         <div style={{ fontSize: '11px', color: 'var(--text-muted, #94A3B8)' }}>{item.totalUnits || 0} Units total</div>
                       </td>
                       <td>
-                        {item.status === 'Approved' ? (
-                          <span className="badge badge-success">Approved</span>
+                        {item.status === 'Approved' || item.status === 'Enrolled' ? (
+                          <span className="badge badge-success">Enrolled</span>
                         ) : item.status === 'Rejected' ? (
                           <span className="badge badge-danger">Rejected</span>
                         ) : item.status === 'For Review' ? (

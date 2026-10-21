@@ -35,39 +35,47 @@ export const printIsolatedElement = (elementId, title = 'Official Document') => 
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Courier+Prime&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
         <style>
           * { box-sizing: border-box; margin: 0; padding: 0; }
-          body {
+          html, body {
             font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
             background: #FFFFFF !important;
             color: #0F172A;
-            padding: 24px 30px;
-            font-size: 13.5px;
-            line-height: 1.5;
+            font-size: 11px;
+            line-height: 1.4;
+            height: 100%;
           }
           .receipt-paper {
             background: #FFFFFF;
             border: 1.5px dashed #64748B;
-            padding: 30px;
+            padding: 20px;
             border-radius: 8px;
             font-family: 'Courier Prime', 'Courier New', Courier, monospace;
             max-width: 520px;
             margin: 0 auto;
           }
-          .cor-document {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 30px 40px;
-            background: #FFFFFF;
-            border: 1px solid #CBD5E1;
-            border-radius: 8px;
+          /* COR: scale down to guarantee single page */
+          #ssis-cor-document, .cor-document {
+            width: 100%;
+            max-width: 100%;
+            background: #FFFFFF !important;
+            color: #0F172A !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            zoom: 0.78;
+          }
+          #ssis-cor-document *, .cor-document * {
+            color: #0F172A !important;
           }
           button, .no-print, input[type="checkbox"] { display: none !important; }
           @page {
-            margin: 12mm 15mm;
-            size: auto;
+            size: A4 portrait;
+            margin: 8mm 10mm;
           }
           @media print {
-            body { padding: 0; }
-            .cor-document, .receipt-paper { border: none !important; }
+            html, body { height: 100%; }
+            #ssis-cor-document, .cor-document { zoom: 0.78; }
           }
         </style>
       </head>

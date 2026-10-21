@@ -538,7 +538,7 @@ export const AppProvider = ({ children }) => {
     { id: 6, code: 'ENV101', title: 'Environmental Science', units: 3, schedule: 'M/W 15:00–16:30', room: 'SC-101', slots: 25, selected: false },
     { id: 7, code: 'CSP105', title: 'Algorithms and Complexity', units: 3, schedule: 'T/Th 15:00–17:00', room: 'CL-103', slots: 14, selected: false },
   ]);
-  const [enrollmentStatus, setEnrollmentStatus] = useState('Pending');
+  const [enrollmentStatus, setEnrollmentStatus] = useState('Not Enrolled');
 
   // Student Financial Data (Default 0 for new students; populated when Cashier assesses or processes payments)
   const [assessedFees, setAssessedFees] = useState([]);
@@ -854,10 +854,9 @@ export const AppProvider = ({ children }) => {
       totalUnits: totalUnitsCount,
       submittedAt: today,
       status: 'Pending',
-      validation: { prerequisites: true, curriculum: true, accounts: true }
+      validation: { profileComplete: true, prerequisites: true, noConflicts: true, financeCleared: true }
     };
 
-    setEnrollmentStatus('Pending');
     setRegistrarQueue(prev => [newQueueItem, ...prev.filter(q => q.studentIdNumber !== activeStudentId)]);
     setSelectedQueueStudentId(newQueueItem.id);
 
@@ -883,14 +882,11 @@ export const AppProvider = ({ children }) => {
   // Registrar Approve Enrollment Request
   const approveEnrollmentRequest = (queueItemId) => {
     const targetItem = registrarQueue.find(q => q.id === queueItemId);
-    if (!targetItem) return;
+    if (!targetItem) return false;
 
     setRegistrarQueue(prev =>
-      prev.map(q => q.id === queueItemId ? { ...q, status: 'Approved' } : q)
+      prev.map(q => q.id === queueItemId ? { ...q, status: 'Enrolled' } : q)
     );
-
-    // Update student's enrollmentStatus
-    setEnrollmentStatus('Approved');
 
     // Ensure student selections are synced with all approved courses
     if (targetItem.courses && targetItem.courses.length > 0) {
@@ -932,16 +928,15 @@ export const AppProvider = ({ children }) => {
 
     setAssessedFees(newAssessment.items);
 
-    showToast(`Enrollment for ${targetItem.studentName} approved! Assessment forwarded to Cashier.`);
+    showToast(`Enrollment for ${targetItem.studentName} approved! Status updated to Enrolled.`);
     recordAuditLog('Enrollment approved', `R. Alcantara • ${targetItem.studentName} (${units} units)`);
 
     fetch(`/api/registrar/enrollments/${queueItemId}/decide`, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
-        'X-User-Role': currentUser?.role || 'Registrar',
       },
-      body: JSON.stringify({ status: 'Approved' }),
+      body: JSON.stringify({ status: 'Enrolled' }),
     }).catch(err => console.log('Client-side synced', err));
   };
 
@@ -953,7 +948,6 @@ export const AppProvider = ({ children }) => {
     setRegistrarQueue(prev =>
       prev.map(q => q.id === queueItemId ? { ...q, status: 'Rejected' } : q)
     );
-    setEnrollmentStatus('Rejected');
 
     showToast(`Enrollment for ${targetItem.studentName} rejected.`);
     recordAuditLog('Enrollment rejected', `R. Alcantara • ${targetItem.studentName}`);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { Printer, Download, CheckCircle, FileText } from 'lucide-react';
 import { printIsolatedElement, downloadPdfFromElement } from '../utils/pdfExport';
@@ -15,6 +15,27 @@ export const CertificateOfRegistrationView = () => {
 
   const [selectedStudentId, setSelectedStudentId] = useState(defaultStudentId);
   const [isExporting, setIsExporting] = useState(false);
+  const corRef = useRef(null);
+
+  // Force all text inside the COR to dark colors regardless of CSS theme overrides
+  useEffect(() => {
+    const el = corRef.current;
+    if (!el) return;
+    const force = () => {
+      el.style.setProperty('color', '#0F172A', 'important');
+      el.style.setProperty('background-color', '#FFFFFF', 'important');
+      el.querySelectorAll('*').forEach(child => {
+        const tag = child.tagName;
+        // skip SVG/icons
+        if (['svg', 'path', 'circle', 'line', 'polyline', 'rect'].includes(tag.toLowerCase())) return;
+        child.style.setProperty('color', '#0F172A', 'important');
+      });
+    };
+    force();
+    // Re-run after a tick in case React re-renders reset styles
+    const t = setTimeout(force, 50);
+    return () => clearTimeout(t);
+  });
 
   // Dynamically resolve target student: strictly isolated to student accounts, NEVER staff
   let student = null;
@@ -127,6 +148,7 @@ export const CertificateOfRegistrationView = () => {
       ) : (
         /* Official Document Card - isolated with id="ssis-cor-document" */
         <div
+          ref={corRef}
           id="ssis-cor-document"
           className="cor-document printable-document ssis-card"
           style={{
@@ -141,7 +163,15 @@ export const CertificateOfRegistrationView = () => {
             borderRadius: '10px',
           }}
         >
-          {/* Document Header */}
+          <style>{`
+            #ssis-cor-document,
+            #ssis-cor-document * {
+              color: #0F172A !important;
+            }
+            #ssis-cor-document {
+              background-color: #FFFFFF !important;
+            }
+          `}</style>
           <div style={{ textAlign: 'center', marginBottom: '18px', borderBottom: '2px solid #0F172A', paddingBottom: '14px' }}>
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
               <img src="/images/cuyotech-logo.png" alt="University Logo" style={{ width: '50px', height: '50px', objectFit: 'contain' }} />
@@ -165,19 +195,19 @@ export const CertificateOfRegistrationView = () => {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px', textAlign: 'left', marginTop: '14px', backgroundColor: '#F8FAFC', padding: '12px 16px', borderRadius: '8px' }}>
               <div>
-                <span style={{ fontSize: '10px', color: '#64748B', display: 'block', fontWeight: '700', textTransform: 'uppercase' }}>Student Name</span>
+                <span style={{ fontSize: '10px', color: '#1E293B', display: 'block', fontWeight: '700', textTransform: 'uppercase' }}>Student Name</span>
                 <strong style={{ fontSize: '13px', color: '#0F172A' }}>{student.name}</strong>
               </div>
               <div>
-                <span style={{ fontSize: '10px', color: '#64748B', display: 'block', fontWeight: '700', textTransform: 'uppercase' }}>Student ID Number</span>
+                <span style={{ fontSize: '10px', color: '#1E293B', display: 'block', fontWeight: '700', textTransform: 'uppercase' }}>Student ID Number</span>
                 <strong style={{ fontSize: '13px', color: '#0F172A', fontFamily: 'monospace' }}>{student.student_id_number || student.studentId || '2026-0001'}</strong>
               </div>
               <div>
-                <span style={{ fontSize: '10px', color: '#64748B', display: 'block', fontWeight: '700', textTransform: 'uppercase' }}>Degree Program</span>
+                <span style={{ fontSize: '10px', color: '#1E293B', display: 'block', fontWeight: '700', textTransform: 'uppercase' }}>Degree Program</span>
                 <strong style={{ fontSize: '13px', color: '#0F172A' }}>{student.program || 'BS Computer Science'}</strong>
               </div>
               <div>
-                <span style={{ fontSize: '10px', color: '#64748B', display: 'block', fontWeight: '700', textTransform: 'uppercase' }}>Academic Term</span>
+                <span style={{ fontSize: '10px', color: '#1E293B', display: 'block', fontWeight: '700', textTransform: 'uppercase' }}>Academic Term</span>
                 <strong style={{ fontSize: '13px', color: '#0F172A' }}>2nd Sem, AY 2025–2026</strong>
               </div>
             </div>
@@ -228,8 +258,8 @@ export const CertificateOfRegistrationView = () => {
           </div>
           <div>
             <div style={{ fontSize: '10.5px', color: '#64748B', fontWeight: '700', textTransform: 'uppercase' }}>Registration Status</div>
-            <div style={{ fontSize: '15px', fontWeight: '800', color: totalUnits > 0 ? '#166534' : '#64748B' }}>
-              {totalUnits > 0 ? 'Officially Enrolled' : 'Pending Enrollment'}
+            <div style={{ fontSize: '15px', fontWeight: '800', color: (approvedEnrollment?.status === 'Enrolled' || approvedEnrollment?.status === 'Approved') ? '#166534' : '#64748B' }}>
+              {(approvedEnrollment?.status === 'Enrolled' || approvedEnrollment?.status === 'Approved') ? 'Officially Enrolled' : 'Pending Enrollment'}
             </div>
           </div>
           <div>

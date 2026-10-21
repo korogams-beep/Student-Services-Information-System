@@ -17,15 +17,19 @@ import {
 } from 'lucide-react';
 
 const ROLE_ACCENT = {
-  Student:          { pill: '#FDE8E9', text: '#881337' },
-  Registrar:        { pill: '#EDE9FE', text: '#5B21B6' },
-  Cashier:          { pill: '#FEF3C7', text: '#92400E' },
-  'Department Staff': { pill: '#DBEAFE', text: '#1E40AF' },
-  Admin:            { pill: '#DCFCE7', text: '#166534' },
+  Student:          { pill: '#FDE8E9', text: '#7F1D1D', pillDark: 'rgba(254, 202, 202, 0.15)', textDark: '#FCA5A5' },
+  Registrar:        { pill: '#EDE9FE', text: '#5B21B6', pillDark: 'rgba(167, 139, 250, 0.15)', textDark: '#C4B5FD' },
+  Cashier:          { pill: '#FEF3C7', text: '#92400E', pillDark: 'rgba(253, 224, 71, 0.15)', textDark: '#FDE047' },
+  'Department Staff': { pill: '#DBEAFE', text: '#1E40AF', pillDark: 'rgba(96, 165, 250, 0.15)', textDark: '#93C5FD' },
+  Admin:            { pill: '#DCFCE7', text: '#166534', pillDark: 'rgba(134, 239, 172, 0.15)', textDark: '#86EFAC' },
 };
 
 export const Sidebar = () => {
   const { currentUser, currentView, setCurrentView, handleLogout } = useApp();
+
+  // Detect dark mode
+  const isDarkMode = document.documentElement.classList.contains('dark') || 
+                     document.documentElement.getAttribute('data-theme') === 'dark';
 
   const accent = ROLE_ACCENT[currentUser?.role] || ROLE_ACCENT.Student;
 
@@ -92,7 +96,7 @@ export const Sidebar = () => {
           <h1 className="ssis-brand-title" style={{ fontSize: '17px', fontWeight: '900', color: '#F1B82D', margin: 0, lineHeight: 1.1 }}>
             CUYOTECH • SSIS
           </h1>
-          <p className="ssis-brand-subtitle" style={{ fontSize: '10.5px', color: '#94A3B8', margin: '2px 0 0', fontWeight: '600' }}>
+          <p className="ssis-brand-subtitle" style={{ fontSize: '10.5px', color: '#CBD5E1', margin: '2px 0 0', fontWeight: '600' }}>
             CuyoTech University
           </p>
         </div>
@@ -103,12 +107,15 @@ export const Sidebar = () => {
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentView === item.id;
+          const activeStyle = isDarkMode 
+            ? { backgroundColor: accent.pillDark, color: accent.textDark }
+            : { backgroundColor: accent.pill, color: accent.text };
           return (
             <button
               key={item.id}
               onClick={() => setCurrentView(item.id)}
               className={`ssis-nav-item ${isActive ? 'active' : ''}`}
-              style={isActive ? { backgroundColor: accent.pill, color: accent.text } : {}}
+              style={isActive ? activeStyle : { color: '#CBD5E1' }}
             >
               <Icon size={18} />
               <span>{item.label}</span>

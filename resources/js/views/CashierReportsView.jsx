@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { Clock, Printer, Download, TrendingUp, DollarSign, CreditCard } from 'lucide-react';
 import { printIsolatedElement, downloadPdfFromElement } from '../utils/pdfExport';
@@ -7,6 +7,22 @@ export const CashierReportsView = () => {
   const { paymentHistory, showToast } = useApp();
   const [selectedPeriod, setSelectedPeriod] = useState('Today (Feb 16, 2026)');
   const [isExporting, setIsExporting] = useState(false);
+  const docRef = useRef(null);
+
+  useEffect(() => {
+    const el = docRef.current;
+    if (!el) return;
+    el.style.setProperty('background-color', '#FFFFFF', 'important');
+    el.style.setProperty('color', '#0F172A', 'important');
+    el.querySelectorAll('*').forEach(child => {
+      const tag = child.tagName.toLowerCase();
+      if (['svg','path','circle','line','polyline','rect'].includes(tag)) return;
+      const existingColor = child.style.color;
+      if (!existingColor || existingColor === '' || existingColor === 'inherit') {
+        child.style.setProperty('color', '#0F172A', 'important');
+      }
+    });
+  });
 
   // Method totals
   const cashPayments = paymentHistory.filter(p => p.method === 'Cash');
@@ -70,7 +86,7 @@ export const CashierReportsView = () => {
       {/* Printable Report Document Card */}
       <div
         id="ssis-cashier-report-doc"
-        className="printable-document ssis-card"
+        ref={docRef}
         style={{
           maxWidth: '860px',
           margin: '0 auto',
@@ -78,8 +94,21 @@ export const CashierReportsView = () => {
           backgroundColor: '#FFFFFF',
           border: '1px solid #CBD5E1',
           borderRadius: '12px',
+          color: '#0F172A',
         }}
       >
+        <style>{`
+          #ssis-cashier-report-doc,
+          #ssis-cashier-report-doc * {
+            color: #0F172A !important;
+          }
+          #ssis-cashier-report-doc {
+            background-color: #FFFFFF !important;
+          }
+          #ssis-cashier-report-doc .grand-total-amount {
+            color: #9F1239 !important;
+          }
+        `}</style>
         {/* Report Header */}
         <div style={{ textAlign: 'center', borderBottom: '2px solid #0F172A', paddingBottom: '20px', marginBottom: '28px' }}>
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
@@ -88,16 +117,16 @@ export const CashierReportsView = () => {
               <h2 style={{ fontSize: '20px', fontWeight: '900', letterSpacing: '0.5px', color: '#0F172A', margin: 0 }}>
                 CUYOTECH UNIVERSITY
               </h2>
-              <p style={{ fontSize: '11px', color: '#475569', margin: '2px 0 0' }}>CuyoTech University • Office of the Cashier</p>
+              <p style={{ fontSize: '11px', color: '#334155', margin: '2px 0 0' }}>CuyoTech University • Office of the Cashier</p>
             </div>
           </div>
-          <p style={{ fontSize: '12px', fontWeight: '700', color: '#64748B', letterSpacing: '1.5px', textTransform: 'uppercase', marginTop: '4px' }}>
+          <p style={{ fontSize: '12px', fontWeight: '700', color: '#334155', letterSpacing: '1.5px', textTransform: 'uppercase', marginTop: '4px' }}>
             CASHIERING & TREASURY OFFICE
           </p>
           <div style={{ fontSize: '15px', fontWeight: '800', color: '#92400E', marginTop: '12px' }}>
             DAILY COLLECTION & SHIFT AUDIT REPORT
           </div>
-          <div style={{ fontSize: '12.5px', color: '#64748B', marginTop: '4px' }}>
+          <div style={{ fontSize: '12.5px', color: '#334155', marginTop: '4px' }}>
             Period: {selectedPeriod} • Counter No. 3 (Cashier: Leah Navarro)
           </div>
         </div>
@@ -105,27 +134,27 @@ export const CashierReportsView = () => {
         {/* Collection Breakdown Summary */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '32px' }}>
           <div style={{ backgroundColor: '#F8FAFC', padding: '16px', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
-            <span style={{ fontSize: '11.5px', color: '#64748B', fontWeight: '700', textTransform: 'uppercase' }}>Cash Collections</span>
+            <span style={{ fontSize: '11.5px', color: '#475569', fontWeight: '700', textTransform: 'uppercase' }}>Cash Collections</span>
             <div style={{ fontSize: '20px', fontWeight: '800', color: '#0F172A', marginTop: '4px' }}>
               PHP {cashTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </div>
-            <div style={{ fontSize: '11px', color: '#64748B', marginTop: '2px' }}>{cashPayments.length} transactions</div>
+            <div style={{ fontSize: '11px', color: '#475569', marginTop: '2px' }}>{cashPayments.length} transactions</div>
           </div>
 
           <div style={{ backgroundColor: '#F8FAFC', padding: '16px', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
-            <span style={{ fontSize: '11.5px', color: '#64748B', fontWeight: '700', textTransform: 'uppercase' }}>Online (GCash/Maya)</span>
+            <span style={{ fontSize: '11.5px', color: '#475569', fontWeight: '700', textTransform: 'uppercase' }}>Online (GCash/Maya)</span>
             <div style={{ fontSize: '20px', fontWeight: '800', color: '#0F172A', marginTop: '4px' }}>
               PHP {onlineTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </div>
-            <div style={{ fontSize: '11px', color: '#64748B', marginTop: '2px' }}>{onlinePayments.length} transactions</div>
+            <div style={{ fontSize: '11px', color: '#475569', marginTop: '2px' }}>{onlinePayments.length} transactions</div>
           </div>
 
           <div style={{ backgroundColor: '#F8FAFC', padding: '16px', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
-            <span style={{ fontSize: '11.5px', color: '#64748B', fontWeight: '700', textTransform: 'uppercase' }}>Card & Bank</span>
+            <span style={{ fontSize: '11.5px', color: '#475569', fontWeight: '700', textTransform: 'uppercase' }}>Card & Bank</span>
             <div style={{ fontSize: '20px', fontWeight: '800', color: '#0F172A', marginTop: '4px' }}>
               PHP {cardTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </div>
-            <div style={{ fontSize: '11px', color: '#64748B', marginTop: '2px' }}>{cardPayments.length} transactions</div>
+            <div style={{ fontSize: '11px', color: '#475569', marginTop: '2px' }}>{cardPayments.length} transactions</div>
           </div>
         </div>
 
@@ -137,19 +166,19 @@ export const CashierReportsView = () => {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
             <thead>
               <tr style={{ borderBottom: '1.5px solid #CBD5E1', backgroundColor: '#F8FAFC' }}>
-                <th style={{ padding: '8px 12px', textAlign: 'left' }}>OR Number</th>
-                <th style={{ padding: '8px 12px', textAlign: 'left' }}>Student Name</th>
-                <th style={{ padding: '8px 12px', textAlign: 'left' }}>Method</th>
-                <th style={{ padding: '8px 12px', textAlign: 'right' }}>Amount Paid</th>
+                <th style={{ padding: '8px 12px', textAlign: 'left', color: '#475569' }}>OR Number</th>
+                <th style={{ padding: '8px 12px', textAlign: 'left', color: '#475569' }}>Student Name</th>
+                <th style={{ padding: '8px 12px', textAlign: 'left', color: '#475569' }}>Method</th>
+                <th style={{ padding: '8px 12px', textAlign: 'right', color: '#475569' }}>Amount Paid</th>
               </tr>
             </thead>
             <tbody>
               {paymentHistory.map(p => (
                 <tr key={p.id || p.reference} style={{ borderBottom: '1px solid #F1F5F9' }}>
-                  <td style={{ padding: '10px 12px', fontFamily: 'monospace', fontWeight: '700' }}>{p.reference}</td>
-                  <td style={{ padding: '10px 12px' }}>{p.studentName || 'Student'}</td>
+                  <td style={{ padding: '10px 12px', fontFamily: 'monospace', fontWeight: '700', color: '#0F172A' }}>{p.reference}</td>
+                  <td style={{ padding: '10px 12px', color: '#0F172A' }}>{p.studentName || 'Student'}</td>
                   <td style={{ padding: '10px 12px', color: '#475569' }}>{p.method}</td>
-                  <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: '700' }}>
+                  <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: '700', color: '#0F172A' }}>
                     PHP {Number(p.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </td>
                 </tr>
@@ -173,14 +202,14 @@ export const CashierReportsView = () => {
           <div style={{ textAlign: 'center' }}>
             <div style={{ borderTop: '1px solid #64748B', width: '220px', margin: '40px auto 0', paddingTop: '4px' }}>
               <strong style={{ fontSize: '12.5px', color: '#0F172A', display: 'block' }}>LEAH NAVARRO</strong>
-              <span style={{ fontSize: '11px', color: '#64748B' }}>Cashier In-Charge (Counter 3)</span>
+              <span style={{ fontSize: '11px', color: '#475569' }}>Cashier In-Charge (Counter 3)</span>
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
             <div style={{ borderTop: '1px solid #64748B', width: '220px', margin: '40px auto 0', paddingTop: '4px' }}>
               <strong style={{ fontSize: '12.5px', color: '#0F172A', display: 'block' }}>VICTOR RAMOS</strong>
-              <span style={{ fontSize: '11px', color: '#64748B' }}>University Auditor / Admin</span>
+              <span style={{ fontSize: '11px', color: '#475569' }}>University Auditor / Admin</span>
             </div>
           </div>
         </div>
